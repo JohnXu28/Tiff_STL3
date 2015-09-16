@@ -4,7 +4,7 @@
 /*34567890123456789012345678901234567890123456789012345678901234567890123456789012345678*/
 /*******************************************|********************************************/
 /*
-*   Copyright (c) 2012  Avision Corporation All rights reserved.
+*   Copyright (c) 2015  Avision Corporation All rights reserved.
 *
 *   Copyright protection claimed includes all forms and matters of
 *   copyrightable material and information now allowed by statutory or judicial
@@ -14,19 +14,19 @@
 *
 *******************************************|********************************************/
 /**
-* @defgroup	Tiff_Module Tiff Module (STL Version 2).
-* @brief		Tiff Image Module. 
+* @defgroup	Tiff_Module Tiff Module (STL Version 3).
+* @brief		Tiff Image Module.
 *
-* @details 
+* @details
 *
 * For more infomation, you need to read this document.\n
-* @ref TiffDocument 
+* @ref TiffDocument
 *
 * Simple Example: This example is a template of how to using this class to do a image processing.\n
 * @ref TiffExample
-* @image html  ..\sheep2.jpg  
+* @image html  ..\sheep2.jpg
 *
-* @page pageTiff Tiff documentation & Examples 
+* @page pageTiff Tiff documentation & Examples
 *
 * <CENTER><b>Document and Example.</b></CENTER>
 *
@@ -82,9 +82,9 @@ main(int argc, _TCHAR* argv[]))
 	delete []lpBuf;
 
 	Out.SaveFile("Output.tif");
-}            
+}
 *
-* @endcode 
+* @endcode
 */
 
 #if !defined(_TIFF_STL3_)
@@ -97,7 +97,7 @@ main(int argc, _TCHAR* argv[]))
 #pragma warning(disable : 4996)//for Net
 
 /***************************************************************************
-	Virtual IO
+Virtual IO
 ***************************************************************************/
 //#define VIRTUAL_IO	
 //#define VIRTUAL_IO_STL	
@@ -148,10 +148,14 @@ main(int argc, _TCHAR* argv[]))
 
 #ifndef SWAP 
 inline DWORD SwapDWORD(const DWORD x)
-{	return ((( x & 0xFF000000) >> 24) |(( x & 0xFF0000) >> 8) | (( x & 0xFF00) << 8) | (x << 24));}
+{
+	return (((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | (x << 24));
+}
 
 inline WORD SwapWORD(const WORD x)
-{	return ((( x & 0xFF) << 8) | (x >> 8));}
+{
+	return (((x & 0xFF) << 8) | (x >> 8));
+}
 #endif //SWAP
 
 #define MAXTAG 30
@@ -160,6 +164,7 @@ inline WORD SwapWORD(const WORD x)
 #include <functional>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 using namespace std;
 
 /**
@@ -170,12 +175,12 @@ using namespace std;
 * @Detailed
 * When you using this library, just include the header file.\n
 * Header file has already declaire the namespace AV_Tiff_STL3.\n
-* Interface for the CTiff_STL class.\n 
+* Interface for the CTiff_STL class.\n
 */
 namespace AV_Tiff_STL3{
 
-/***************************************************************************
- ***************************************************************************/
+	/***************************************************************************
+	***************************************************************************/
 	enum TiffTagSignature{
 		NullTag						= 0x0000L,
 		NewSubfileType				= 0x00FEL,
@@ -259,45 +264,45 @@ namespace AV_Tiff_STL3{
 		IccProfile					= 0x8773L
 	};
 
-/***************************************************************************
- ***************************************************************************/
+	/***************************************************************************
+	***************************************************************************/
 	enum FieldType{
-		Unknown						= 0x0000L,
-		Byte						= 0x0001L,
-		ASCII						= 0x0002L,
-		Short						= 0x0003L,
-		Long						= 0x0004L,
-		Rational					= 0x0005L,
-		SBYTE						= 0x0006L,
-		UndefineType				= 0x0007L,
-		SShort						= 0x0008L,
-		SLong						= 0x0009L,
-		Float						= 0x000AL,
-		Double						= 0x000BL,
-		Unknown1					= 0x000CL,//Never using, Just for code analysis warning.
-		Unknown2					= 0x000DL,
-		Unknown3					= 0x000EL,
-		Unknown4					= 0x000FL,
+		Unknown			= 0x0000L,
+		Byte			= 0x0001L,
+		ASCII			= 0x0002L,
+		Short			= 0x0003L,
+		Long			= 0x0004L,
+		Rational		= 0x0005L,
+		SBYTE			= 0x0006L,
+		UndefineType	= 0x0007L,
+		SShort			= 0x0008L,
+		SLong			= 0x0009L,
+		Float			= 0x000AL,
+		Double			= 0x000BL,
+		Unknown1		= 0x000CL,//Never using, Just for code analysis warning.
+		Unknown2		= 0x000DL,
+		Unknown3		= 0x000EL,
+		Unknown4		= 0x000FL,
 	};
 
 #define FieldTypeSize 16
-/***************************************************************************
- ***************************************************************************/
+	/***************************************************************************
+	***************************************************************************/
 	enum ErrCode{
-		Tiff_OK						=  0,
-		FileOpenErr					= -1,
-		VersionErr					= -2,/*!< Check Win or Mac version.*/
-		TooManyTags					= -3,/*!< Tags > MaxTag; */
-		TagStripErr					= -4,/*!< StripByteCount.n != StripOffset.n;*/
-		MemoryAllocFail				= -5,
-		DataTypeErr					= -6,
-		CompressData				= -7,
-		UnDefineErr					= -9999,
-		Tiff_NEW_TAG				= 1
+		Tiff_OK			= 0,
+		FileOpenErr		= -1,
+		VersionErr		= -2,/*!< Check Win or Mac version.*/
+		TooManyTags		= -3,/*!< Tags > MaxTag; */
+		TagStripErr		= -4,/*!< StripByteCount.n != StripOffset.n;*/
+		MemoryAllocFail	= -5,
+		DataTypeErr		= -6,
+		CompressData	= -7,
+		UnDefineErr		= -9999,
+		Tiff_NEW_TAG	= 1
 	};
 
-/***************************************************************************
- ***************************************************************************/
+	/***************************************************************************
+	***************************************************************************/
 	/*! \class TiffTag
 	* This basic class is using for tiff operation.
 	*
@@ -313,20 +318,20 @@ namespace AV_Tiff_STL3{
 		TiffTag(TiffTagSignature Signature);
 		TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
 		TiffTag(TiffTagSignature Tag, FieldType Type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
-		bool operator()(const TiffTag& Data) const{return tag == Data.tag;};
-		virtual DWORD GetValue() const; 
+		bool operator()(const TiffTag& Data) const{ return tag == Data.tag; };
+		virtual DWORD GetValue() const;
 		virtual int SaveFile(IO_Interface *IO);
-		virtual LPBYTE GetData() const {return lpData;}
+		virtual LPBYTE GetData() const { return lpData; }
 		int ValueIsOffset() const;
 
 		//! The Tag that identifies the field.
-		TiffTagSignature	tag;  
+		TiffTagSignature	tag;
 
 		//!	The field Type. 
-		FieldType			type;         
+		FieldType			type;
 
 		//! The number of values, Count of the indicated Type.
-		DWORD 				n;          
+		DWORD 				n;
 
 		//! Value or Offset.
 		/*
@@ -335,68 +340,77 @@ namespace AV_Tiff_STL3{
 		Value Offset will thus be an even number. This file offset may
 		point anywhere in the file, even after the image data.
 		*/
-		DWORD				value; 
+		DWORD				value;
 
 		//! The real data, if the value is offset.
 		LPBYTE				lpData;
-	};      
+	};
 
-/***************************************************************************
- ***************************************************************************/
+	/***************************************************************************
+	***************************************************************************/
 	//Special Tag
-	class BitsPerSampleTag:public TiffTag
+	class BitsPerSampleTag :public TiffTag
 	{
 	public:
 		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
 		DWORD GetValue() const;
-	};     
+	};
 
-	class ResolutionTag:public TiffTag
+	class ResolutionTag :public TiffTag
 	{
 	public:
 		ResolutionTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
 		virtual DWORD GetValue() const;
 	};
 
-	class Exif_IFD_Tag:public TiffTag
+	class Exif_IFD_Tag :public TiffTag
 	{
 	public:
-		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);			
+		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
 		//***Don't save anything. This tag broke all rule, just skip it.		
 	};
 
 	class TAG//funtor, For find_if
 	{
 	public:
-		TAG(TiffTagSignature signature){Signature = signature;};
-		bool operator()(const TiffTag* Tag) const{return Tag->tag == Signature;}
+		TAG(TiffTagSignature signature){ Signature = signature; };
+		bool operator()(const TiffTag* Tag) const{ return Tag->tag == Signature; }
 		TiffTagSignature Signature;
 	};
 
-	typedef vector<TiffTag*> TagList;
+#ifdef SHARED_POINTER
+	typedef shared_ptr<TiffTag> TiffTagPtr;
+#else
+	typedef TiffTag *TiffTagPtr;
+#endif //SHARED_POINTER
 
-	/** 
+	typedef vector<TiffTagPtr> TagList;
+	typedef TagList::iterator TiffTag_iter;
+#define TiffTag_Begin m_IFD.m_TagList.begin()
+#define TiffTag_End m_IFD.m_TagList.end()	
+
+	/**
 	* @class Tag_equal
 	* @brief funtor, For find_if
-	* 
+	*
 	* @attention
 	* The VC6 seems can't compiler STL source code.
-	* If you want to using STL, just define STL in preprocessor. 
+	* If you want to using STL, just define STL in preprocessor.
 	*/
 
 
-/***************************************************************************
- ***************************************************************************/
+	/***************************************************************************
+	***************************************************************************/
 	struct IFD_STRUCTURE
 	{
-		IFD_STRUCTURE(){NextIFD=0;}
+		IFD_STRUCTURE(){ NextIFD = 0; }
 		TagList		m_TagList;
 		DWORD		NextIFD;
 	};
 
-/***************************************************************************
- ***************************************************************************/
-	/** 
+	/***************************************************************************
+	***************************************************************************/
+	/**
 	* @class Tiff
 	* @brief Just Read and Write tiff file.
 	*
@@ -404,7 +418,7 @@ namespace AV_Tiff_STL3{
 	* The VC6 seems can't compiler STL source code.
 	* If you want to using STL, just define STL in preprocessor.
 	*/
-	class Tiff  
+	class Tiff
 	{
 	public:
 		Tiff();
@@ -416,21 +430,21 @@ namespace AV_Tiff_STL3{
 		virtual		ErrCode SaveTiff(IO_Interface *IO);
 		virtual		ErrCode	ReadFile(LPCSTR FileName);
 		virtual		ErrCode	SaveFile(LPCSTR FileName);
-		
+
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);
 		virtual		ErrCode SaveMemory(LPBYTE Buffer, size_t BufSize, size_t &SaveSize);
 #endif //VIRTUAL_IO
 
 		//	Tag Operation
-		TiffTag*	GetTag(const TiffTagSignature Signature);		
+		TiffTagPtr	GetTag(const TiffTagSignature Signature);
 		DWORD		GetTagValue(const TiffTagSignature Signature);
-		ErrCode		SetTag(TiffTag *NewTag);
+		ErrCode		SetTag(TiffTagPtr NewTag);
 		ErrCode		SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 	protected:
 		//Read Image
-		virtual		TiffTag*	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_Interface *IO);
+		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_Interface *IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface *IO);
 		ErrCode		ReadImage(IO_Interface *IO);
 		ErrCode		ReadMultiStripOffset(IO_Interface *IO);
@@ -446,28 +460,28 @@ namespace AV_Tiff_STL3{
 		ErrCode		WriteData_Exif_IFD_Tag(IO_Interface *IO);
 
 		DWORD			m_IFD_Offset;
-		IFD_STRUCTURE	m_IFD;		
+		IFD_STRUCTURE	m_IFD;
 	};
 
-/***************************************************************************
- ***************************************************************************/
-	class CTiff:public Tiff  
+	/***************************************************************************
+	***************************************************************************/
+	class CTiff :public Tiff
 	{
 	public:
 		CTiff();
 		CTiff(LPCSTR FileName);
 		virtual		~CTiff();
-		virtual		ErrCode	ReadFile(LPCSTR FileName);					
+		virtual		ErrCode	ReadFile(LPCSTR FileName);
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);		
+		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);
 #endif //VIRTUAL_IO
 
 		ErrCode		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		ErrCode		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
 		ErrCode		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
 		ErrCode		SetTag(TiffTagSignature Signature, WORD type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
-		ErrCode		SetTagValue(const TiffTagSignature Signature, DWORD Value);		
+		ErrCode		SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 		//operation
 		template<class T>
@@ -487,18 +501,18 @@ namespace AV_Tiff_STL3{
 		int	SetRowColumn(LPBYTE lpBuf, int x, int y, int RecX, int RecY);
 		int	SetRowColumn(LPWORD lpBuf, int x, int y, int RecX, int RecY);
 
-		LPBYTE GetRowIndex(int Line){return GetXY(0,Line);};
-		LPBYTE GetRowIndex_Q(int Line){return GetXY_Q(0,Line);};
+		LPBYTE GetRowIndex(int Line){ return GetXY(0, Line); };
+		LPBYTE GetRowIndex_Q(int Line){ return GetXY_Q(0, Line); };
 
 		//Coordinate operation. M:Math, Q:Quick(Not Check Boundary)
 		LPBYTE		GetXY(int X, int Y);
-		void		SetXY(int X, int Y, BYTE Value){*(GetXY(X,Y)) = Value;};
+		void		SetXY(int X, int Y, BYTE Value){ *(GetXY(X, Y)) = Value; };
 		LPBYTE		GetXY_M(int X, int Y);
-		void		SetXY_M(int X, int Y, BYTE Value){*(GetXY_M(X,Y)) = Value;};
+		void		SetXY_M(int X, int Y, BYTE Value){ *(GetXY_M(X, Y)) = Value; };
 		LPBYTE		GetXY_Q(int X, int Y);
-		void		SetXY_Q(int X, int Y, BYTE Value){*(GetXY_Q(X,Y)) = Value;};
+		void		SetXY_Q(int X, int Y, BYTE Value){ *(GetXY_Q(X, Y)) = Value; };
 		LPBYTE		GetXY_MQ(int X, int Y);
-		void		SetXY_MQ(int X, int Y, BYTE Value){*(GetXY_MQ(X,Y)) = Value;};
+		void		SetXY_MQ(int X, int Y, BYTE Value){ *(GetXY_MQ(X, Y)) = Value; };
 
 		//Icc profile Operation.
 		ErrCode		SetIccProfile(char *IccFile);
@@ -519,7 +533,7 @@ namespace AV_Tiff_STL3{
 		int DumpTiff(LPCSTR FileName);
 		void DumpTags(DWORD TypeSignature, DWORD n, DWORD value, FILE *File);
 #endif //DUMP_TIFF
-		
+
 	private:
 		//useful property
 		int m_Width, m_Length, m_SamplesPerPixel, m_BitsPerSample, m_BytesPerLine, m_Resolution;
@@ -538,33 +552,39 @@ namespace AV_Tiff_STL3{
 			return 0x0;
 		else
 		{
-			intPart = (int) data;
+			intPart = (int)data;
 			rationPart = (int)((data - intPart) * 256 + 0.5);
 			return (0xFF00 & (int)(intPart * 255 / 100 + 0.5) << 8) | (0xFF & rationPart);
 		}
 	}
 
 	inline WORD Tiff_encode_ab(double data)
-	{	return (short)(data * 256);}
+	{
+		return (short)(data * 256);
+	}
 
 	inline double Tiff_decode_L(WORD data)
-	{  	return (double)data * 100 / 65535.0;}
+	{
+		return (double)data * 100 / 65535.0;
+	}
 
 	//bug???
 	inline double Tiff_decode_ab(WORD data)
-	{	
-		if(data < 0x8000)
+	{
+		if (data < 0x8000)
 			return (short)data / 256.0;
 		else
 			return (data - 0xFFFF) / 256.0;
 	}
 
 	inline double Tiff_decode_L_8(BYTE data)
-	{  	return (double)data * 100 / 255.0;}
+	{
+		return (double)data * 100 / 255.0;
+	}
 
 	inline double Tiff_decode_ab_8(BYTE data)
-	{	
-		if(data < 128)
+	{
+		if (data < 128)
 			return (double)data;
 		else
 			return data - 255;
