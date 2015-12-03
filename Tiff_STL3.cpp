@@ -553,11 +553,27 @@ ErrCode Tiff::ReadImage(IO_Interface *IO)
 	DWORD samplesPerPixel = GetTagValue(SamplesPerPixel);
 	LPBYTE lpImageBuf = nullptr;
 
+	if (rowsPerStrip == 0)
+	{
+		rowsPerStrip = Length;
+		TiffTagPtr NewTag = SHARED_PTR(TiffTag, new TiffTag(RowsPerStrip, Short, 1, Length));
+		m_IFD.m_TagList.push_back(NewTag);		
+	}
+
 	if (Length == rowsPerStrip)
 	{//Single Strip
 		if ((planarConfiguration == 0) || (planarConfiguration == 1))
 		{//RGBRGB
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
+			#if 1//Liao's Bug, data Error.
+				int ImgSize = (Width * Length * samplesPerPixel * bitsPerSample) >> 3;
+				if (ImgSize != stripByteCounts)
+				{
+					stripByteCounts = ImgSize;
+					SetTagValue(StripByteCounts, stripByteCounts);
+				}
+			#endif //Check StripByteCounts. 
+
 			lpImageBuf = new BYTE[stripByteCounts];
 			IO_Seek(stripOffsets, SEEK_SET);
 			IO_Read(lpImageBuf, 1, stripByteCounts);
