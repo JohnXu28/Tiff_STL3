@@ -6,7 +6,6 @@
 //	You can get the sample code in "Tiff_STL3.h"
 //********************************************************************
 #include "stdafx.h"
-#include <math.h>
 #include <iostream>
 #include "Tiff_STL3.h"
 #include <algorithm>
@@ -54,7 +53,7 @@ TiffTag::TiffTag()
 TiffTag::~TiffTag()
 {
 	if (lpData != nullptr)
-		delete[]lpData;
+		delete []lpData;
 	lpData = nullptr;
 
 	tag = NullTag;
@@ -1219,6 +1218,7 @@ ErrCode CTiff::SetIccProfile(char *IccFile)
 	IO_Interface *IO = IO_In(IccFile);
 	if (IO == nullptr)
 		throw " *** CTiff::SetIccProfile() --> Icc Profile open Fail. *** ";
+
 	int FileSize = 0;
 	IO_Read((LPBYTE)&FileSize, 1, 4);
 	FileSize = SwapDWORD(FileSize);
@@ -1234,7 +1234,8 @@ ErrCode CTiff::SetIccProfile(char *IccFile)
 		IO_Seek(0, SEEK_SET);
 		IO_Read(Icc->lpData, 1, FileSize);
 		IO_Close(IO);
-	}
+	}		
+
 	return Tiff_OK;
 }
 
