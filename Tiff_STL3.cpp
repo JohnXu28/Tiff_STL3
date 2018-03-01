@@ -969,10 +969,10 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 	return Tiff_OK;
 }
 
-ErrCode CTiff::ReadFile(LPCSTR FileName)
+ErrCode CTiff::ReadTiff(IO_Interface *IO)
 {
 	try{
-		ErrCode ret = Tiff::ReadFile(FileName);
+		ErrCode ret = Tiff::ReadTiff(IO);
 
 		if (ret != Tiff_OK)
 			return ret;
@@ -999,6 +999,32 @@ ErrCode CTiff::ReadFile(LPCSTR FileName)
 
 	return Tiff_OK;
 }
+
+ErrCode CTiff::ReadFile(LPCSTR FileName)
+{
+	try{
+		IO_Interface *IO = IO_In(FileName);
+		if (IO == nullptr)
+			throw " *** CTiff::SetIccProfile() --> Icc Profile open Fail. *** ";
+		
+		ErrCode ret = Tiff::ReadTiff(IO);
+
+		if (ret != Tiff_OK)
+			return ret;
+	}
+
+	catch (const char* ErrMsg)
+	{
+		cout << "*** " << ErrMsg << " Open Error. ***" << endl; return FileOpenErr;
+	}
+	catch (...)
+	{
+		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;	return UnDefineErr;
+	}
+
+	return Tiff_OK;
+}
+
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 ErrCode CTiff::ReadMemory(LPBYTE Buffer, size_t BufSize)
@@ -1208,6 +1234,14 @@ void CTiff::SetImageBuf(LPBYTE lpBuf)
 		delete[]StripOffsetTag->lpData;
 	StripOffsetTag->lpData = lpBuf;
 	m_lpImageBuf = lpBuf;
+}
+
+//Just for Image Adapter, don't release it, because we don't want read the image again.
+void CTiff::ForgetImageBuf()
+{
+	TiffTagPtr StripOffsetTag = Tiff::GetTag(StripOffsets);
+	StripOffsetTag->lpData = 0;
+	m_lpImageBuf = 0;
 }
 
 //*********************************************************************

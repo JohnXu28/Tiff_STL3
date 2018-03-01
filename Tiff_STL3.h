@@ -471,7 +471,8 @@ namespace AV_Tiff_STL3{
 		CTiff();
 		CTiff(LPCSTR FileName);
 		virtual		~CTiff();
-		virtual		ErrCode	ReadFile(LPCSTR FileName);
+		virtual		ErrCode	ReadTiff(IO_Interface *IO);
+		virtual		ErrCode	ReadFile(LPCSTR FileName);		
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);
@@ -521,6 +522,7 @@ namespace AV_Tiff_STL3{
 
 		//Image Buffer operation.
 		void		SetImageBuf(LPBYTE lpBuf);
+		void		ForgetImageBuf();
 		LPBYTE		GetImageBuf();
 
 #ifdef TIFF_EXT
