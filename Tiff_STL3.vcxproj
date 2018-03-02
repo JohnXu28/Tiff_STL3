@@ -153,9 +153,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tiff.h">
@@ -206,9 +203,6 @@
     </ClCompile>
     <ClCompile Include="Tiff_STL3.cpp" />
     <ClCompile Include="Virtual_IO.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TIFF6.pdf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

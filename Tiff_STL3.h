@@ -158,7 +158,7 @@ inline WORD SwapWORD(const WORD x)
 }
 #endif //SWAP
 
-#define MAXTAG 30
+#define MAXTAG 40
 
 #include <vector>
 #include <functional>

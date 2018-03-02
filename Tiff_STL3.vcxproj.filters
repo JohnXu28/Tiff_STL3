@@ -19,9 +19,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -63,10 +60,5 @@
     <ClCompile Include="Tiff_STL.cpp">
       <Filter>Old &amp; Doc</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TIFF6.pdf">
-      <Filter>Old &amp; Doc</Filter>
-    </None>
   </ItemGroup>
 </Project>

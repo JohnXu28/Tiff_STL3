@@ -1002,25 +1002,18 @@ ErrCode CTiff::ReadTiff(IO_Interface *IO)
 
 ErrCode CTiff::ReadFile(LPCSTR FileName)
 {
-	try{
-		IO_Interface *IO = IO_In(FileName);
-		if (IO == nullptr)
-			throw " *** CTiff::SetIccProfile() --> Icc Profile open Fail. *** ";
+	Reset();
+
+	IO_Interface *IO = IO_In(FileName);
+	if (IO == nullptr)
+		throw " *** CTiff::ReadFile() --> FileName is nullptr. *** ";
 		
-		ErrCode ret = Tiff::ReadTiff(IO);
+	ErrCode ret = ReadTiff(IO);
 
-		if (ret != Tiff_OK)
-			return ret;
-	}
+	IO_Close(IO);
 
-	catch (const char* ErrMsg)
-	{
-		cout << "*** " << ErrMsg << " Open Error. ***" << endl; return FileOpenErr;
-	}
-	catch (...)
-	{
-		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;	return UnDefineErr;
-	}
+	if (ret != Tiff_OK)
+		return ret;
 
 	return Tiff_OK;
 }
