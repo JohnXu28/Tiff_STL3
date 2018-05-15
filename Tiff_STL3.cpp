@@ -391,13 +391,13 @@ ErrCode Tiff::SaveFile(LPCSTR FileName)
 
 		ret = SaveTiff(IO);
 		IO_Close(IO);
+		return ret;
 	}
 	catch (const char* ErrMsg)
 	{
 		cout << ErrMsg << endl;
-	}
-
-	return ret;
+		return FileOpenErr;
+	}	
 }
 
 ErrCode Tiff::SaveTiff(IO_Interface *IO)
@@ -527,6 +527,7 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 			delete NewTag;
 		NewTag = nullptr;
 		cerr << "bad_alloc caught: " << ba.what() << endl;
+		return NULL;
 	}
 	return (TiffTagPtr)NewTag;
 }
@@ -953,13 +954,13 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 		IO_Read(m_lpImageBuf, 1, m_BytesPerLine * m_Length);
 
 		IO_Close(IO);
+		return Tiff_OK;
 	}
 	catch (const char* msg)
 	{
 		cout << msg << endl;
-	}
-
-	return Tiff_OK;
+		return FileOpenErr;
+	}	
 }
 
 ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName)
@@ -990,11 +991,13 @@ ErrCode CTiff::ReadTiff(IO_Interface *IO)
 
 	catch (const char* ErrMsg)
 	{
-		cout << "*** " << ErrMsg << " Open Error. ***" << endl; return FileOpenErr;
+		cout << "*** " << ErrMsg << " Open Error. ***" << endl; 
+		return FileOpenErr;
 	}
 	catch (...)
 	{
-		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;	return UnDefineErr;
+		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;	
+		return UnDefineErr;
 	}
 
 	return Tiff_OK;
@@ -1003,19 +1006,21 @@ ErrCode CTiff::ReadTiff(IO_Interface *IO)
 ErrCode CTiff::ReadFile(LPCSTR FileName)
 {
 	Reset();
+	try {
+		IO_Interface *IO = IO_In(FileName);
+		if (IO == nullptr)
+			throw FileName;
 
-	IO_Interface *IO = IO_In(FileName);
-	if (IO == nullptr)
-		throw " *** CTiff::ReadFile() --> FileName is nullptr. *** ";
-		
-	ErrCode ret = ReadTiff(IO);
+		ErrCode ret = ReadTiff(IO);
 
-	IO_Close(IO);
-
-	if (ret != Tiff_OK)
+		IO_Close(IO);
 		return ret;
-
-	return Tiff_OK;
+	}
+	catch (const char* ErrMsg)
+	{
+		cout << ErrMsg << " Open fail." << endl;
+		return FileOpenErr;
+	}
 }
 
 
