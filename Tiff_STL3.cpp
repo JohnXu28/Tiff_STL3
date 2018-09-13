@@ -9,7 +9,16 @@
 #include <iostream>
 #include "Tiff_STL3.h"
 #include <algorithm>
-#include <functional>
+//#include <functional> //replaced by those files below by klocwork
+#include <type_traits>
+#include <cstddef>
+#include <cstdlib>
+#include <exception>
+#include <new>
+#include <iosfwd>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -60,6 +69,57 @@ TiffTag::~TiffTag()
 	type = Unknown;
 	n = 0;
 	value = 0;
+}
+
+TiffTag::TiffTag(const TiffTag & Tag) // copy constructor
+{
+	tag = Tag.tag;
+	type = Tag.type;
+	n = Tag.n;
+	
+	int DataSize = DataType[type] * this->n;
+	if (DataSize > 4)
+	{
+		lpData = new BYTE[DataSize];
+		memcpy(lpData, Tag.lpData, DataSize);
+	}else
+		lpData = nullptr;
+}
+
+TiffTag::TiffTag(TiffTag&& other) noexcept //move constructor
+{
+	tag = other.tag;
+	type = other.type;
+	n = other.n;
+	value = other.value;
+	lpData = other.lpData;
+
+	// Release the data pointer from the source object so that  
+	// the destructor does not free the memory multiple times.  
+	other.lpData = nullptr;
+}
+
+TiffTag& TiffTag::operator=(const TiffTag& other) // copy assignment
+{
+	return *this = TiffTag(other);
+}
+
+TiffTag& TiffTag::operator=(TiffTag&& other) noexcept // move assignment
+{	
+	this->tag = other.tag;
+	this->type = other.type;
+	n = other.n;
+
+	int DataSize = DataType[type] * this->n;
+	if (DataSize > 4)
+	{
+		lpData = new BYTE[DataSize];
+		memcpy(lpData, other.lpData, DataSize);
+	}
+	else
+		lpData = nullptr;
+
+	return *this;
 }
 
 TiffTag::TiffTag(TiffTagSignature Signature)
@@ -336,7 +396,8 @@ ErrCode Tiff::ReadFile(LPCSTR FileName)
 		throw FileName;
 
 	ErrCode ret = ReadTiff(IO);
-	IO_Close(IO);
+	if(IO != NULL)
+		IO_Close(IO);
 
 	return ret;
 }
@@ -382,12 +443,16 @@ ErrCode Tiff::ReadTiff(IO_Interface *IO)
 ErrCode Tiff::SaveFile(LPCSTR FileName)
 {
 	ErrCode ret = Tiff_OK;
-	IO_Interface *IO = IO_Out(FileName);
+	
 	try{
+		IO_Interface *IO = IO_Out(FileName);
 		if (IO == nullptr)
 			throw "*** File(Save) Open Error. ***";
 		if (m_IFD.m_TagList.size() == 0)
+		{
+			IO_Close(IO);
 			throw "*** Tiff::SaveFile() --> TiffTag EntryCounts is 0. ***";
+		}
 
 		ret = SaveTiff(IO);
 		IO_Close(IO);
@@ -1264,9 +1329,11 @@ ErrCode CTiff::SetIccProfile(char *IccFile)
 		Icc->n = FileSize;
 		Icc->value = 0;//Offset, recaculating when saveing file.
 		IO_Seek(0, SEEK_SET);
-		IO_Read(Icc->lpData, 1, FileSize);
-		IO_Close(IO);
+		IO_Read(Icc->lpData, 1, FileSize);		
 	}		
+
+	if(IO != NULL)
+		IO_Close(IO);
 
 	return Tiff_OK;
 }

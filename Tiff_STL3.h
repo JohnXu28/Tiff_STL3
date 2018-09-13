@@ -315,6 +315,11 @@ namespace AV_Tiff_STL3{
 	public:
 		TiffTag();
 		virtual ~TiffTag();
+		TiffTag(const TiffTag& Tag); //Copy Constructor
+		TiffTag(TiffTag&& other) noexcept; // move constructor
+		TiffTag& operator=(const TiffTag& other); // copy assignment
+		TiffTag& operator=(TiffTag&& other) noexcept; // move assignment
+
 		TiffTag(TiffTagSignature Signature);
 		TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
 		TiffTag(TiffTagSignature Tag, FieldType Type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
