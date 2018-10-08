@@ -71,12 +71,9 @@ TiffTag::~TiffTag()
 	value = 0;
 }
 
-TiffTag::TiffTag(const TiffTag & Tag) // copy constructor
+//Copy Construct
+TiffTag::TiffTag(const TiffTag & Tag):tag(Tag.tag), type(Tag.type), n(Tag.n)
 {
-	tag = Tag.tag;
-	type = Tag.type;
-	n = Tag.n;
-	
 	int DataSize = DataType[type] * this->n;
 	if (DataSize > 4)
 	{
@@ -86,39 +83,56 @@ TiffTag::TiffTag(const TiffTag & Tag) // copy constructor
 		lpData = nullptr;
 }
 
-TiffTag::TiffTag(TiffTag&& other) noexcept //move constructor
+//move constructor
+TiffTag::TiffTag(TiffTag&& Tag) noexcept :tag(Tag.tag), type(Tag.type), n(Tag.n), value(Tag.value), lpData(Tag.lpData)
 {
-	tag = other.tag;
-	type = other.type;
-	n = other.n;
-	value = other.value;
-	lpData = other.lpData;
-
 	// Release the data pointer from the source object so that  
 	// the destructor does not free the memory multiple times.  
-	other.lpData = nullptr;
+	Tag.lpData = nullptr;
 }
 
-TiffTag& TiffTag::operator=(const TiffTag& other) // copy assignment
+// copy assignment
+TiffTag& TiffTag::operator=(const TiffTag& Tag)
 {
-	return *this = TiffTag(other);
+	if (this != &Tag)
+	{
+		tag = Tag.tag;
+		type = Tag.type;
+		n = Tag.n;
+		if (lpData != nullptr)
+			delete[]lpData;
+
+		int DataSize = DataType[type] * this->n;
+		if (DataSize > 4)
+		{
+			lpData = new BYTE[DataSize];
+			memcpy(lpData, Tag.lpData, DataSize);
+		}
+	}
+	return *this;
 }
 
-TiffTag& TiffTag::operator=(TiffTag&& other) noexcept // move assignment
+//Move assignment
+TiffTag& TiffTag::operator=(TiffTag&& Tag) noexcept // move assignment
 {	
-	this->tag = other.tag;
-	this->type = other.type;
-	n = other.n;
-
-	int DataSize = DataType[type] * this->n;
-	if (DataSize > 4)
+	if (this != &Tag)
 	{
-		lpData = new BYTE[DataSize];
-		memcpy(lpData, other.lpData, DataSize);
-	}
-	else
-		lpData = nullptr;
+		if (lpData != nullptr)
+			delete[]lpData;
 
+		tag = Tag.tag;
+		type = Tag.type;
+		n = Tag.n;
+
+		int DataSize = DataType[type] * this->n;
+		if (DataSize > 4)
+		{
+			lpData = new BYTE[DataSize];
+			memcpy(lpData, Tag.lpData, DataSize);
+		}
+		else
+			lpData = nullptr;
+	}
 	return *this;
 }
 
