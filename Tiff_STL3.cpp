@@ -50,44 +50,37 @@ namespace AV_Tiff_STL3{
 //////////////////////////////////////////////////////////////////////
 // Class TiffTag
 //////////////////////////////////////////////////////////////////////
-TiffTag::TiffTag()
-{
-	tag = NullTag;
-	lpData = nullptr;
-	type = Unknown;
-	n = 0;
-	value = 0;
-}
+TiffTag::TiffTag() :tag(NullTag), lpData(nullptr), type(Unknown), n(0), value(0)
+{}
 
 TiffTag::~TiffTag()
 {
-	if (lpData != nullptr)
-		delete []lpData;
-	lpData = nullptr;
-
 	tag = NullTag;
 	type = Unknown;
 	n = 0;
 	value = 0;
+
+	if (lpData != nullptr)
+		delete[]lpData;
+	lpData = nullptr;
+
 }
 
 //Copy Construct
 TiffTag::TiffTag(const TiffTag & Tag):tag(Tag.tag), type(Tag.type), n(Tag.n)
 {
+	lpData = nullptr;
 	int DataSize = DataType[type] * this->n;
 	if (DataSize > 4)
 	{
 		lpData = new BYTE[DataSize];
 		memcpy(lpData, Tag.lpData, DataSize);
-	}else
-		lpData = nullptr;
+	}		
 }
 
 //move constructor
 TiffTag::TiffTag(TiffTag&& Tag) noexcept :tag(Tag.tag), type(Tag.type), n(Tag.n), value(Tag.value), lpData(Tag.lpData)
 {
-	// Release the data pointer from the source object so that  
-	// the destructor does not free the memory multiple times.  
 	Tag.lpData = nullptr;
 }
 
@@ -99,15 +92,17 @@ TiffTag& TiffTag::operator=(const TiffTag& Tag)
 		tag = Tag.tag;
 		type = Tag.type;
 		n = Tag.n;
+
 		if (lpData != nullptr)
 			delete[]lpData;
 
+		lpData = nullptr;
 		int DataSize = DataType[type] * this->n;
 		if (DataSize > 4)
 		{
 			lpData = new BYTE[DataSize];
 			memcpy(lpData, Tag.lpData, DataSize);
-		}
+		}			
 	}
 	return *this;
 }
@@ -117,21 +112,15 @@ TiffTag& TiffTag::operator=(TiffTag&& Tag) noexcept // move assignment
 {	
 	if (this != &Tag)
 	{
-		if (lpData != nullptr)
-			delete[]lpData;
-
 		tag = Tag.tag;
 		type = Tag.type;
 		n = Tag.n;
 
-		int DataSize = DataType[type] * this->n;
-		if (DataSize > 4)
-		{
-			lpData = new BYTE[DataSize];
-			memcpy(lpData, Tag.lpData, DataSize);
-		}
-		else
-			lpData = nullptr;
+		if (lpData != nullptr)
+			delete[]lpData;
+
+		lpData = Tag.lpData;
+		Tag.lpData = nullptr;
 	}
 	return *this;
 }
