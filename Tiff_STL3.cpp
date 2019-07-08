@@ -925,6 +925,11 @@ CTiff::CTiff(LPCSTR FileName)
 	ReadFile(FileName);
 }
 
+CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf)
+{
+	CreateNew(width, length, resolution, samplesperpixel, bitspersample, AllocBuf);
+}
+
 ErrCode CTiff::SetTag(TiffTagSignature Signature, WORD type, DWORD n, DWORD value, LPBYTE lpBuf)
 {
 	DWORD SigType = (Signature) | (type << 16);

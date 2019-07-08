@@ -475,6 +475,7 @@ namespace AV_Tiff_STL3{
 	public:
 		CTiff();
 		CTiff(LPCSTR FileName);
+		CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		virtual		~CTiff();
 		virtual		ErrCode	ReadTiff(IO_Interface *IO);
 		virtual		ErrCode	ReadFile(LPCSTR FileName);		
