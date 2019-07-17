@@ -527,7 +527,7 @@ namespace AV_Tiff_STL3{
 		void		RemoveIcc();
 
 		//Image Buffer operation.
-		void		SetImageBuf(LPBYTE lpBuf);
+		void		SetImageBuf(LPBYTE lpBuf, bool FreeBuf = true);
 		void		ForgetImageBuf();
 		LPBYTE		GetImageBuf();
 

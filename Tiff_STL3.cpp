@@ -1298,11 +1298,13 @@ LPBYTE CTiff::GetImageBuf()
 	return m_lpImageBuf;
 }
 
-void CTiff::SetImageBuf(LPBYTE lpBuf)
+void CTiff::SetImageBuf(LPBYTE lpBuf, bool FreeBuf)
 {
 	TiffTagPtr StripOffsetTag = Tiff::GetTag(StripOffsets);
-	if (StripOffsetTag->lpData != nullptr)
-		delete[]StripOffsetTag->lpData;
+	if(FreeBuf == true)
+		if (StripOffsetTag->lpData != nullptr)
+			delete[]StripOffsetTag->lpData;
+
 	StripOffsetTag->lpData = lpBuf;
 	m_lpImageBuf = lpBuf;
 }
