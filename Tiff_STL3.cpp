@@ -478,6 +478,35 @@ ErrCode Tiff::SaveTiff(IO_Interface *IO)
 	return ret;
 }
 
+ErrCode Tiff::SaveRaw(LPCSTR FileName)
+{
+	ErrCode ret = Tiff_OK;
+
+	try {
+		IO_Interface *IO = IO_Out(FileName);
+		if (IO == nullptr)
+			throw "*** File(Save) Open Error. ***";
+		if (m_IFD.m_TagList.size() == 0)
+		{
+			IO_Close(IO);
+			throw "*** Tiff::SaveFile() --> TiffTag EntryCounts is 0. ***";
+		}
+		int Width = GetTagValue(ImageWidth);
+		int Length = GetTagValue(ImageLength);
+		int Samples = GetTagValue(SamplesPerPixel);
+		int Bits = GetTagValue(BitsPerSample);
+		cout << endl << "Width:" << Width << " Length:" << Length << " Samples:" << Samples << " Bits:" << Bits << endl;
+		ret = WriteImageData(IO);
+		IO_Close(IO);
+		return ret;
+	}
+	catch (const char* ErrMsg)
+	{
+		cout << ErrMsg << endl;
+		return FileOpenErr;
+	}
+}
+
 TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO)
 {
 	TiffTag *NewTag = nullptr;

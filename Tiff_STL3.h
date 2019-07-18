@@ -435,6 +435,7 @@ namespace AV_Tiff_STL3{
 		virtual		ErrCode SaveTiff(IO_Interface *IO);
 		virtual		ErrCode	ReadFile(LPCSTR FileName);
 		virtual		ErrCode	SaveFile(LPCSTR FileName);
+		virtual		ErrCode	SaveRaw(LPCSTR FileName);
 
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);
