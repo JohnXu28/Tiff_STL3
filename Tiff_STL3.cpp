@@ -639,7 +639,7 @@ void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface *IO)
 ErrCode Tiff::ReadImage(IO_Interface *IO)
 {
 	if (GetTagValue(Compression) != 1)//No compress
-		return CompressData;
+		throw CompressData;
 
 	DWORD Width = GetTagValue(ImageWidth);
 	DWORD Length = GetTagValue(ImageLength);
@@ -1096,6 +1096,11 @@ ErrCode CTiff::ReadTiff(IO_Interface *IO)
 		cout << "*** " << ErrMsg << " Open Error. ***" << endl; 
 		return FileOpenErr;
 	}
+	catch (const ErrCode &Err)
+	{
+		cout << "Tiff Read Filer Error:" <<  Err << endl;
+		return Err;
+	}
 	catch (...)
 	{
 		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;	
@@ -1121,6 +1126,16 @@ ErrCode CTiff::ReadFile(LPCSTR FileName)
 	catch (const char* ErrMsg)
 	{
 		cout << ErrMsg << " Open fail." << endl;
+		return FileOpenErr;
+	}
+	catch (const ErrCode &Err)
+	{
+		cout << "Tiff Open fail, Error Code:"  << Err << endl;
+		return Err;
+	}
+	catch (...)
+	{
+		cout << "Tiff Open fail, Unknown Error" << endl;
 		return FileOpenErr;
 	}
 }
