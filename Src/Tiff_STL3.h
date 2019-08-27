@@ -90,7 +90,9 @@ main(int argc, _TCHAR* argv[]))
 #if !defined(_TIFF_STL3_)
 #define _TIFF_STL3_
 
-#include <SysInfo\SysInfo.h>
+#if !defined(SYS_INFO)
+#include "SysInfo.h"
+#endif SYS_INFO
 
 #ifdef WIN32
 #include <windows.h>

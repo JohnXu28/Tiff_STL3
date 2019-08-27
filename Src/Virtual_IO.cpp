@@ -1,5 +1,9 @@
 #include "stdafx.h"
-#include <SysInfo\SysInfo.h>
+
+#if !defined(SYS_INFO)
+#include "SysInfo.h"
+#endif SYS_INFO
+
 #include "Virtual_IO.h"
 
 /***************************************************************************************

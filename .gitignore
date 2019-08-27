@@ -15,6 +15,15 @@ build/
 [Bb]in/
 [Oo]bj/
 
+.vs/
+
+# Linux
+*.o
+*.a
+*.s
+*.bak
+*.exe
+
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
 
@@ -58,6 +67,7 @@ ipch/
 *.psess
 *.vsp
 *.vspx
+*.filters
 
 # Guidance Automation Toolkit
 *.gpState
@@ -74,6 +84,21 @@ _TeamCity*
 
 # NCrunch
 *.ncrunch*
+
+# Img
+*.tif
+*.tiff
+*.jpg
+*.png
+*.bmp
+*.ppm
+*.pbm
+*.raw
+*.pwg
+*.ps
+*.prn
+*.pjl
+
 .*crunch*.local.xml
 
 # Installshield output folder
@@ -154,3 +179,24 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+*.opendb
+*.db
+
+# =========================
+# KlocWork files
+# =========================
+local.properties
+version
+vsix
+.klocwork/
+
+# =========================
+# Uedit32
+# =========================
+*.bak
+
+# =========================
+# IPS
+# =========================
+PS_Job/PSdisk0/
+*.ps
