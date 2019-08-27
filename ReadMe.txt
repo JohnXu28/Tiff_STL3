@@ -21,7 +21,6 @@ Tiff_STL3.vcxproj.filters
     similar extensions under a specific node (for e.g. ".cpp" files are associated with the
     "Source Files" filter).
 
-Add String 3.
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -29,15 +28,55 @@ StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
     named Tiff_STL3.pch and a precompiled types file named StdAfx.obj.
 
+
+Tiff_STL3.cpp, Tiff_STL3.h
+	These files are core of tiff class, basically you just need these two files.
+	*** if compiler support C++ 11 , turn on define ENABLE_SHARED_POINTER ***
+	
+Virtual_IO.cpp, Virtual_h
+	If we didn't define VIRTUAL_IO, or VIRTUAL_IO_STL, we don't need these files.
+	used for testing io stream.
+	
+Tiff_c.cpp,....Files in Version_C
+	These files was writtern long times ago, Easy to understand.
+	
+TiffTest Project
+TiffTest.cpp
+	Turn on define Tiff_Test, it will test all tiff files in folder "TestImg".
+	1. Read Tiff files and clone files into Output folder, example : 3RGB8.tif --> 3RGBOut.tif.
+	2. Copy test, example : 3RGB8.tif --> 3RGBOut2.tif.
+	3. Read 3RGB8Out.tif, 3RGB8Out2.tif, and check these two files are equivalent.
+	
+
 /////////////////////////////////////////////////////////////////////////////
 Other notes:
 
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
+This class didn't suppot compressd Tiff.
+This Tiff calss is designed for image processing and Icc color management testing.
+We use it for descreen, color conversion, dithering,...conver to ps, pdf,...
+Most of time, the final output will send to print, so we don't want to compress.
+
+We can find the examples in TiffTest.cpp or Tiff_STL3.h
+
+Test Images:
+0  NULL : pure empty files
+1  LineArt : 1 channel, 1 bit
+2  gray8 : Gray, 8 bits 
+3  RGB8 : R,G,B color image, 8 bits, interlace
+4  CMYK8 : C,M,Y,K color image, 8 bits, interlace
+5  Lab8 : Lab color image, 8 bits, interlace
+6  gray16 : Gray, 16 bits, interlace
+7  RGB16 : R,G,B color image, 16 bits, interlace
+8  CMYK16 : C,M,Y,K color image, 16 bits, interlace
+9  Lab16 : Lab color image, 8 bits, interlace
+10 RGB82 : R,G,B color image, 8 bits, noninterlace
+11 RGB162 : R,G,B color image, 16 bits, noninterlace
+12 CMYK82 : C,M,Y,K color image, 8 bits, noninterlace
+13 CMYK162 : C,M,Y,K color image, 16 bits, noninterlace
+14 Lab82", Lab color image, 8 bits, noninterlace
+15 Lab162",Lab color image, 16 bits, noninterlace
+16 MultiStrip : Multiple Strip Image. 
+17 Ycc8 : Special file format for image processing simulation 
+18 Special : Special Tiff format, Old version can't parser this tiff.
 
 /////////////////////////////////////////////////////////////////////////////
-
-
-Test for git.
-
-Add String 2.
