@@ -1,7 +1,5 @@
-========================================================================
-    STATIC LIBRARY : Tiff_STL3 Project Overview
-========================================================================
-
+***STATIC LIBRARY : Tiff_STL3 Project Overview***
+=================================================
 AppWizard has created this Tiff_STL3 library project for you.
 
 This file contains a summary of what you will find in each of the files that
@@ -39,7 +37,7 @@ make up your Tiff_STL3 application.
 	
 ***Virtual_IO.cpp, Virtual_h***
 
-  * If we didn't define VIRTUAL_IO, or VIRTUAL_IO_STL, we don't need these files.
+  * If we didn't define ***VIRTUAL_IO, or VIRTUAL_IO_STL***, we don't need these files.
     used for testing io stream.
 	
 ***Tiff_c.cpp,....Files in Version_C***
@@ -47,9 +45,10 @@ make up your Tiff_STL3 application.
   * These files was writtern long times ago, Easy to understand.
 	
 /////////////////////////////////////////////////////////////////////////////
-========================================================================
-    TiffTest Project Overview
-========================================================================
+
+
+***TiffTest Project Overview***
+=================================================
 ***TiffTest.cpp***
 
   * Turn on define Tiff_Test, it will test all tiff files in folder "TestImg".
@@ -57,9 +56,11 @@ make up your Tiff_STL3 application.
     1. Read Tiff files and clone files into Output folder, example : 3RGB8.tif --> 3RGBOut.tif.
     2. Copy test, example : 3RGB8.tif --> 3RGBOut2.tif.
     3. Read 3RGB8Out.tif, 3RGB8Out2.tif, and check these two files are equivalent.
+	4. You can use a different Tiff Lib instead, just modify the interface, you can find it at the top of TiffTest.cpp.
 	
 
 /////////////////////////////////////////////////////////////////////////////
+
 Other notes:
 
 This class didn't suppot compressd Tiff.
@@ -92,8 +93,11 @@ Test Images:
 - 17 Ycc8 : Special file format for image processing simulation 
 - 18 Special : Special Tiff format, Old version can't parser this tiff.
 
+
 /////////////////////////////////////////////////////////////////////////////
-Example:
+
+Example
+
 		#include "stdafx.h"
 		#include <string>
 		#include <iostream>
