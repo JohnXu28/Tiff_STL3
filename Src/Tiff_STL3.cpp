@@ -664,7 +664,7 @@ ErrCode Tiff::ReadImage(IO_Interface *IO)
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
 			#if 1//Liao's Bug, data Error.
 				int ImgSize = (Width * Length * samplesPerPixel * bitsPerSample) >> 3;
-				if (ImgSize != stripByteCounts)
+				if (ImgSize != (int)stripByteCounts)
 				{
 					stripByteCounts = ImgSize;
 					SetTagValue(StripByteCounts, stripByteCounts);
@@ -1225,7 +1225,7 @@ int CTiff::GetRowColumn(T* lpBuf, int x, int y, int RecX, int RecY)
 	if ((m_BitsPerSample != 8) && (m_BitsPerSample != 16))
 		return -1;
 
-	T* lpPosition = (T*)m_lpImageBuf;
+	//T* lpPosition = (T*)m_lpImageBuf;
 	T* lpWidthBuf = new T[m_Width*m_SamplesPerPixel];
 	LPBYTE lpCurrent = (LPBYTE)lpBuf;
 	int LineBufSize = (int)(RecX * m_SamplesPerPixel * m_BitsPerSample) >> 3;

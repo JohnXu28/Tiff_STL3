@@ -2,31 +2,40 @@
 #define _SYSINFO_H__
 
 #ifndef WIN32
-	//using namespace std;
-	typedef INSTR				INSTR;
-	typedef unsigned INSTR		BYTE;
+	//using namespace std;		
+	typedef char				INT8;
+	typedef unsigned char		UINT8;
+	typedef unsigned char		BYTE;
+
+	typedef short				INT16;
+	typedef unsigned short      UINT16;
 	typedef unsigned short      WORD;
+
+	typedef long				INT32;
+	typedef unsigned long       UINT32;
 	typedef unsigned long       DWORD;
+
+	typedef long long			INT64;
+	typedef unsigned long long	UINT64;
+	typedef long long			LONGLONG;
+	typedef unsigned long long	ULONGLONG;
+
 	typedef unsigned int	 	UINT;
-	typedef unsigned INSTR		UINSTR;
-	typedef int		 			BOOL;
+	typedef char				INSTR;
+	typedef unsigned char		UINSTR;
+	typedef bool	 			BOOL;
 	typedef WORD				WINSTR;
-	typedef INSTR				TINSTR;
-	typedef WINSTR				LPWSTR;
 	typedef const WINSTR		LPCWSTR;
-	typedef TINSTR				LPTSTR;
-	typedef const TINSTR		LPCTSTR;
 	typedef BYTE *				LPBYTE;
 	typedef WORD *				LPWORD;
 	typedef DWORD *				LPDWORD;
 	typedef int*				LPINT;
-	typedef INSTR				LPSTR;
-
+	typedef const char*			LPCSTR;
 	//typedef int					size_t;
-	typedef long				LONG;
-	#define FALSE   0
-	#define TRUE    1
-	#define nullptr    0
+	
+	#define FALSE				0
+	#define TRUE				1
+	#define nullptr				0
 
 	#ifdef Mac
 	#define HiByteFirst
@@ -75,8 +84,9 @@
 
 	inline WORD SwapWORD(const WORD x)
 	{	return x;}
-#else
-	#if 1  //For VC (Little Endian)
+#else	
+	#define	SWAP
+	#ifdef WIN32  //For VC (Little Endian)		
 		#ifdef WIN64
 			#define SwapWORD _byteswap_ushort 
 			#define SwapDWORD _byteswap_ulong 
@@ -84,31 +94,26 @@
 			#define SwapWORD _byteswap_ushort 
 			#define SwapDWORD _byteswap_ulong 
 		#endif //WIN64
-		#define	SWAP
-	#else
-		inline DWORD SwapDWORD(const DWORD &x)
-		{	return ((( x & 0xFF000000) >> 24) |(( x & 0xFF0000) >> 8) | (( x & 0xFF00) << 8) | (x << 24));}
+	#else	
+		#define SwapWORD __builtin_bswap16  
+		#define SwapDWORD __builtin_bswap32 
+	#endif//WIN32
 
-		inline WORD SwapWORD(const WORD x)
-		{	return ((( x & 0xFF) << 8) | (x >> 8));}
-	#endif
+inline void SwapDWORD_Buf(LPDWORD lpBuf, int Size)
+{
+	LPDWORD lpIn, lpOut;
+	lpIn = lpOut = lpBuf;
+	for (int i = 0; i < Size; i++)
+		*(lpOut++) = SwapDWORD(*(lpIn++));
+}
 
-	inline void SwapDWORD_Buf(LPDWORD lpBuf, int Size)
-	{
-		LPDWORD lpIn, lpOut;
-		lpIn = lpOut = lpBuf;	
-		for(int i = 0; i < Size; i++)
-			*(lpOut++) = SwapDWORD(*(lpIn++));
-	}
-
-	inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
-	{
-		LPWORD lpIn, lpOut;
-		lpIn = lpOut = lpBuf;	
-		for(int i = 0; i < Size; i++)
-			*(lpOut++) = SwapWORD(*(lpIn++));
-	}
-
+inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
+{
+	LPWORD lpIn, lpOut;
+	lpIn = lpOut = lpBuf;
+	for (int i = 0; i < Size; i++)
+		*(lpOut++) = SwapWORD(*(lpIn++));
+}
 #endif //HiByteFirst   
 
 //For C++ 11
