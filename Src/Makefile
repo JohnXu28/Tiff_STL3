@@ -25,7 +25,7 @@ ${SYS_AP_NAME} : Tiff_STL3
 	${CC} ${CPPFLAGS} ${CPPS}
 	#${AR} ${SYS_AP_NAME}.a *.o
 	#${MV} ${SYS_AP_NAME}.a ../Lib
-	${MV} *.o ../Lib
+	${MV} *.o ../../Lib
 clean :
-	${RM} ../Lib/*.o
+	${RM} ../../Lib/*.o
 

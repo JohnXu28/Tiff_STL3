@@ -92,7 +92,7 @@ main(int argc, _TCHAR* argv[]))
 
 #if !defined(SYS_INFO)
 #include "SysInfo.h"
-#endif SYS_INFO
+#endif //SYS_INFO
 
 #ifdef WIN32
 #include <windows.h>
