@@ -1,44 +1,32 @@
-#CROSS_COMPILE ?= arm-linux-gnueabihf-
-CC      = $(CROSS_COMPILE)g++
-AR      = $(CROSS_COMPILE)ar
-RM 		= rm -f
-AR		= ar crsv
-MV		= mv
-SYS_AP_NAME = Tiff_STL3
+include ../../Makefile.inc
+LIB_NAME = Tiff_STL3
 
-CPPS = 	Tiff_STL3.cpp \
-#		Virtual_IO.cpp
+CPPS = 	Tiff_STL3.cpp 
 		
-#CPPFLAGS = -c -g -v -Wall -O2 -Wno-reorder -Wno-unused-result -finline-functions -fopenmp 
-CPPFLAGS = -c -g -v -Wall -fPIC -Wno-reorder -Wno-unused-result -finline-functions -fopenmp 
-#CPPFLAGS += -DLiux 
-#SYS_INCLUDE =../../ 
-#CPPFLAGS += -iquote $(SYS_INCLUDE)
-
-#LINK_LIB = -lrt -lm -ldl -lpthread -fopenmp
-#LINK_LIB = -shared -lm -lpthread -fopenmp
+CPPFLAGS += -fPIC
 
 #================================================================
-allgen : ${SYS_AP_NAME}
+allgen : ${LIB_NAME}
 
-${SYS_AP_NAME} : Tiff_STL3
-	${RM} ../Lib/*.o
+${LIB_NAME} : Tiff_STL3	
 	${CC} ${CPPFLAGS} -O2 ${CPPS}
-	#${AR} ${SYS_AP_NAME}.a *.o
-	#${MV} ${SYS_AP_NAME}.a ../Lib
-	${MV} *.o ../../Lib
+	${CP} *.o ../../Lib
 	
-#================================================================	
-debug : ${SYS_AP_NAME}
+#================================================================
+release : ${LIB_NAME}
 
-${SYS_AP_NAME} : Tiff_STL3
-	${RM} ../Lib/*.o
+${LIB_NAME} : Tiff_STL3	
+	${CC} ${CPPFLAGS} -O2 ${CPPS}
+	${CP} *.o ../../Lib
+
+#================================================================	
+debug : ${LIB_NAME}
+
+${LIB_NAME} : Tiff_STL3	
 	${CC} ${CPPFLAGS} -O0 ${CPPS}
-	#${AR} ${SYS_AP_NAME}.a *.o
-	#${MV} ${SYS_AP_NAME}.a ../Lib
-	${MV} *.o ../../Lib
+	${CP} *.o ../../Lib
 
 #================================================================		
 clean :
-	${RM} ../../Lib/*.o
+	${RM} *.o
 
