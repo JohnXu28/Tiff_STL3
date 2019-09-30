@@ -1,5 +1,4 @@
 include ../../Makefile.inc
-LIB_NAME = Tiff_STL3
 
 CPPS = 	Tiff_STL3.cpp 
 		
