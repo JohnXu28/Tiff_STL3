@@ -518,110 +518,110 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 
 	switch ((0xFFFF & SigType))
 	{//Default Tag
-		case NewSubfileType:
-		case SubfileType:
-		case ImageWidth:
-		case ImageLength:
-		case Compression:
-		case PhotometricInterpretation:
-		case RowsPerStrip:
-		case StripByteCounts:
-		case PlanarConfiguration:
-		case ResolutionUnit:
-		case Threshholding:
-		case Orientation:
-		case SamplesPerPixel:
-		case MinSampleValue:
-		case MaxSampleValue:
-		case CellWidth:
-		case CellLength:
-		case FillOrder:
-		case DocumentName:
-		case ImageDescription:
-		case Make:
-		case Model:
-		case StripOffsets:
-		case PageName:
-		case XPosition:
-		case YPosition:
-		case FreeOffsets:
-		case FreeByteCounts:
-		case GrayResponseUnit:
-		case GrayResponsCurve:
-		case T4Options:
-		case T6Options:
-		case PageNumber:
-		case TransferFunction:
-		case Software:
-		case DateTime:
-		case Artist:
-		case HostComputer:
-		case Predicator:
-		case WhitePoint:
-		case PrimaryChromaticities:
-		case ColorMap:
-		case HalftoneHints:
-		case TileWidth:
-		case TileLength:
-		case TileOffsets:
-		case TileByteCounts:
-		case InkSet:
-		case InkNames:
-		case NumberOfInks:
-		case DotRange:
-		case TargetPrinter:
-		case ExtraSamples:
-		case SampleFormat:
-		case SMinSampleValue:
-		case SMaxSampleValue:
-		case TransforRange:
-		case JPEGProc:
-		case JPEGInterchangeFormat:
-		case JPEGIngerchangeFormatLength:
-		case JPEGRestartInterval:
-		case JPEGLosslessPredicators:
-		case JPEGPointTransforms:
-		case JPEGQTable:
-		case JPEGDCTable:
-		case JPEGACTable:
-		case YCbCrCoefficients:
-		case YCbCrSampling:
-		case YCbCrPositioning:
-		case ReferenceBlackWhite:
-		case XML_Data:
-		case CopyRight:
-		case IPTC:
-		case Photoshop:
-		case IccProfile:
-			NewTag = new TiffTag(SigType, n, value, IO);
-			break;
+	case NewSubfileType:
+	case SubfileType:
+	case ImageWidth:
+	case ImageLength:
+	case Compression:
+	case PhotometricInterpretation:
+	case RowsPerStrip:
+	case StripByteCounts:
+	case PlanarConfiguration:
+	case ResolutionUnit:
+	case Threshholding:
+	case Orientation:
+	case SamplesPerPixel:
+	case MinSampleValue:
+	case MaxSampleValue:
+	case CellWidth:
+	case CellLength:
+	case FillOrder:
+	case DocumentName:
+	case ImageDescription:
+	case Make:
+	case Model:
+	case StripOffsets:
+	case PageName:
+	case XPosition:
+	case YPosition:
+	case FreeOffsets:
+	case FreeByteCounts:
+	case GrayResponseUnit:
+	case GrayResponsCurve:
+	case T4Options:
+	case T6Options:
+	case PageNumber:
+	case TransferFunction:
+	case Software:
+	case DateTime:
+	case Artist:
+	case HostComputer:
+	case Predicator:
+	case WhitePoint:
+	case PrimaryChromaticities:
+	case ColorMap:
+	case HalftoneHints:
+	case TileWidth:
+	case TileLength:
+	case TileOffsets:
+	case TileByteCounts:
+	case InkSet:
+	case InkNames:
+	case NumberOfInks:
+	case DotRange:
+	case TargetPrinter:
+	case ExtraSamples:
+	case SampleFormat:
+	case SMinSampleValue:
+	case SMaxSampleValue:
+	case TransforRange:
+	case JPEGProc:
+	case JPEGInterchangeFormat:
+	case JPEGIngerchangeFormatLength:
+	case JPEGRestartInterval:
+	case JPEGLosslessPredicators:
+	case JPEGPointTransforms:
+	case JPEGQTable:
+	case JPEGDCTable:
+	case JPEGACTable:
+	case YCbCrCoefficients:
+	case YCbCrSampling:
+	case YCbCrPositioning:
+	case ReferenceBlackWhite:
+	case XML_Data:
+	case CopyRight:
+	case IPTC:
+	case Photoshop:
+	case IccProfile:
+		NewTag = new TiffTag(SigType, n, value, IO);
+		break;
 
-			//	Special Tag
-		case BitsPerSample:
-			NewTag = new BitsPerSampleTag(SigType, n, value, IO);
-			break;
+		//	Special Tag
+	case BitsPerSample:
+		NewTag = new BitsPerSampleTag(SigType, n, value, IO);
+		break;
 
-		case XResolution:
-		case YResolution:
-			NewTag = new ResolutionTag(SigType, n, value, IO);
-			break;
+	case XResolution:
+	case YResolution:
+		NewTag = new ResolutionTag(SigType, n, value, IO);
+		break;
 
-			//Just Skip this tag.
-		case Exif_IFD:
-			/*
-			* Photoshop Tag, Still Unknown...
-			* Don't save anything. This tag broke all rule, just skip it.
-			* If you want to save this tag.
-			* You may need to pay more expense.
-			* Sometimes I wonder that it is worth to do such thing.
-			*/
-			NewTag = new Exif_IFD_Tag(SigType, n, value, IO);
-			break;
+		//Just Skip this tag.
+	case Exif_IFD:
+		/*
+		* Photoshop Tag, Still Unknown...
+		* Don't save anything. This tag broke all rule, just skip it.
+		* If you want to save this tag.
+		* You may need to pay more expense.
+		* Sometimes I wonder that it is worth to do such thing.
+		*/
+		NewTag = new Exif_IFD_Tag(SigType, n, value, IO);
+		break;
 
-		default:
-			NewTag = new TiffTag(SigType, n, value, IO);
-			break;
-		}
+	default:
+		NewTag = new TiffTag(SigType, n, value, IO);
+		break;
+	}
 
 	return (TiffTagPtr)NewTag;
 }
