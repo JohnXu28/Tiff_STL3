@@ -67,7 +67,7 @@ TiffTag::~TiffTag()
 }
 
 //Copy Construct
-TiffTag::TiffTag(const TiffTag & Tag) :tag(Tag.tag), type(Tag.type), n(Tag.n)
+TiffTag::TiffTag(const TiffTag & Tag) :tag(Tag.tag), type(Tag.type), n(Tag.n), value(0)
 {
 	lpData = nullptr;
 	int DataSize = DataType[type] * this->n;
@@ -279,13 +279,13 @@ Exif_IFD_Tag::Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 //////////////////////////////////////////////////////////////////////
 // Tiff
 //////////////////////////////////////////////////////////////////////
-Tiff::Tiff()
+Tiff::Tiff():m_IFD_Offset(0)
 {
 	m_IFD.NextIFD = 8;
 	//IO = nullptr;
 }
 
-Tiff::Tiff(LPCSTR FileName)
+Tiff::Tiff(LPCSTR FileName) :Tiff()
 {
 	ReadFile(FileName);
 }
@@ -620,8 +620,8 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 	}
 	catch (bad_alloc &ba)
 	{
-		if (nullptr != NewTag)
-			delete NewTag;
+		//if (nullptr != NewTag)
+		//	delete NewTag;
 		NewTag = nullptr;
 		cerr << "bad_alloc caught: " << ba.what() << endl;
 		return NULL;
@@ -949,13 +949,14 @@ CTiff::CTiff()
 CTiff::~CTiff()
 {}
 
-CTiff::CTiff(LPCSTR FileName)
+CTiff::CTiff(LPCSTR FileName):CTiff()
 {
 	ReadFile(FileName);
 }
 
 CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf)
 {
+	CTiff();
 	CreateNew(width, length, resolution, samplesperpixel, bitspersample, AllocBuf);
 }
 
@@ -1005,7 +1006,8 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 
 	SetTag(RowsPerStrip, Long, 1, length);
 
-	int stripByteCounts = (DWORD)(ceil(width * bitspersample * 0.125) * length * samplesperpixel);
+	int stripByteCounts = (int)ceil((double)width * bitspersample * 0.125) * length * samplesperpixel;
+
 	SetTag(StripByteCounts, Long, 1, stripByteCounts);
 
 	SetTag(StripOffsets, Long, 1, 0);//For code analysis.
@@ -1039,7 +1041,7 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 	m_SamplesPerPixel = samplesperpixel;
 	m_BitsPerSample = bitspersample;
 	m_Resolution = resolution;
-	m_BytesPerLine = (int)ceil(m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
+	m_BytesPerLine = (int)ceil((double)m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
 
 	return Tiff_OK;
 }
@@ -1085,7 +1087,7 @@ ErrCode CTiff::ReadTiff(IO_Interface *IO)
 		m_Length = GetTagValue(ImageLength);
 		m_SamplesPerPixel = GetTagValue(SamplesPerPixel);
 		m_BitsPerSample = GetTagValue(BitsPerSample);
-		m_BytesPerLine = (int)ceil(m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
+		m_BytesPerLine = (int)ceil((double)m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
 		m_Resolution = GetTagValue(XResolution);
 		TiffTagPtr TempTag = Tiff::GetTag(StripOffsets);
 		m_lpImageBuf = TempTag->lpData;
