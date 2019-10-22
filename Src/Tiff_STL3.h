@@ -59,11 +59,11 @@ main(int argc, _TCHAR* argv[]))
 	CTiff In, Out;
 	In.ReadFile("Input.tif");
 
-	int Width = In.GetTagValue(ImageWidth);
-	int Length = In.GetTagValue(ImageLength);
-	int resolution = In.GetTagValue(XResolution);
-	int samplesPerPixel = In.GetTagValue(SamplesPerPixel);
-	int bitspersample = In.GetTagValue(BitsPerSample);
+	int Width = In.GetTagValue(TIFF_SIG(ImageWidth));
+	int Length = In.GetTagValue(TIFF_SIG(ImageLength));
+	int resolution = In.GetTagValue(TIFF_SIG(XResolution));
+	int samplesPerPixel = In.GetTagValue(TIFF_SIG(SamplesPerPixel));
+	int bitspersample = In.GetTagValue(TIFF_SIG(BitsPerSample));
 
 	Out.CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
 
@@ -183,7 +183,7 @@ namespace AV_Tiff_STL3{
 
 	/***************************************************************************
 	***************************************************************************/
-	enum TiffTagSignature{
+	enum class TiffTagSignature{
 		NullTag						= 0x0000L,
 		NewSubfileType				= 0x00FEL,
 		SubfileType					= 0x00FFL,
@@ -268,8 +268,8 @@ namespace AV_Tiff_STL3{
 
 	/***************************************************************************
 	***************************************************************************/
-	enum FieldType{
-		Unknown			= 0x0000L,
+	enum class FieldType{
+		UnknownType		= 0x0000L,
 		Byte			= 0x0001L,
 		ASCII			= 0x0002L,
 		Short			= 0x0003L,
@@ -290,8 +290,8 @@ namespace AV_Tiff_STL3{
 #define FieldTypeSize 16
 	/***************************************************************************
 	***************************************************************************/
-	enum ErrCode{
-		Tiff_OK			= 0,
+	enum class Tif_Err{
+		OK				= 0,
 		FileOpenErr		= -1,
 		VersionErr		= -2,/*!< Check Win or Mac version.*/
 		TooManyTags		= -3,/*!< Tags > MaxTag; */
@@ -432,40 +432,40 @@ namespace AV_Tiff_STL3{
 		Tiff(LPCSTR FileName);
 		virtual		~Tiff();
 		virtual		void Reset();
-		virtual		ErrCode CheckFile(IO_Interface *IO);
-		virtual		ErrCode	ReadTiff(IO_Interface *IO);
-		virtual		ErrCode SaveTiff(IO_Interface *IO);
-		virtual		ErrCode	ReadFile(LPCSTR FileName);
-		virtual		ErrCode	SaveFile(LPCSTR FileName);
-		virtual		ErrCode	SaveRaw(LPCSTR FileName);
+		virtual		Tif_Err CheckFile(IO_Interface *IO);
+		virtual		Tif_Err	ReadTiff(IO_Interface *IO);
+		virtual		Tif_Err SaveTiff(IO_Interface *IO);
+		virtual		Tif_Err	ReadFile(LPCSTR FileName);
+		virtual		Tif_Err	SaveFile(LPCSTR FileName);
+		virtual		Tif_Err	SaveRaw(LPCSTR FileName);
 
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);
-		virtual		ErrCode SaveMemory(LPBYTE Buffer, size_t BufSize, size_t &SaveSize);
+		virtual		Tif_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
+		virtual		Tif_Err SaveMemory(LPBYTE Buffer, size_t BufSize, size_t &SaveSize);
 #endif //VIRTUAL_IO
 
 		//	Tag Operation
 		TiffTagPtr	GetTag(const TiffTagSignature Signature);
 		DWORD		GetTagValue(const TiffTagSignature Signature);
-		ErrCode		SetTag(TiffTagPtr NewTag);
-		ErrCode		SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tif_Err		SetTag(TiffTagPtr NewTag);
+		Tif_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 	protected:
 		//Read Image
 		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_Interface *IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface *IO);
-		ErrCode		ReadImage(IO_Interface *IO);
-		ErrCode		ReadMultiStripOffset(IO_Interface *IO);
+		Tif_Err		ReadImage(IO_Interface *IO);
+		Tif_Err		ReadMultiStripOffset(IO_Interface *IO);
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
 		//Write Image
-		virtual		ErrCode	WriteHeader(IO_Interface *IO);
-		ErrCode		WriteIFD(IO_Interface *IO);
-		ErrCode		WriteTagData(IO_Interface *IO);
-		ErrCode		WriteImageData(IO_Interface *IO);
-		ErrCode		WriteData_Exif_IFD_Tag(IO_Interface *IO);
+		virtual		Tif_Err	WriteHeader(IO_Interface *IO);
+		Tif_Err		WriteIFD(IO_Interface *IO);
+		Tif_Err		WriteTagData(IO_Interface *IO);
+		Tif_Err		WriteImageData(IO_Interface *IO);
+		Tif_Err		WriteData_Exif_IFD_Tag(IO_Interface *IO);
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;
@@ -480,18 +480,18 @@ namespace AV_Tiff_STL3{
 		CTiff(LPCSTR FileName);
 		CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		virtual		~CTiff();
-		virtual		ErrCode	ReadTiff(IO_Interface *IO);
-		virtual		ErrCode	ReadFile(LPCSTR FileName);		
+		virtual		Tif_Err	ReadTiff(IO_Interface *IO);
+		virtual		Tif_Err	ReadFile(LPCSTR FileName);		
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-		virtual		ErrCode ReadMemory(LPBYTE Buffer, size_t BufSize);
+		virtual		Tif_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
 #endif //VIRTUAL_IO
 
-		ErrCode		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
-		ErrCode		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
-		ErrCode		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
-		ErrCode		SetTag(TiffTagSignature Signature, WORD type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
-		ErrCode		SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tif_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
+		Tif_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
+		Tif_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
+		Tif_Err		SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
+		Tif_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 		//operation
 		template<class T>
@@ -525,7 +525,7 @@ namespace AV_Tiff_STL3{
 		void		SetXY_MQ(int X, int Y, BYTE Value){ *(GetXY_MQ(X, Y)) = Value; };
 
 		//Icc profile Operation.
-		ErrCode		SetIccProfile(char *IccFile);
+		Tif_Err		SetIccProfile(char *IccFile);
 		void		SaveIccProfile(char *OutIccFile);
 		void		RemoveIcc();
 
@@ -535,9 +535,9 @@ namespace AV_Tiff_STL3{
 		LPBYTE		GetImageBuf();
 
 #ifdef TIFF_EXT
-		ErrCode	ReadJPG(LPCSTR FileName);
-		ErrCode	SaveJPG(LPCSTR FileName);
-		ErrCode	ReadFile_Ext(LPCSTR FileName);
+		Tif_Err	ReadJPG(LPCSTR FileName);
+		Tif_Err	SaveJPG(LPCSTR FileName);
+		Tif_Err	ReadFile_Ext(LPCSTR FileName);
 #endif //TIFF_EXT
 
 #ifdef DUMP_TIFF
@@ -604,5 +604,10 @@ namespace AV_Tiff_STL3{
 }//namespace AV_Tiff_STL3 or AV_Tiff
 
 using namespace AV_Tiff_STL3;
+
+//For fix C26812, for VS2019
+#define TIFF_ERR(Err)			Tif_Err::##Err
+#define TIFF_TYPE(Type)			FieldType::##Type
+#define TIFF_SIG(Sig)			TiffTagSignature::##Sig
 
 #endif // !defined(_TIFF_STL3_)
