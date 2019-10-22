@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include <iostream>
 #include "Tiff_STL3.h"
+using namespace AV_Tiff_STL3;
+
 #include <algorithm>
 //#include <functional> //replaced by those files below by klocwork
 #include <type_traits>
@@ -50,13 +52,16 @@ namespace AV_Tiff_STL3 {
 //////////////////////////////////////////////////////////////////////
 // Class TiffTag
 //////////////////////////////////////////////////////////////////////
-TiffTag::TiffTag() :tag(NullTag), lpData(nullptr), type(Unknown), n(0), value(0)
-{}
+TiffTag::TiffTag() :lpData(nullptr), n(0), value(0)
+{
+	tag = TIFF_SIG(NullTag);
+	type = TIFF_TYPE(UnknownType);
+}
 
 TiffTag::~TiffTag()
 {
-	tag = NullTag;
-	type = Unknown;
+	tag = TIFF_SIG(NullTag);
+	type = TIFF_TYPE(UnknownType);
 	n = 0;
 	value = 0;
 
@@ -70,7 +75,7 @@ TiffTag::~TiffTag()
 TiffTag::TiffTag(const TiffTag & Tag) :tag(Tag.tag), type(Tag.type), n(Tag.n), value(0)
 {
 	lpData = nullptr;
-	int DataSize = DataType[type] * this->n;
+	int DataSize = DataType[(int)type] * this->n;
 	if (DataSize > 4)
 	{
 		lpData = new BYTE[DataSize];
@@ -97,7 +102,7 @@ TiffTag& TiffTag::operator=(const TiffTag& Tag)
 			delete[]lpData;
 
 		lpData = nullptr;
-		int DataSize = DataType[type] * this->n;
+		int DataSize = DataType[(int)type] * this->n;
 		if (DataSize > 4)
 		{
 			lpData = new BYTE[DataSize];
@@ -129,7 +134,7 @@ TiffTag::TiffTag(TiffTagSignature Signature)
 {
 	tag = Signature;
 	lpData = nullptr;
-	type = Unknown;
+	type = TIFF_TYPE(UnknownType);
 	n = 0;
 	value = 0;
 }
@@ -150,18 +155,18 @@ TiffTag::TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO)
 	this->n = n;
 	this->value = value;
 
-	int DataSize = DataType[type] * this->n;
+	int DataSize = DataType[(int)type] * this->n;
 	if (DataSize > 4)
 	{//memory address
 		if (IO != nullptr)
 		{
 			lpData = new BYTE[DataSize];
 			IO_Seek(value, SEEK_SET);
-			IO_Read(lpData, DataType[type], n);
+			IO_Read(lpData, DataType[(int)type], n);
 		}
 		else
 			//Not from file, Setting directly, 
-			//for example setting BitsPerSample, It will set up the data in the constructor.
+			//for example setting TIFF_SIG(BitsPerSample), It will set up the data in the constructor.
 			lpData = nullptr;
 	}
 	else
@@ -170,7 +175,7 @@ TiffTag::TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO)
 
 DWORD TiffTag::GetValue() const
 {
-	DWORD DataSize = DataType[this->type] * this->n;
+	DWORD DataSize = DataType[(int)type] * this->n;
 	if (DataSize <= 4)
 		return value;
 	else
@@ -179,16 +184,16 @@ DWORD TiffTag::GetValue() const
 
 int TiffTag::SaveFile(IO_Interface *IO)
 {
-	int DataSize = DataType[type] * n;
+	int DataSize = DataType[(int)type] * n;
 	int ret = 0;
 	if (DataSize > 4)
-		ret = (int)IO_Write(lpData, DataType[type], n);
+		ret = (int)IO_Write(lpData, DataType[(int)type], n);
 	return ret;
 }
 
 int TiffTag::ValueIsOffset() const
 {
-	int DataSize = DataType[type] * n;
+	int DataSize = DataType[(int)type] * n;
 	int ret = 0;
 	if (DataSize > 4)
 		ret = 1;
@@ -198,7 +203,7 @@ int TiffTag::ValueIsOffset() const
 /*****************************************************************************************
 //Special Tags
 *****************************************************************************************/
-//BitsPerSample
+//TIFF_SIG(BitsPerSample)
 BitsPerSampleTag::BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO)
 	:TiffTag(SigType, n, value, IO)
 {
@@ -328,10 +333,10 @@ DWORD Tiff::GetTagValue(const TiffTagSignature Signature)
 		return 0;
 }
 
-ErrCode Tiff::SetTag(TiffTagPtr NewTag)
+Tif_Err Tiff::SetTag(TiffTagPtr NewTag)
 {
 	if (NewTag == nullptr)
-		return Tiff_OK;//If the tag is unknown, just forget it!
+		return TIFF_ERR(OK);//If the tag is unknown, just forget it!
 
 	TiffTagSignature sig = NewTag->tag;
 
@@ -354,10 +359,10 @@ ErrCode Tiff::SetTag(TiffTagPtr NewTag)
 			*pos = NewTag;
 		}
 	}
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode Tiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
+Tif_Err Tiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
 {
 	TiffTagPtr lpTag = GetTag(Signature);
 	if (lpTag != nullptr)
@@ -368,26 +373,26 @@ ErrCode Tiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
 //////////////////////////////////////////////////////////////////////
 // Tiff Read File Operaton
 //////////////////////////////////////////////////////////////////////
-ErrCode Tiff::CheckFile(IO_Interface *IO)
+Tif_Err Tiff::CheckFile(IO_Interface *IO)
 {
 #if defined(VIRTUAL_IO_STL)
 	fstream *file = reinterpret_cast<fstream*>(dynamic_cast<IO_fstream*>(IO)->GetHandle());
 	if (file->is_open() == false)
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 
 #elif defined(VIRTUAL_IO)
 	if (IO->GetHandle() == nullptr)
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 
 #else //C version.
 	if (IO == nullptr)
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 
 #endif //VIRTUAL_IO_STL
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode Tiff::ReadFile(LPCSTR FileName)
+Tif_Err Tiff::ReadFile(LPCSTR FileName)
 {
 	Reset();
 
@@ -395,28 +400,28 @@ ErrCode Tiff::ReadFile(LPCSTR FileName)
 		throw " *** Tiff::ReadFile() --> FileName is nullptr. *** ";
 
 	IO_Interface *IO = IO_In(FileName);
-	if (CheckFile(IO) != Tiff_OK)
+	if (CheckFile(IO) != TIFF_ERR(OK))
 		throw FileName;
 
-	ErrCode ret = ReadTiff(IO);
+	Tif_Err ret = ReadTiff(IO);
 	if (IO != NULL)
 		IO_Close(IO);
 
 	return ret;
 }
 
-ErrCode Tiff::ReadTiff(IO_Interface *IO)
+Tif_Err Tiff::ReadTiff(IO_Interface *IO)
 {
 	DWORD	TiffVersion;
 	WORD	TagCount;
-	ErrCode ret = Tiff_OK;
+	Tif_Err ret = TIFF_ERR(OK);
 
 	IO_Seek(0, SEEK_SET);
 	IO_Read((LPBYTE)&TiffVersion, 1, 4);
 
 	if (TiffVersion != 0x002A4949)
 	{//PC Version
-		ret = VersionErr;
+		ret = TIFF_ERR(VersionErr);
 		IO_Close(IO);
 		throw " *** Tiff is not PC version. *** ";
 	}
@@ -426,7 +431,7 @@ ErrCode Tiff::ReadTiff(IO_Interface *IO)
 	IO_Read((LPBYTE)&TagCount, 1, 2);
 	if (TagCount >= MAXTAG)
 	{//Too many m_Tags
-		ret = TooManyTags;
+		ret = TIFF_ERR(TooManyTags);
 		IO_Close(IO);
 		return ret;
 	}
@@ -443,9 +448,9 @@ ErrCode Tiff::ReadTiff(IO_Interface *IO)
 	return ret;
 }
 
-ErrCode Tiff::SaveFile(LPCSTR FileName)
+Tif_Err Tiff::SaveFile(LPCSTR FileName)
 {
-	ErrCode ret = Tiff_OK;
+	Tif_Err ret = TIFF_ERR(OK);
 
 	try {
 		IO_Interface *IO = IO_Out(FileName);
@@ -464,13 +469,13 @@ ErrCode Tiff::SaveFile(LPCSTR FileName)
 	catch (const char* ErrMsg)
 	{
 		cout << ErrMsg << endl;
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 	}
 }
 
-ErrCode Tiff::SaveTiff(IO_Interface *IO)
+Tif_Err Tiff::SaveTiff(IO_Interface *IO)
 {
-	ErrCode ret = WriteHeader(IO);
+	Tif_Err ret = WriteHeader(IO);
 	ret = WriteIFD(IO);
 	ret = WriteTagData(IO);
 	ret = WriteImageData(IO);
@@ -478,9 +483,9 @@ ErrCode Tiff::SaveTiff(IO_Interface *IO)
 	return ret;
 }
 
-ErrCode Tiff::SaveRaw(LPCSTR FileName)
+Tif_Err Tiff::SaveRaw(LPCSTR FileName)
 {
-	ErrCode ret = Tiff_OK;
+	Tif_Err ret = TIFF_ERR(OK);
 
 	try {
 		IO_Interface *IO = IO_Out(FileName);
@@ -491,10 +496,10 @@ ErrCode Tiff::SaveRaw(LPCSTR FileName)
 			IO_Close(IO);
 			throw "*** Tiff::SaveFile() --> TiffTag EntryCounts is 0. ***";
 		}
-		int Width = GetTagValue(ImageWidth);
-		int Length = GetTagValue(ImageLength);
-		int Samples = GetTagValue(SamplesPerPixel);
-		int Bits = GetTagValue(BitsPerSample);
+		int Width = GetTagValue(TIFF_SIG(ImageWidth));
+		int Length = GetTagValue(TIFF_SIG(ImageLength));
+		int Samples = GetTagValue(TIFF_SIG(SamplesPerPixel));
+		int Bits = GetTagValue(TIFF_SIG(BitsPerSample));
 		cout << endl << "Width:" << Width << " Length:" << Length << " Samples:" << Samples << " Bits:" << Bits << endl;
 		ret = WriteImageData(IO);
 		IO_Close(IO);
@@ -503,7 +508,7 @@ ErrCode Tiff::SaveRaw(LPCSTR FileName)
 	catch (const char* ErrMsg)
 	{
 		cout << ErrMsg << endl;
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 	}
 }
 
@@ -512,97 +517,19 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 	TiffTag *NewTag = nullptr;
 	try {
 		switch ((0xFFFF & SigType))
-		{//Default Tag
-		case NewSubfileType:
-		case SubfileType:
-		case ImageWidth:
-		case ImageLength:
-		case Compression:
-		case PhotometricInterpretation:
-		case RowsPerStrip:
-		case StripByteCounts:
-		case PlanarConfiguration:
-		case ResolutionUnit:
-		case Threshholding:
-		case Orientation:
-		case SamplesPerPixel:
-		case MinSampleValue:
-		case MaxSampleValue:
-		case CellWidth:
-		case CellLength:
-		case FillOrder:
-		case DocumentName:
-		case ImageDescription:
-		case Make:
-		case Model:
-		case StripOffsets:
-		case PageName:
-		case XPosition:
-		case YPosition:
-		case FreeOffsets:
-		case FreeByteCounts:
-		case GrayResponseUnit:
-		case GrayResponsCurve:
-		case T4Options:
-		case T6Options:
-		case PageNumber:
-		case TransferFunction:
-		case Software:
-		case DateTime:
-		case Artist:
-		case HostComputer:
-		case Predicator:
-		case WhitePoint:
-		case PrimaryChromaticities:
-		case ColorMap:
-		case HalftoneHints:
-		case TileWidth:
-		case TileLength:
-		case TileOffsets:
-		case TileByteCounts:
-		case InkSet:
-		case InkNames:
-		case NumberOfInks:
-		case DotRange:
-		case TargetPrinter:
-		case ExtraSamples:
-		case SampleFormat:
-		case SMinSampleValue:
-		case SMaxSampleValue:
-		case TransforRange:
-		case JPEGProc:
-		case JPEGInterchangeFormat:
-		case JPEGIngerchangeFormatLength:
-		case JPEGRestartInterval:
-		case JPEGLosslessPredicators:
-		case JPEGPointTransforms:
-		case JPEGQTable:
-		case JPEGDCTable:
-		case JPEGACTable:
-		case YCbCrCoefficients:
-		case YCbCrSampling:
-		case YCbCrPositioning:
-		case ReferenceBlackWhite:
-		case XML_Data:
-		case CopyRight:
-		case IPTC:
-		case Photoshop:
-		case IccProfile:
-			NewTag = new TiffTag(SigType, n, value, IO);
-			break;
-
-			//	Special Tag
-		case BitsPerSample:
+		{
+		//	Special Tag
+		case TIFF_SIG(BitsPerSample):
 			NewTag = new BitsPerSampleTag(SigType, n, value, IO);
 			break;
 
-		case XResolution:
-		case YResolution:
+		case TIFF_SIG(XResolution):
+		case TIFF_SIG(YResolution):
 			NewTag = new ResolutionTag(SigType, n, value, IO);
 			break;
 
 			//Just Skip this tag.
-		case Exif_IFD:
+		case TIFF_SIG(Exif_IFD):
 			/*
 			* Photoshop Tag, Still Unknown...
 			* Don't save anything. This tag broke all rule, just skip it.
@@ -613,7 +540,7 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 			NewTag = new Exif_IFD_Tag(SigType, n, value, IO);
 			break;
 
-		default:
+		default:			
 			NewTag = new TiffTag(SigType, n, value, IO);
 			break;
 		}
@@ -636,24 +563,24 @@ void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface *IO)
 		m_IFD.m_TagList.push_back(tag);
 }
 
-ErrCode Tiff::ReadImage(IO_Interface *IO)
+Tif_Err Tiff::ReadImage(IO_Interface *IO)
 {
-	if (GetTagValue(Compression) != 1)//No compress
-		throw CompressData;
+	if (GetTagValue(TIFF_SIG(Compression)) != 1)//No compress
+		throw TIFF_ERR(CompressData);
 
-	DWORD Width = GetTagValue(ImageWidth);
-	DWORD Length = GetTagValue(ImageLength);
-	DWORD rowsPerStrip = GetTagValue(RowsPerStrip);
-	DWORD stripOffsets = GetTagValue(StripOffsets);
-	DWORD planarConfiguration = GetTagValue(PlanarConfiguration);
-	DWORD bitsPerSample = GetTagValue(BitsPerSample);
-	DWORD samplesPerPixel = GetTagValue(SamplesPerPixel);
+	DWORD Width = GetTagValue(TIFF_SIG(ImageWidth));
+	DWORD Length = GetTagValue(TIFF_SIG(ImageLength));
+	DWORD rowsPerStrip = GetTagValue(TIFF_SIG(RowsPerStrip));
+	DWORD stripOffsets = GetTagValue(TIFF_SIG(StripOffsets));
+	DWORD planarConfiguration = GetTagValue(TIFF_SIG(PlanarConfiguration));
+	DWORD bitsPerSample = GetTagValue(TIFF_SIG(BitsPerSample));
+	DWORD samplesPerPixel = GetTagValue(TIFF_SIG(SamplesPerPixel));
 	LPBYTE lpImageBuf = nullptr;
 
 	if (rowsPerStrip == 0)
 	{
 		rowsPerStrip = Length;
-		TiffTagPtr NewTag = SHARED_PTR(TiffTag, new TiffTag(RowsPerStrip, Short, 1, Length));
+		TiffTagPtr NewTag = SHARED_PTR(TiffTag, new TiffTag(TIFF_SIG(RowsPerStrip), TIFF_TYPE(Short), 1, Length));
 		m_IFD.m_TagList.push_back(NewTag);
 	}
 
@@ -661,25 +588,25 @@ ErrCode Tiff::ReadImage(IO_Interface *IO)
 	{//Single Strip
 		if ((planarConfiguration == 0) || (planarConfiguration == 1))
 		{//RGBRGB
-			DWORD stripByteCounts = GetTagValue(StripByteCounts);
+			DWORD stripByteCounts = GetTagValue(TIFF_SIG(StripByteCounts));
 #if 1//Liao's Bug, data Error.
 			int ImgSize = (Width * Length * samplesPerPixel * bitsPerSample) >> 3;
 			if (ImgSize != (int)stripByteCounts)
 			{
 				stripByteCounts = ImgSize;
-				SetTagValue(StripByteCounts, stripByteCounts);
+				SetTagValue(TIFF_SIG(StripByteCounts), stripByteCounts);
 			}
-#endif //Check StripByteCounts. 
+#endif //Check TIFF_SIG(StripByteCounts). 
 
 			lpImageBuf = new BYTE[stripByteCounts];
 			IO_Seek(stripOffsets, SEEK_SET);
 			IO_Read(lpImageBuf, 1, stripByteCounts);
 			//Set ImageBuf address to StripOffset Tag
-			TiffTagPtr TempTag = GetTag(StripOffsets);
+			TiffTagPtr TempTag = GetTag(TIFF_SIG(StripOffsets));
 			TempTag->lpData = lpImageBuf;
 		}
 		else
-		{//PlanarConfiguration == 2, 
+		{//TIFF_SIG(PlanarConfiguration) == 2, 
 			if (bitsPerSample == 1)
 			{//Undocument, just for avision, CMYKcm(4 or 6) 1bit.
 				DWORD stripByteCounts = (Width >> 3) * Length * samplesPerPixel;
@@ -687,7 +614,7 @@ ErrCode Tiff::ReadImage(IO_Interface *IO)
 				IO_Seek(stripOffsets, SEEK_SET);
 				IO_Read(lpImageBuf, 1, stripByteCounts);
 				//Set ImageBuf address to StripOffset Tag
-				TiffTagPtr TempTag = GetTag(StripOffsets);
+				TiffTagPtr TempTag = GetTag(TIFF_SIG(StripOffsets));
 				TempTag->lpData = lpImageBuf;
 			}
 			else
@@ -699,21 +626,21 @@ ErrCode Tiff::ReadImage(IO_Interface *IO)
 				else
 					Pack<WORD>(Width, Length);
 
-				//Reset PlanarConfiguration -> 1.
-				SetTagValue(PlanarConfiguration, 1);
+				//Reset TIFF_SIG(PlanarConfiguration) -> 1.
+				SetTagValue(TIFF_SIG(PlanarConfiguration), 1);
 			}
 		}
 	}
 	else
 		ReadMultiStripOffset(IO);
 
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode Tiff::ReadMultiStripOffset(IO_Interface *IO)
+Tif_Err Tiff::ReadMultiStripOffset(IO_Interface *IO)
 {
-	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
-	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+	TiffTagPtr TagStripOffsets = GetTag(TIFF_SIG(StripOffsets));
+	TiffTagPtr TagStripByteCounts = GetTag(TIFF_SIG(StripByteCounts));
 	DWORD stripByteCounts = 0;
 	DWORD strip = TagStripOffsets->n;
 	LPDWORD lpTemp = (LPDWORD)TagStripByteCounts->lpData;
@@ -735,31 +662,31 @@ ErrCode Tiff::ReadMultiStripOffset(IO_Interface *IO)
 		lpImageBufTemp += Bufsize;
 	}
 
-	//Reset StripOffsets and StripByteCounts
+	//Reset TIFF_SIG(StripOffsets) and TIFF_SIG(StripByteCounts)
 	delete[]TagStripOffsets->lpData;
 	TagStripOffsets->lpData = lpImageBuf;
 	TagStripOffsets->n = 1;
-	TagStripOffsets->type = Long;
+	TagStripOffsets->type = TIFF_TYPE(Long);
 	//TagStripOffsets->value = lpImageBuf;//Don't care, It mean's nothing.
 
 	delete[]TagStripByteCounts->lpData;
 	TagStripByteCounts->lpData = nullptr;
-	TagStripByteCounts->type = Short;
+	TagStripByteCounts->type = TIFF_TYPE(Short);
 	TagStripByteCounts->n = 1;
 	TagStripByteCounts->value = stripByteCounts;
 
-	//Reset RowsPerStrip, it should be the same with Length;
-	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
+	//Reset TIFF_SIG(RowsPerStrip), it should be the same with Length;
+	SetTagValue(TIFF_SIG(RowsPerStrip), GetTagValue(TIFF_SIG(ImageLength)));
 
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
 template<class T>   //T:type, Ts:type size
 void Tiff::Pack(int Width, int Length)
 {
-	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
+	TiffTagPtr TagStripOffsets = GetTag(TIFF_SIG(StripOffsets));
 	int PixelsPerChannel = Width * Length;
-	if (GetTagValue(SamplesPerPixel) == 3)
+	if (GetTagValue(TIFF_SIG(SamplesPerPixel)) == 3)
 	{
 		T* lpR = (T*)TagStripOffsets->lpData;
 		T* lpG = lpR + PixelsPerChannel;
@@ -801,7 +728,7 @@ void Tiff::Pack(int Width, int Length)
 //////////////////////////////////////////////////////////////////////
 // Tiff Write File Operaton
 //////////////////////////////////////////////////////////////////////
-ErrCode Tiff::WriteHeader(IO_Interface *IO)
+Tif_Err Tiff::WriteHeader(IO_Interface *IO)
 {
 	WORD	TiffHeader[4];
 #ifdef HiByteFirst 
@@ -817,10 +744,10 @@ ErrCode Tiff::WriteHeader(IO_Interface *IO)
 #endif //HiByteFirst
 
 	IO_Write((LPBYTE)TiffHeader, sizeof(WORD), 4);
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode Tiff::WriteIFD(IO_Interface *IO)
+Tif_Err Tiff::WriteIFD(IO_Interface *IO)
 {
 	const int IFD_Offset = 8;//Header Size;
 	int OffsetValue = IFD_Offset + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
@@ -834,23 +761,23 @@ ErrCode Tiff::WriteIFD(IO_Interface *IO)
 		bool Offset = false;
 		switch ((*(pos))->type)
 		{
-		case SBYTE:
-		case UndefineType:
-		case SShort:
-		case SLong:Offset = true;
+		case TIFF_TYPE(SBYTE):
+		case TIFF_TYPE(UndefineType):
+		case TIFF_TYPE(SShort):
+		case TIFF_TYPE(SLong):Offset = true;
 		default:break;
 		}
 
 		int DataSize;
 		if (Offset == true)
 		{//Now Just for Icc profile
-			DataSize = DataType[(*(pos))->type] * (*(pos))->n;
+			DataSize = DataType[(int)(*(pos))->type] * (*(pos))->n;
 			(*pos)->value = OffsetValue;
 			OffsetValue += DataSize;
 		}
 		else
 		{
-			DataSize = DataType[(*(pos))->type] * (*(pos))->n;
+			DataSize = DataType[(int)(*(pos))->type] * (*(pos))->n;
 			if (DataSize > 4)
 			{
 				(*pos)->value = OffsetValue;
@@ -861,12 +788,12 @@ ErrCode Tiff::WriteIFD(IO_Interface *IO)
 
 	//Some Special Tag need to be reset...
 	//StripOffset
-	TiffTagPtr	TempTag = GetTag(StripOffsets);
+	TiffTagPtr	TempTag = GetTag(TIFF_SIG(StripOffsets));
 	TempTag->value = OffsetValue;
 
-	OffsetValue += GetTagValue(StripByteCounts);
+	OffsetValue += GetTagValue(TIFF_SIG(StripByteCounts));
 
-	TempTag = GetTag(Exif_IFD);
+	TempTag = GetTag(TIFF_SIG(Exif_IFD));
 	if (TempTag != nullptr)
 		TempTag->value = OffsetValue;
 
@@ -878,7 +805,7 @@ ErrCode Tiff::WriteIFD(IO_Interface *IO)
 	for_each(TiffTag_Begin, TiffTag_End,
 		[&lpTemp](TiffTagPtr pos)
 	{
-		*lpTemp++ = pos->tag | (pos->type << 16);
+		*lpTemp++ = (int)(pos->tag) | ((int)(pos->type) << 16);
 		*lpTemp++ = pos->n;
 		*lpTemp++ = pos->value;
 	});
@@ -890,48 +817,48 @@ ErrCode Tiff::WriteIFD(IO_Interface *IO)
 	DWORD NextIFD = 0;
 	IO_Write((LPBYTE)&NextIFD, sizeof(DWORD), 1);
 
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode Tiff::WriteTagData(IO_Interface *IO)
+Tif_Err Tiff::WriteTagData(IO_Interface *IO)
 {
 	for_each(TiffTag_Begin, TiffTag_End,
 		[&IO](TiffTagPtr pos) {pos->SaveFile(IO); });
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode Tiff::WriteImageData(IO_Interface *IO)
+Tif_Err Tiff::WriteImageData(IO_Interface *IO)
 {
-	DWORD stripByteCounts = GetTagValue(StripByteCounts);
-	TiffTagPtr TempTag = GetTag(StripOffsets);
+	DWORD stripByteCounts = GetTagValue(TIFF_SIG(StripByteCounts));
+	TiffTagPtr TempTag = GetTag(TIFF_SIG(StripOffsets));
 	IO_Write(TempTag->lpData, 1, stripByteCounts);
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode	Tiff::WriteData_Exif_IFD_Tag(IO_Interface *IO)
+Tif_Err	Tiff::WriteData_Exif_IFD_Tag(IO_Interface *IO)
 {
-	TiffTagPtr TempTag = GetTag(Exif_IFD);
+	TiffTagPtr TempTag = GetTag(TIFF_SIG(Exif_IFD));
 	if (TempTag != nullptr)
 		IO_Write(TempTag->lpData, 1, Exif_IFD_Size);
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
 //Not Fully Test yet...
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-ErrCode Tiff::SaveMemory(LPBYTE Buffer, size_t BufSize, size_t &SaveSize)
+Tif_Err Tiff::SaveMemory(LPBYTE Buffer, size_t BufSize, size_t &SaveSize)
 {
 	IO_Interface *IO = new IO_Buf(Buffer, BufSize);
-	ErrCode ret = SaveTiff(IO);
+	Tif_Err ret = SaveTiff(IO);
 	SaveSize = dynamic_cast<IO_Buf*>(IO)->Tell();
 	IO_Close(IO);
 	return ret;
 }
 
 //Not Fully Test yet...
-ErrCode Tiff::ReadMemory(LPBYTE Buffer, size_t BufSize)
+Tif_Err Tiff::ReadMemory(LPBYTE Buffer, size_t BufSize)
 {
 	IO_Interface *IO = new IO_Buf(Buffer, BufSize);
-	ErrCode ret = ReadTiff(IO);
+	Tif_Err ret = ReadTiff(IO);
 	IO_Close(IO);
 	return ret;
 }
@@ -960,60 +887,60 @@ CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bit
 	CreateNew(width, length, resolution, samplesperpixel, bitspersample, AllocBuf);
 }
 
-ErrCode CTiff::SetTag(TiffTagSignature Signature, WORD type, DWORD n, DWORD value, LPBYTE lpBuf)
+Tif_Err CTiff::SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf)
 {
-	DWORD SigType = (Signature) | (type << 16);
+	DWORD SigType = (int)(Signature) | ((int)type << 16);
 	TiffTagPtr New = CreateTag(SigType, n, value, nullptr);
 	return Tiff::SetTag(New);
 }
 
-ErrCode	CTiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
+Tif_Err	CTiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
 {
 	TiffTagPtr New = Tiff::GetTag(Signature);
 	if (New != nullptr)
 		New->value = Value;
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf)
+Tif_Err CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf)
 {//Initial IFD
 
 	Reset();
 
-	SetTag(NewSubfileType, Long, 1, 0); //For TiffLib.
+	SetTag(TIFF_SIG(NewSubfileType), TIFF_TYPE(Long), 1, 0); //For TiffLib.
 
-	SetTag(ImageWidth, Long, 1, width);
+	SetTag(TIFF_SIG(ImageWidth), TIFF_TYPE(Long), 1, width);
 
-	SetTag(ImageLength, Long, 1, length);
+	SetTag(TIFF_SIG(ImageLength), TIFF_TYPE(Long), 1, length);
 
-	SetTag(BitsPerSample, Short, samplesperpixel, bitspersample);
+	SetTag(TIFF_SIG(BitsPerSample), TIFF_TYPE(Short), samplesperpixel, bitspersample);
 
 	//SetTag(new BitsPerSampleTag());
 
-	SetTag(Compression, Short, 1, 1);
+	SetTag(TIFF_SIG(Compression), TIFF_TYPE(Short), 1, 1);
 
 	switch (samplesperpixel)
 	{//0:White is zero, 1:Black is Zero, 2:RGB color, 3:Palette color, 5:CMYK, 6:YCbCr
-	case 1:SetTag(PhotometricInterpretation, Short, 1, 1); break;
-	case 3:SetTag(PhotometricInterpretation, Short, 1, 2); break;
-	case 4:SetTag(PhotometricInterpretation, Short, 1, 5); break;
-	case 6:SetTag(PhotometricInterpretation, Short, 1, 0); break;
-	case 7:SetTag(PhotometricInterpretation, Short, 1, 0); break;
-	default:SetTag(PhotometricInterpretation, Short, 1, 1); break;
+	case 1:SetTag(TIFF_SIG(PhotometricInterpretation), TIFF_TYPE(Short), 1, 1); break;
+	case 3:SetTag(TIFF_SIG(PhotometricInterpretation), TIFF_TYPE(Short), 1, 2); break;
+	case 4:SetTag(TIFF_SIG(PhotometricInterpretation), TIFF_TYPE(Short), 1, 5); break;
+	case 6:SetTag(TIFF_SIG(PhotometricInterpretation), TIFF_TYPE(Short), 1, 0); break;
+	case 7:SetTag(TIFF_SIG(PhotometricInterpretation), TIFF_TYPE(Short), 1, 0); break;
+	default:SetTag(TIFF_SIG(PhotometricInterpretation), TIFF_TYPE(Short), 1, 1); break;
 	}
 
-	SetTag(SamplesPerPixel, Short, 1, samplesperpixel);
+	SetTag(TIFF_SIG(SamplesPerPixel), TIFF_TYPE(Short), 1, samplesperpixel);
 
-	SetTag(RowsPerStrip, Long, 1, length);
+	SetTag(TIFF_SIG(RowsPerStrip), TIFF_TYPE(Long), 1, length);
 
 	int stripByteCounts = (int)ceil((double)width * bitspersample * 0.125) * length * samplesperpixel;
 
-	SetTag(StripByteCounts, Long, 1, stripByteCounts);
+	SetTag(TIFF_SIG(StripByteCounts), TIFF_TYPE(Long), 1, stripByteCounts);
 
-	SetTag(StripOffsets, Long, 1, 0);//For code analysis.
-	TiffTagPtr StripOffsetsTag = GetTag(StripOffsets);
+	SetTag(TIFF_SIG(StripOffsets), TIFF_TYPE(Long), 1, 0);//For code analysis.
+	TiffTagPtr StripOffsetsTag = GetTag(TIFF_SIG(StripOffsets));
 	if (AllocBuf == 1)
-	{//Create StripOffsets Tag directly.
+	{//Create TIFF_SIG(StripOffsets) Tag directly.
 		StripOffsetsTag->lpData = new BYTE[stripByteCounts];
 		memset(StripOffsetsTag->lpData, 0, stripByteCounts);
 		m_lpImageBuf = StripOffsetsTag->lpData;
@@ -1023,17 +950,17 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 
 	Tiff::SetTag(StripOffsetsTag);
 
-	SetTag(XResolution, Rational, 1, resolution);
+	SetTag(TIFF_SIG(XResolution), TIFF_TYPE(Rational), 1, resolution);
 
-	SetTag(YResolution, Rational, 1, resolution);
+	SetTag(TIFF_SIG(YResolution), TIFF_TYPE(Rational), 1, resolution);
 
-	SetTag(ResolutionUnit, Short, 1, 2);
+	SetTag(TIFF_SIG(ResolutionUnit), TIFF_TYPE(Short), 1, 2);
 	//2:inch, 3:centimeter
 
-	SetTag(PlanarConfiguration, Short, 1, 1);
+	SetTag(TIFF_SIG(PlanarConfiguration), TIFF_TYPE(Short), 1, 1);
 	//1: Data is stored as RGBRGB..., 2:RRRR....,GGGG...., BBBB....
 
-	SetTag(IccProfile, UndefineType, 0, 0);
+	SetTag(TIFF_SIG(IccProfile), TIFF_TYPE(UndefineType), 0, 0);
 
 	//Basic Property for easy using.
 	m_Width = width;
@@ -1043,10 +970,10 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 	m_Resolution = resolution;
 	m_BytesPerLine = (int)ceil((double)m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
 
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName)
+Tif_Err CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName)
 {
 	IO_Interface *IO;
 	try {
@@ -1058,61 +985,61 @@ ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpi
 		IO_Read(m_lpImageBuf, 1, m_BytesPerLine * m_Length);
 
 		IO_Close(IO);
-		return Tiff_OK;
+		return TIFF_ERR(OK);
 	}
 	catch (const char* msg)
 	{
 		cout << msg << endl;
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 	}
 }
 
-ErrCode CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName)
+Tif_Err CTiff::CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName)
 {
 	CreateNew(width, length, resolution, samplesperpixel, bitspersample, InName);
 	SaveFile(OutName);
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode CTiff::ReadTiff(IO_Interface *IO)
+Tif_Err CTiff::ReadTiff(IO_Interface *IO)
 {
 	try {
-		ErrCode ret = Tiff::ReadTiff(IO);
+		Tif_Err ret = Tiff::ReadTiff(IO);
 
-		if (ret != Tiff_OK)
+		if (ret != TIFF_ERR(OK))
 			return ret;
 
 		//Basic Property for easy using.
-		m_Width = GetTagValue(ImageWidth);
-		m_Length = GetTagValue(ImageLength);
-		m_SamplesPerPixel = GetTagValue(SamplesPerPixel);
-		m_BitsPerSample = GetTagValue(BitsPerSample);
+		m_Width = GetTagValue(TIFF_SIG(ImageWidth));
+		m_Length = GetTagValue(TIFF_SIG(ImageLength));
+		m_SamplesPerPixel = GetTagValue(TIFF_SIG(SamplesPerPixel));
+		m_BitsPerSample = GetTagValue(TIFF_SIG(BitsPerSample));
 		m_BytesPerLine = (int)ceil((double)m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
-		m_Resolution = GetTagValue(XResolution);
-		TiffTagPtr TempTag = Tiff::GetTag(StripOffsets);
+		m_Resolution = GetTagValue(TIFF_SIG(XResolution));
+		TiffTagPtr TempTag = Tiff::GetTag(TIFF_SIG(StripOffsets));
 		m_lpImageBuf = TempTag->lpData;
 	}
 
 	catch (const char* ErrMsg)
 	{
 		cout << "*** " << ErrMsg << " Open Error. ***" << endl;
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 	}
-	catch (const ErrCode &Err)
-	{
-		cout << "Tiff Read Filer Error:" << Err << endl;
-		return Err;
-	}
+	//catch (const Tif_Err &Err)
+	//{
+	//	cout << "Tiff Read Filer Error:" << Tif_Err::Err << endl;
+	//	return Err;
+	//}
 	catch (...)
 	{
 		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;
-		return UnDefineErr;
+		return TIFF_ERR(UnDefineErr);
 	}
 
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
-ErrCode CTiff::ReadFile(LPCSTR FileName)
+Tif_Err CTiff::ReadFile(LPCSTR FileName)
 {
 	Reset();
 	try {
@@ -1120,7 +1047,7 @@ ErrCode CTiff::ReadFile(LPCSTR FileName)
 		if (IO == nullptr)
 			throw FileName;
 
-		ErrCode ret = ReadTiff(IO);
+		Tif_Err ret = ReadTiff(IO);
 
 		IO_Close(IO);
 		return ret;
@@ -1128,36 +1055,36 @@ ErrCode CTiff::ReadFile(LPCSTR FileName)
 	catch (const char* ErrMsg)
 	{
 		cout << ErrMsg << " Open fail." << endl;
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 	}
-	catch (const ErrCode &Err)
-	{
-		cout << "Tiff Open fail, Error Code:" << Err << endl;
-		return Err;
-	}
+	//catch (const Tif_Err &Err)
+	//{
+	//	cout << "Tiff Open fail, Error Code:" << Err << endl;
+	//	return Err;
+	//}
 	catch (...)
 	{
 		cout << "Tiff Open fail, Unknown Error" << endl;
-		return FileOpenErr;
+		return TIFF_ERR(FileOpenErr);
 	}
 }
 
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-ErrCode CTiff::ReadMemory(LPBYTE Buffer, size_t BufSize)
+Tif_Err CTiff::ReadMemory(LPBYTE Buffer, size_t BufSize)
 {
-	if (Tiff::ReadMemory(Buffer, BufSize) != Tiff_OK)
-		return FileOpenErr;
+	if (Tiff::ReadMemory(Buffer, BufSize) != TIFF_ERR(OK))
+		return TIFF_ERR(FileOpenErr);
 	//Basic Property for easy using.
-	m_Width = GetTagValue(ImageWidth);
-	m_Length = GetTagValue(ImageLength);
-	m_SamplesPerPixel = GetTagValue(SamplesPerPixel);
-	m_BitsPerSample = GetTagValue(BitsPerSample);
+	m_Width = GetTagValue(TIFF_SIG(ImageWidth));
+	m_Length = GetTagValue(TIFF_SIG(ImageLength));
+	m_SamplesPerPixel = GetTagValue(TIFF_SIG(SamplesPerPixel));
+	m_BitsPerSample = GetTagValue(TIFF_SIG(BitsPerSample));
 	m_BytesPerLine = (int)ceil(m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
-	m_Resolution = GetTagValue(XResolution);
-	TiffTagPtr TempTag = Tiff::GetTag(StripOffsets);
+	m_Resolution = GetTagValue(TIFF_SIG(XResolution));
+	TiffTagPtr TempTag = Tiff::GetTag(TIFF_SIG(StripOffsets));
 	m_lpImageBuf = TempTag->lpData;
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 #endif //VIRTUAL_IO or VIRTUAL_IO_STL
 
@@ -1346,7 +1273,7 @@ LPBYTE CTiff::GetImageBuf()
 
 void CTiff::SetImageBuf(LPBYTE lpBuf, bool FreeBuf)
 {
-	TiffTagPtr StripOffsetTag = Tiff::GetTag(StripOffsets);
+	TiffTagPtr StripOffsetTag = Tiff::GetTag(TIFF_SIG(StripOffsets));
 	if (FreeBuf == true)
 		if (StripOffsetTag->lpData != nullptr)
 			delete[]StripOffsetTag->lpData;
@@ -1358,7 +1285,7 @@ void CTiff::SetImageBuf(LPBYTE lpBuf, bool FreeBuf)
 //Just for Image Adapter, don't release it, because we don't want read the image again.
 void CTiff::ForgetImageBuf()
 {
-	TiffTagPtr StripOffsetTag = Tiff::GetTag(StripOffsets);
+	TiffTagPtr StripOffsetTag = Tiff::GetTag(TIFF_SIG(StripOffsets));
 	StripOffsetTag->lpData = 0;
 	m_lpImageBuf = 0;
 }
@@ -1366,7 +1293,7 @@ void CTiff::ForgetImageBuf()
 //*********************************************************************
 //Icc Profile
 //*********************************************************************
-ErrCode CTiff::SetIccProfile(char *IccFile)
+Tif_Err CTiff::SetIccProfile(char *IccFile)
 {
 	IO_Interface *IO = IO_In(IccFile);
 	if (IO == nullptr)
@@ -1376,7 +1303,7 @@ ErrCode CTiff::SetIccProfile(char *IccFile)
 	IO_Read((LPBYTE)&FileSize, 1, 4);
 	FileSize = SwapDWORD(FileSize);
 
-	TiffTagPtr Icc = Tiff::GetTag(IccProfile);
+	TiffTagPtr Icc = Tiff::GetTag(TIFF_SIG(IccProfile));
 	if (Icc != nullptr)
 	{
 		if (Icc->lpData != nullptr)
@@ -1391,12 +1318,12 @@ ErrCode CTiff::SetIccProfile(char *IccFile)
 	if (IO != NULL)
 		IO_Close(IO);
 
-	return Tiff_OK;
+	return TIFF_ERR(OK);
 }
 
 void CTiff::SaveIccProfile(char *OutIccFile)
 {
-	TiffTagPtr TempTag = Tiff::GetTag(IccProfile);
+	TiffTagPtr TempTag = Tiff::GetTag(TIFF_SIG(IccProfile));
 	if (TempTag != nullptr)
 	{
 		IO_Interface *IO = IO_Out(OutIccFile);
@@ -1411,7 +1338,7 @@ void CTiff::SaveIccProfile(char *OutIccFile)
 
 void CTiff::RemoveIcc()
 {
-	TiffTagSignature sig = IccProfile;
+	TiffTagSignature sig = TIFF_SIG(IccProfile);
 
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
 		[&sig](TiffTagPtr pos) {return pos->tag == sig; });
