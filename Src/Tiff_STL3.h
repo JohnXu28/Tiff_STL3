@@ -59,11 +59,11 @@ main(int argc, _TCHAR* argv[]))
 	CTiff In, Out;
 	In.ReadFile("Input.tif");
 
-	int Width = In.GetTagValue(TIFF_SIG(ImageWidth));
-	int Length = In.GetTagValue(TIFF_SIG(ImageLength));
-	int resolution = In.GetTagValue(TIFF_SIG(XResolution));
-	int samplesPerPixel = In.GetTagValue(TIFF_SIG(SamplesPerPixel));
-	int bitspersample = In.GetTagValue(TIFF_SIG(BitsPerSample));
+	int Width = In.GetTagValue(ImageWidth));
+	int Length = In.GetTagValue(ImageLength));
+	int resolution = In.GetTagValue(XResolution));
+	int samplesPerPixel = In.GetTagValue(SamplesPerPixel));
+	int bitspersample = In.GetTagValue(BitsPerSample));
 
 	Out.CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
 
@@ -179,128 +179,128 @@ using namespace std;
 * Header file has already declaire the namespace AV_Tiff_STL3.\n
 * Interface for the CTiff_STL class.\n
 */
-namespace AV_Tiff_STL3{
+namespace AV_Tiff_STL3 {
 
 	/***************************************************************************
 	***************************************************************************/
-	enum class TiffTagSignature{
-		NullTag						= 0x0000L,
-		NewSubfileType				= 0x00FEL,
-		SubfileType					= 0x00FFL,
-		ImageWidth					= 0x0100L,
-		ImageLength					= 0x0101L,
-		BitsPerSample				= 0x0102L,
-		Compression					= 0x0103L,
-		PhotometricInterpretation	= 0x0106L,
-		Threshholding				= 0x0107L,
-		CellWidth					= 0x0108L,
-		CellLength					= 0x0109L,
-		FillOrder					= 0x010AL,
-		DocumentName				= 0x010DL,
-		ImageDescription			= 0x010EL,
-		Make						= 0x010FL,
-		Model						= 0x0110L,
-		StripOffsets				= 0x0111L,
-		Orientation					= 0x0112L,
-		SamplesPerPixel				= 0x0115L,
-		RowsPerStrip				= 0x0116L,
-		StripByteCounts				= 0x0117L,
-		MinSampleValue				= 0x0118L,
-		MaxSampleValue				= 0x0119L,
-		XResolution					= 0x011AL,
-		YResolution					= 0x011BL,
-		PlanarConfiguration			= 0x011CL,
-		PageName					= 0x011DL,
-		XPosition					= 0x011EL,
-		YPosition					= 0x011FL,
-		FreeOffsets					= 0x0120L,
-		FreeByteCounts				= 0x0121L,
-		GrayResponseUnit			= 0x0122L,
-		GrayResponsCurve			= 0x0123L,
-		T4Options					= 0x0124L,
-		T6Options					= 0x0125L,
-		ResolutionUnit				= 0x0128L,
-		PageNumber					= 0x0129L,
-		TransferFunction			= 0x012DL,
-		Software					= 0x0131L,
-		DateTime					= 0x0132L,
-		Artist						= 0x013BL,
-		HostComputer				= 0x013CL,
-		Predicator					= 0x013DL,
-		WhitePoint					= 0x013EL,
-		PrimaryChromaticities		= 0x013FL,
-		ColorMap					= 0x0140L,
-		HalftoneHints				= 0x0141L,
-		TileWidth					= 0x0142L,
-		TileLength					= 0x0143L,
-		TileOffsets					= 0x0144L,
-		TileByteCounts				= 0x0145L,
-		InkSet						= 0x014CL,
-		InkNames					= 0x014DL,
-		NumberOfInks				= 0x014EL,
-		DotRange					= 0x0150L,
-		TargetPrinter				= 0x0151L,
-		ExtraSamples				= 0x0152L,
-		SampleFormat				= 0x0153L,
-		SMinSampleValue				= 0x0154L,
-		SMaxSampleValue				= 0x0155L,
-		TransforRange				= 0x0156L,
-		JPEGProc					= 0x0157L,
-		JPEGInterchangeFormat		= 0x0201L,
-		JPEGIngerchangeFormatLength = 0x0202L,
-		JPEGRestartInterval			= 0x0203L,
-		JPEGLosslessPredicators		= 0x0205L,
-		JPEGPointTransforms			= 0x0206L,
-		JPEGQTable					= 0x0207L,
-		JPEGDCTable					= 0x0208L,
-		JPEGACTable					= 0x0209L,
-		YCbCrCoefficients			= 0x0211L,
-		YCbCrSampling				= 0x0212L,
-		YCbCrPositioning			= 0x0213L,
-		ReferenceBlackWhite			= 0x0214L,
-		XML_Data					= 0x02BCL,
-		CopyRight					= 0x8298L,
-		IPTC						= 0x83BBL,/*!< IPTC (International Press Telecommunications Council) metadata.*/
-		Photoshop					= 0x8649L,
-		Exif_IFD					= 0x8769L,
-		IccProfile					= 0x8773L
+	enum class TiffTagSignature {
+		eNullTag = 0x0000L,
+		eNewSubfileType = 0x00FEL,
+		eSubfileType = 0x00FFL,
+		eImageWidth = 0x0100L,
+		eImageLength = 0x0101L,
+		eBitsPerSample = 0x0102L,
+		eCompression = 0x0103L,
+		ePhotometricInterpretation = 0x0106L,
+		eThreshholding = 0x0107L,
+		eCellWidth = 0x0108L,
+		eCellLength = 0x0109L,
+		eFillOrder = 0x010AL,
+		eDocumentName = 0x010DL,
+		eImageDescription = 0x010EL,
+		eMake = 0x010FL,
+		eModel = 0x0110L,
+		eStripOffsets = 0x0111L,
+		eOrientation = 0x0112L,
+		eSamplesPerPixel = 0x0115L,
+		eRowsPerStrip = 0x0116L,
+		eStripByteCounts = 0x0117L,
+		eMinSampleValue = 0x0118L,
+		eMaxSampleValue = 0x0119L,
+		eXResolution = 0x011AL,
+		eYResolution = 0x011BL,
+		ePlanarConfiguration = 0x011CL,
+		ePageName = 0x011DL,
+		eXPosition = 0x011EL,
+		eYPosition = 0x011FL,
+		eFreeOffsets = 0x0120L,
+		eFreeByteCounts = 0x0121L,
+		eGrayResponseUnit = 0x0122L,
+		eGrayResponsCurve = 0x0123L,
+		eT4Options = 0x0124L,
+		eT6Options = 0x0125L,
+		eResolutionUnit = 0x0128L,
+		ePageNumber = 0x0129L,
+		eTransferFunction = 0x012DL,
+		eSoftware = 0x0131L,
+		eDateTime = 0x0132L,
+		eArtist = 0x013BL,
+		eHostComputer = 0x013CL,
+		ePredicator = 0x013DL,
+		eWhitePoint = 0x013EL,
+		ePrimaryChromaticities = 0x013FL,
+		eColorMap = 0x0140L,
+		eHalftoneHints = 0x0141L,
+		eTileWidth = 0x0142L,
+		eTileLength = 0x0143L,
+		eTileOffsets = 0x0144L,
+		eTileByteCounts = 0x0145L,
+		eInkSet = 0x014CL,
+		eInkNames = 0x014DL,
+		eNumberOfInks = 0x014EL,
+		eDotRange = 0x0150L,
+		eTargetPrinter = 0x0151L,
+		eExtraSamples = 0x0152L,
+		eSampleFormat = 0x0153L,
+		eSMinSampleValue = 0x0154L,
+		eSMaxSampleValue = 0x0155L,
+		eTransforRange = 0x0156L,
+		eJPEGProc = 0x0157L,
+		eJPEGInterchangeFormat = 0x0201L,
+		eJPEGIngerchangeFormatLength = 0x0202L,
+		eJPEGRestartInterval = 0x0203L,
+		eJPEGLosslessPredicators = 0x0205L,
+		eJPEGPointTransforms = 0x0206L,
+		eJPEGQTable = 0x0207L,
+		eJPEGDCTable = 0x0208L,
+		eJPEGACTable = 0x0209L,
+		eYCbCrCoefficients = 0x0211L,
+		eYCbCrSampling = 0x0212L,
+		eYCbCrPositioning = 0x0213L,
+		eReferenceBlackWhite = 0x0214L,
+		eXML_Data = 0x02BCL,
+		eCopyRight = 0x8298L,
+		eIPTC = 0x83BBL,/*!< IPTC (International Press Telecommunications Council) metadata.*/
+		ePhotoshop = 0x8649L,
+		eExif_IFD = 0x8769L,
+		eIccProfile = 0x8773L
 	};
 
 	/***************************************************************************
 	***************************************************************************/
-	enum class FieldType{
-		UnknownType		= 0x0000L,
-		Byte			= 0x0001L,
-		ASCII			= 0x0002L,
-		Short			= 0x0003L,
-		Long			= 0x0004L,
-		Rational		= 0x0005L,
-		SBYTE			= 0x0006L,
-		UndefineType	= 0x0007L,
-		SShort			= 0x0008L,
-		SLong			= 0x0009L,
-		Float			= 0x000AL,
-		Double			= 0x000BL,
-		Unknown1		= 0x000CL,//Never using, Just for code analysis warning.
-		Unknown2		= 0x000DL,
-		Unknown3		= 0x000EL,
-		Unknown4		= 0x000FL,
+	enum class FieldType {
+		eUnknownType = 0x0000L,
+		eByte = 0x0001L,
+		eASCII = 0x0002L,
+		eShort = 0x0003L,
+		eLong = 0x0004L,
+		eRational = 0x0005L,
+		eSBYTE = 0x0006L,
+		eUndefineType = 0x0007L,
+		eSShort = 0x0008L,
+		eSLong = 0x0009L,
+		eFloat = 0x000AL,
+		eDouble = 0x000BL,
+		eUnknown1 = 0x000CL,//Never using, Just for code analysis warning.
+		eUnknown2 = 0x000DL,
+		eUnknown3 = 0x000EL,
+		eUnknown4 = 0x000FL,
 	};
 
 #define FieldTypeSize 16
 	/***************************************************************************
 	***************************************************************************/
-	enum class Tif_Err{
-		OK				= 0,
-		FileOpenErr		= -1,
-		VersionErr		= -2,/*!< Check Win or Mac version.*/
-		TooManyTags		= -3,/*!< Tags > MaxTag; */
-		TagStripErr		= -4,/*!< StripByteCount.n != StripOffset.n;*/
-		MemoryAllocFail	= -5,
-		DataTypeErr		= -6,
-		CompressData	= -7,
-		UnDefineErr		= -9999,
-		Tiff_NEW_TAG	= 1
+	enum class Tiff_Err {
+		eTiff_OK		= 0,
+		eFileOpenErr	= -1,
+		eVersionErr		= -2,/*!< Check Win or Mac version.*/
+		eTooManyTags	= -3,/*!< Tags > MaxTag; */
+		eTagStripErr	= -4,/*!< StripByteCount.n != StripOffset.n;*/
+		eMemoryAllocFail= -5,
+		eDataTypeErr	= -6,
+		eCompressData	= -7,
+		eUnDefineErr	= -9999,
+		eTiff_NEW_TAG	= 1
 	};
 
 	/***************************************************************************
@@ -323,11 +323,11 @@ namespace AV_Tiff_STL3{
 		TiffTag& operator=(TiffTag&& other) noexcept; // move assignment
 
 		TiffTag(TiffTagSignature Signature);
-		TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
+		TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
 		TiffTag(TiffTagSignature Tag, FieldType Type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
-		bool operator()(const TiffTag& Data) const{ return tag == Data.tag; };
+		bool operator()(const TiffTag& Data) const { return tag == Data.tag; };
 		virtual DWORD GetValue() const;
-		virtual int SaveFile(IO_Interface *IO);
+		virtual int SaveFile(IO_Interface* IO);
 		virtual LPBYTE GetData() const { return lpData; }
 		int ValueIsOffset() const;
 
@@ -359,36 +359,36 @@ namespace AV_Tiff_STL3{
 	class BitsPerSampleTag :public TiffTag
 	{
 	public:
-		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
+		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
 		DWORD GetValue() const;
 	};
 
 	class ResolutionTag :public TiffTag
 	{
 	public:
-		ResolutionTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
+		ResolutionTag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
 		virtual DWORD GetValue() const;
 	};
 
 	class Exif_IFD_Tag :public TiffTag
 	{
 	public:
-		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO);
+		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
 		//***Don't save anything. This tag broke all rule, just skip it.		
 	};
 
 	class TAG//funtor, For find_if
 	{
 	public:
-		TAG(TiffTagSignature signature){ Signature = signature; };
-		bool operator()(const TiffTag* Tag) const{ return Tag->tag == Signature; }
+		TAG(TiffTagSignature signature) { Signature = signature; };
+		bool operator()(const TiffTag* Tag) const { return Tag->tag == Signature; }
 		TiffTagSignature Signature;
 	};
 
 #ifdef SHARED_POINTER
 	typedef shared_ptr<TiffTag> TiffTagPtr;
 #else
-	typedef TiffTag *TiffTagPtr;
+	typedef TiffTag* TiffTagPtr;
 #endif //SHARED_POINTER
 
 	typedef vector<TiffTagPtr> TagList;
@@ -410,7 +410,7 @@ namespace AV_Tiff_STL3{
 	***************************************************************************/
 	struct IFD_STRUCTURE
 	{
-		IFD_STRUCTURE(){ NextIFD = 0; }
+		IFD_STRUCTURE() { NextIFD = 0; }
 		TagList		m_TagList;
 		DWORD		NextIFD;
 	};
@@ -432,40 +432,40 @@ namespace AV_Tiff_STL3{
 		Tiff(LPCSTR FileName);
 		virtual		~Tiff();
 		virtual		void Reset();
-		virtual		Tif_Err CheckFile(IO_Interface *IO);
-		virtual		Tif_Err	ReadTiff(IO_Interface *IO);
-		virtual		Tif_Err SaveTiff(IO_Interface *IO);
-		virtual		Tif_Err	ReadFile(LPCSTR FileName);
-		virtual		Tif_Err	SaveFile(LPCSTR FileName);
-		virtual		Tif_Err	SaveRaw(LPCSTR FileName);
+		virtual		Tiff_Err CheckFile(IO_Interface* IO);
+		virtual		Tiff_Err	ReadTiff(IO_Interface* IO);
+		virtual		Tiff_Err SaveTiff(IO_Interface* IO);
+		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
+		virtual		Tiff_Err	SaveFile(LPCSTR FileName);
+		virtual		Tiff_Err	SaveRaw(LPCSTR FileName);
 
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-		virtual		Tif_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
-		virtual		Tif_Err SaveMemory(LPBYTE Buffer, size_t BufSize, size_t &SaveSize);
+		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
+		virtual		Tiff_Err SaveMemory(LPBYTE Buffer, size_t BufSize, size_t& SaveSize);
 #endif //VIRTUAL_IO
 
 		//	Tag Operation
 		TiffTagPtr	GetTag(const TiffTagSignature Signature);
 		DWORD		GetTagValue(const TiffTagSignature Signature);
-		Tif_Err		SetTag(TiffTagPtr NewTag);
-		Tif_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tiff_Err		SetTag(TiffTagPtr NewTag);
+		Tiff_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 	protected:
 		//Read Image
-		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_Interface *IO);
-		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface *IO);
-		Tif_Err		ReadImage(IO_Interface *IO);
-		Tif_Err		ReadMultiStripOffset(IO_Interface *IO);
+		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_Interface* IO);
+		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface* IO);
+		Tiff_Err		ReadImage(IO_Interface* IO);
+		Tiff_Err		ReadMultiStripOffset(IO_Interface* IO);
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
 		//Write Image
-		virtual		Tif_Err	WriteHeader(IO_Interface *IO);
-		Tif_Err		WriteIFD(IO_Interface *IO);
-		Tif_Err		WriteTagData(IO_Interface *IO);
-		Tif_Err		WriteImageData(IO_Interface *IO);
-		Tif_Err		WriteData_Exif_IFD_Tag(IO_Interface *IO);
+		virtual		Tiff_Err	WriteHeader(IO_Interface* IO);
+		Tiff_Err		WriteIFD(IO_Interface* IO);
+		Tiff_Err		WriteTagData(IO_Interface* IO);
+		Tiff_Err		WriteImageData(IO_Interface* IO);
+		Tiff_Err		WriteData_Exif_IFD_Tag(IO_Interface* IO);
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;
@@ -480,18 +480,18 @@ namespace AV_Tiff_STL3{
 		CTiff(LPCSTR FileName);
 		CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		virtual		~CTiff();
-		virtual		Tif_Err	ReadTiff(IO_Interface *IO);
-		virtual		Tif_Err	ReadFile(LPCSTR FileName);		
+		virtual		Tiff_Err	ReadTiff(IO_Interface* IO);
+		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
-		virtual		Tif_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
+		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
 #endif //VIRTUAL_IO
 
-		Tif_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
-		Tif_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
-		Tif_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
-		Tif_Err		SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
-		Tif_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tiff_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
+		Tiff_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
+		Tiff_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
+		Tiff_Err		SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
+		Tiff_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 		//operation
 		template<class T>
@@ -511,22 +511,22 @@ namespace AV_Tiff_STL3{
 		int	SetRowColumn(LPBYTE lpBuf, int x, int y, int RecX, int RecY);
 		int	SetRowColumn(LPWORD lpBuf, int x, int y, int RecX, int RecY);
 
-		LPBYTE GetRowIndex(int Line){ return GetXY(0, Line); };
-		LPBYTE GetRowIndex_Q(int Line){ return GetXY_Q(0, Line); };
+		LPBYTE GetRowIndex(int Line) { return GetXY(0, Line); };
+		LPBYTE GetRowIndex_Q(int Line) { return GetXY_Q(0, Line); };
 
 		//Coordinate operation. M:Math, Q:Quick(Not Check Boundary)
 		LPBYTE		GetXY(int X, int Y);
-		void		SetXY(int X, int Y, BYTE Value){ *(GetXY(X, Y)) = Value; };
+		void		SetXY(int X, int Y, BYTE Value) { *(GetXY(X, Y)) = Value; };
 		LPBYTE		GetXY_M(int X, int Y);
-		void		SetXY_M(int X, int Y, BYTE Value){ *(GetXY_M(X, Y)) = Value; };
+		void		SetXY_M(int X, int Y, BYTE Value) { *(GetXY_M(X, Y)) = Value; };
 		LPBYTE		GetXY_Q(int X, int Y);
-		void		SetXY_Q(int X, int Y, BYTE Value){ *(GetXY_Q(X, Y)) = Value; };
+		void		SetXY_Q(int X, int Y, BYTE Value) { *(GetXY_Q(X, Y)) = Value; };
 		LPBYTE		GetXY_MQ(int X, int Y);
-		void		SetXY_MQ(int X, int Y, BYTE Value){ *(GetXY_MQ(X, Y)) = Value; };
+		void		SetXY_MQ(int X, int Y, BYTE Value) { *(GetXY_MQ(X, Y)) = Value; };
 
 		//Icc profile Operation.
-		Tif_Err		SetIccProfile(char *IccFile);
-		void		SaveIccProfile(char *OutIccFile);
+		Tiff_Err		SetIccProfile(char* IccFile);
+		void		SaveIccProfile(char* OutIccFile);
 		void		RemoveIcc();
 
 		//Image Buffer operation.
@@ -535,14 +535,14 @@ namespace AV_Tiff_STL3{
 		LPBYTE		GetImageBuf();
 
 #ifdef TIFF_EXT
-		Tif_Err	ReadJPG(LPCSTR FileName);
-		Tif_Err	SaveJPG(LPCSTR FileName);
-		Tif_Err	ReadFile_Ext(LPCSTR FileName);
+		Tiff_Err	ReadJPG(LPCSTR FileName);
+		Tiff_Err	SaveJPG(LPCSTR FileName);
+		Tiff_Err	ReadFile_Ext(LPCSTR FileName);
 #endif //TIFF_EXT
 
 #ifdef DUMP_TIFF
 		int DumpTiff(LPCSTR FileName);
-		void DumpTags(DWORD TypeSignature, DWORD n, DWORD value, FILE *File);
+		void DumpTags(DWORD TypeSignature, DWORD n, DWORD value, FILE* File);
 #endif //DUMP_TIFF
 
 	private:
@@ -606,8 +606,114 @@ namespace AV_Tiff_STL3{
 using namespace AV_Tiff_STL3;
 
 //For fix C26812, for VS2019
-#define TIFF_ERR(Err)			Tif_Err::##Err
-#define TIFF_TYPE(Type)			FieldType::##Type
-#define TIFF_SIG(Sig)			TiffTagSignature::##Sig
+#define NullTag								TiffTagSignature::eNullTag					
+#define NewSubfileType				        TiffTagSignature::eNewSubfileType				
+#define SubfileType					        TiffTagSignature::eSubfileType				
+#define ImageWidth					        TiffTagSignature::eImageWidth					
+#define ImageLength					        TiffTagSignature::eImageLength				
+#define BitsPerSample				        TiffTagSignature::eBitsPerSample				
+#define Compression					        TiffTagSignature::eCompression				
+#define PhotometricInterpretation	        TiffTagSignature::ePhotometricInterpretation	
+#define Threshholding				        TiffTagSignature::eThreshholding				
+#define CellWidth					        TiffTagSignature::eCellWidth					
+#define CellLength					        TiffTagSignature::eCellLength					
+#define FillOrder					        TiffTagSignature::eFillOrder					
+#define DocumentName				        TiffTagSignature::eDocumentName				
+#define ImageDescription			        TiffTagSignature::eImageDescription			
+#define Make						        TiffTagSignature::eMake						
+#define Model						        TiffTagSignature::eModel						
+#define StripOffsets				        TiffTagSignature::eStripOffsets				
+#define Orientation					        TiffTagSignature::eOrientation				
+#define SamplesPerPixel				        TiffTagSignature::eSamplesPerPixel			
+#define RowsPerStrip				        TiffTagSignature::eRowsPerStrip				
+#define StripByteCounts				        TiffTagSignature::eStripByteCounts			
+#define MinSampleValue				        TiffTagSignature::eMinSampleValue				
+#define MaxSampleValue				        TiffTagSignature::eMaxSampleValue				
+#define XResolution					        TiffTagSignature::eXResolution				
+#define YResolution					        TiffTagSignature::eYResolution				
+#define PlanarConfiguration			        TiffTagSignature::ePlanarConfiguration		
+#define PageName					        TiffTagSignature::ePageName					
+#define XPosition					        TiffTagSignature::eXPosition					
+#define YPosition					        TiffTagSignature::eYPosition					
+#define FreeOffsets					        TiffTagSignature::eFreeOffsets				
+#define FreeByteCounts				        TiffTagSignature::eFreeByteCounts				
+#define GrayResponseUnit			        TiffTagSignature::eGrayResponseUnit			
+#define GrayResponsCurve			        TiffTagSignature::eGrayResponsCurve			
+#define T4Options					        TiffTagSignature::eT4Options					
+#define T6Options					        TiffTagSignature::eT6Options					
+#define ResolutionUnit				        TiffTagSignature::eResolutionUnit				
+#define PageNumber					        TiffTagSignature::ePageNumber					
+#define TransferFunction			        TiffTagSignature::eTransferFunction			
+#define Software					        TiffTagSignature::eSoftware					
+#define DateTime					        TiffTagSignature::eDateTime					
+#define Artist						        TiffTagSignature::eArtist						
+#define HostComputer				        TiffTagSignature::eHostComputer				
+#define Predicator					        TiffTagSignature::ePredicator					
+//#define WhitePoint					        TiffTagSignature::eWhitePoint					
+#define PrimaryChromaticities		        TiffTagSignature::ePrimaryChromaticities		
+#define ColorMap					        TiffTagSignature::eColorMap					
+#define HalftoneHints				        TiffTagSignature::eHalftoneHints				
+#define TileWidth					        TiffTagSignature::eTileWidth					
+#define TileLength					        TiffTagSignature::eTileLength					
+#define TileOffsets					        TiffTagSignature::eTileOffsets				
+#define TileByteCounts				        TiffTagSignature::eTileByteCounts				
+#define InkSet						        TiffTagSignature::eInkSet						
+#define InkNames					        TiffTagSignature::eInkNames					
+#define NumberOfInks				        TiffTagSignature::eNumberOfInks				
+#define DotRange					        TiffTagSignature::eDotRange					
+#define TargetPrinter				        TiffTagSignature::eTargetPrinter				
+#define ExtraSamples				        TiffTagSignature::eExtraSamples				
+#define SampleFormat				        TiffTagSignature::eSampleFormat				
+#define SMinSampleValue				        TiffTagSignature::eSMinSampleValue			
+#define SMaxSampleValue				        TiffTagSignature::eSMaxSampleValue			
+#define TransforRange				        TiffTagSignature::eTransforRange				
+#define JPEGProc					        TiffTagSignature::eJPEGProc					
+#define JPEGInterchangeFormat		        TiffTagSignature::eJPEGInterchangeFormat		
+#define JPEGIngerchangeFormatLength         TiffTagSignature::eJPEGIngerchangeFormatLength
+#define JPEGRestartInterval			        TiffTagSignature::eJPEGRestartInterval		
+#define JPEGLosslessPredicators		        TiffTagSignature::eJPEGLosslessPredicators	
+#define JPEGPointTransforms			        TiffTagSignature::eJPEGPointTransforms		
+#define JPEGQTable					        TiffTagSignature::eJPEGQTable					
+#define JPEGDCTable					        TiffTagSignature::eJPEGDCTable				
+#define JPEGACTable					        TiffTagSignature::eJPEGACTable				
+#define YCbCrCoefficients			        TiffTagSignature::eYCbCrCoefficients			
+#define YCbCrSampling				        TiffTagSignature::eYCbCrSampling				
+#define YCbCrPositioning			        TiffTagSignature::eYCbCrPositioning			
+#define ReferenceBlackWhite			        TiffTagSignature::eReferenceBlackWhite		
+#define XML_Data					        TiffTagSignature::eXML_Data					
+#define CopyRight					        TiffTagSignature::eCopyRight					
+#define IPTC						        TiffTagSignature::eIPTC						
+#define Photoshop					        TiffTagSignature::ePhotoshop					
+#define Exif_IFD					        TiffTagSignature::eExif_IFD					
+#define IccProfile					        TiffTagSignature::eIccProfile					
 
-#endif // !defined(_TIFF_STL3_)
+#define UnknownType							FieldType::eUnknownType		
+#define	Byte								FieldType::eByte															
+#define	ASCII								FieldType::eASCII															
+#define	Short								FieldType::eShort															
+#define	Long								FieldType::eLong															
+#define	Rational							FieldType::eRational														
+#define	SBYTE								FieldType::eSBYTE															
+#define	UndefineType						FieldType::eUndefineType													
+#define	SShort								FieldType::eSShort															
+#define	SLong								FieldType::eSLong															
+#define	Float								FieldType::eFloat															
+#define	Double								FieldType::eDouble															
+#define	Unknown1							FieldType::eUnknown1														
+#define	Unknown2							FieldType::eUnknown2														
+#define	Unknown3							FieldType::eUnknown3														
+#define	Unknown4							FieldType::eUnknown4														
+
+
+#define Tiff_OK								Tiff_Err::eTiff_OK																					
+#define FileOpenErr		                    Tiff_Err::eFileOpenErr	
+#define VersionErr			                Tiff_Err::eVersionErr		
+#define TooManyTags	    	                Tiff_Err::eTooManyTags	
+#define TagStripErr	     	    	        Tiff_Err::eTagStripErr	
+#define MemoryAllocFail     	            Tiff_Err::eMemoryAllocFail
+#define DataTypeErr	                	    Tiff_Err::eDataTypeErr	
+#define CompressData	                    Tiff_Err::eCompressData	
+#define UnDefineErr	                    	Tiff_Err::eUnDefineErr	
+#define Tiff_NEW_TAG	                    Tiff_Err::eTiff_NEW_TAG
+
+#endif // !DEFINED(_tIFF_STL3)
