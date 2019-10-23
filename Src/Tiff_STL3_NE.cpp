@@ -516,7 +516,7 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 {
 	TiffTag *NewTag = nullptr;
 
-	switch ((0xFFFF & SigType))
+	switch ((TiffTagSignature)(0xFFFF & SigType))
 	{//Default Tag
 	case NewSubfileType:
 	case SubfileType:
