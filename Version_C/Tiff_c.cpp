@@ -2,7 +2,9 @@
 #include "tiff_c.h"
 #include <stdio.h>
 #include <malloc.h>
+#include <memory.h >
 #include <math.h>
+#include <string.h >
 
 #ifndef SWAP 
 
@@ -202,8 +204,7 @@ DWORD Tiff_GetTagValue(Tiff *This, const TiffTagSignature Signature)
 int Tiff_SetTag(Tiff *This, TiffTag *NewTag)
 {
 	TiffTag **TagList = m_IFD.TagList;
-	TiffTagSignature sig = NewTag->tag;
-	TiffTag *Tag = NULL;
+	TiffTagSignature sig = NewTag->tag;	
 	int TagCount = m_IFD.EntryCounts;
 	int index = 0;
 	bool TagFound = false;
@@ -259,7 +260,7 @@ int Tiff_ReadFile(Tiff *This, const char *FileName)
 	if (FileName == NULL)
 		return -1;//FileOpenErr;
 
-	IO = IO_In_C(FileName);
+	IO = IO_In_C(FileName, "rb");
 
 	if (Tiff_Read(This, IO) != 0)
 		return -1;
@@ -324,7 +325,7 @@ int Tiff_Read(Tiff *This, IO_Interface *IO_C)
 int Tiff_SaveFile(Tiff *This, const char *FileName)
 {
 	int ret;
-	IO_Interface *IO_C = IO_Out_C(FileName);
+	IO_Interface *IO_C = IO_Out_C(FileName, "wb+");
 	if (m_IFD.EntryCounts == 0)
 		return -1;
 	ret = Tiff_WriteHeader(This, IO_C);
@@ -337,94 +338,13 @@ int Tiff_SaveFile(Tiff *This, const char *FileName)
 }
 
 TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_C)
-{
-	int DataSize = 0;
+{	
 	TiffTag *NewTag = NULL;
 
 	//Some special tag need to take care.
 	switch ((0xFFFF & SigType))
-	{//Default Tag
-	case NewSubfileType:
-	case SubfileType:
-	case ImageWidth:
-	case ImageLength:
-	case Compression:
-	case PhotometricInterpretation:
-	case RowsPerStrip:
-	case StripByteCounts:
-	case PlanarConfiguration:
-	case ResolutionUnit:
-	case Threshholding:
-	case Orientation:
-	case SamplesPerPixel:
-	case MinSampleValue:
-	case MaxSampleValue:
-	case CellWidth:
-	case CellLength:
-	case FillOrder:
-	case DocumentName:
-	case ImageDescription:
-	case Make:
-	case Model:
-	case StripOffsets:
-	case PageName:
-	case XPosition:
-	case YPosition:
-	case FreeOffsets:
-	case FreeByteCounts:
-	case GrayResponseUnit:
-	case GrayResponsCurve:
-	case T4Options:
-	case T6Options:
-	case PageNumber:
-	case TransferFunction:
-	case Software:
-	case DateTime:
-	case Artist:
-	case HostComputer:
-	case Predicator:
-	case WhitePoint:
-	case PrimaryChromaticities:
-	case ColorMap:
-	case HalftoneHints:
-	case TileWidth:
-	case TileLength:
-	case TileOffsets:
-	case TileByteCounts:
-	case InkSet:
-	case InkNames:
-	case NumberOfInks:
-	case DotRange:
-	case TargetPrinter:
-	case ExtraSamples:
-	case SampleFormat:
-	case SMinSampleValue:
-	case SMaxSampleValue:
-	case TransforRange:
-	case JPEGProc:
-	case JPEGInterchangeFormat:
-	case JPEGIngerchangeFormatLength:
-	case JPEGRestartInterval:
-	case JPEGLosslessPredicators:
-	case JPEGPointTransforms:
-	case JPEGQTable:
-	case JPEGDCTable:
-	case JPEGACTable:
-	case YCbCrCoefficients:
-	case YCbCrSampling:
-	case YCbCrPositioning:
-	case ReferenceBlackWhite:
-	case XML_Data:
-	case CopyRight:
-	case IPTC:
-	case Photoshop:
-	case IccProfile:
-		//Set up the Get Value function.
-		NewTag = TiffTag_TiffTag2(SigType, n, value, IO_C);
-		NewTag->GetValue = (PGetValue)&TiffTag_GetValue_DWORD;
-		break;
-
-		//	Special Tag **********************
+	{
+	//	Special Tag **********************
 	case BitsPerSample:
 	{//NewTag = new BitsPerSampleTag(SigType, n, value, File);
 		NewTag = TiffTag_TiffTag2(SigType, n, value, IO_C);
@@ -726,7 +646,7 @@ int Tiff_WriteHeader(Tiff *This, IO_Interface *IO_C)
 
 int Tiff_WriteIFD(Tiff *This, IO_Interface *IO_C)
 {
-	int index, NextIFD;
+	int index;
 	LPDWORD lpOutData, lpTemp;
 	TiffTag	*TempTag;
 	int TagCount = m_IFD.EntryCounts;
@@ -796,8 +716,7 @@ int Tiff_WriteIFD(Tiff *This, IO_Interface *IO_C)
 	IO_Write_C(lpOutData, sizeof(DWORD), EntryCounts * 3);
 	free(lpOutData);
 
-	//Write Next IFD
-	NextIFD = 0;
+	//Write Next IFD	
 	IO_Write_C(&m_IFD.NextIFD, sizeof(DWORD), 1);
 
 	return 0;
@@ -1021,13 +940,12 @@ int Tiff_GetRowColumn(Tiff *This, LPBYTE lpBuf, int x, int y, int RecX, int RecY
 int Tiff_GetRowColumn_BYTE(Tiff *This, LPBYTE lpBuf, int x, int y, int RecX, int RecY)
 #endif
 {//Just for Gray(8 or 16 bits) and Color(8 or 16 bits).
-	LPBYTE lpPosition, lpWidthBuf, lpCurrent;
+	LPBYTE lpWidthBuf, lpCurrent;
 	int i, LineBufSize, StartY, EndY;
 
 	if ((m_BitsPerSample != 8) && (m_BitsPerSample != 16))
 		return -1;
-
-	lpPosition = m_lpImageBuf;
+	
 	lpWidthBuf = (LPBYTE)malloc(m_Width * m_SamplesPerPixel * (m_BitsPerSample >> 3));
 	lpCurrent = lpBuf;
 	LineBufSize = (int)(RecX * m_SamplesPerPixel * m_BitsPerSample * 0.125);
@@ -1170,3 +1088,20 @@ void Tiff_RemoveIcc(Tiff *This)
 		TempTag->value = 0;
 	}
 }
+
+//*********************************************************************
+//Test Example
+//*********************************************************************
+#define TEST 0
+#if TEST
+#include "Tiff.h"
+
+int main()
+{
+	Tiff* lpTiff = Tiff_Create();
+	if (Tiff_ReadFile(lpTiff, "3RGB8.tif") == Tiff_OK)
+		Tiff_SaveFile(lpTiff, "Out.tif");
+
+	return 0;
+}
+#endif //TEST
