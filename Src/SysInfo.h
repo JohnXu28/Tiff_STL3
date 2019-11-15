@@ -41,28 +41,28 @@ typedef const char*			LPCSTR;
 #define nullptr				0
 
 #ifdef Mac
-#define HiByteFirst
-#endif 
+	#define HiByteFirst
+	#endif 
 #else
-#include <windows.h>
-#include <stdlib.h>
-#ifdef _DEBUG
-#define DBG_Printf(fmt, ...)	printf("XUJY:"##fmt, ## __VA_ARGS__)
+	#include <windows.h>
+	#include <stdlib.h>
+	#ifdef _DEBUG
+		#define DBG_Printf(fmt, ...)	printf("XUJY:"##fmt, ## __VA_ARGS__)
 
-//For Memory leak detection.
-#define _CRTDBG_MAP_ALLOC 
-#ifndef DBG_NEW     
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#endif//DBG_NEW
+		//For Memory leak detection.
+		#define _CRTDBG_MAP_ALLOC 
+		#ifndef DBG_NEW     
+		#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
+		#endif//DBG_NEW
 
-#define new DBG_NEW 
-#define DETECT_MEMORY_LEAKS _CrtDumpMemoryLeaks()
-//You can using these command to find who alloc the momory.
-//VC will pause when alloc memory 100 times.
-//_CrtSetBreakAlloc(100) or _crtBreakAlloc = 100; 
-#else		
-#define DETECT_MEMORY_LEAKS 
-#endif //_DEBUG
+		#define new DBG_NEW 
+		#define DETECT_MEMORY_LEAKS _CrtDumpMemoryLeaks()
+		//You can using these command to find who alloc the momory.
+		//VC will pause when alloc memory 100 times.
+		//_CrtSetBreakAlloc(100) or _crtBreakAlloc = 100; 
+	#else		
+		#define DETECT_MEMORY_LEAKS 
+	#endif //_DEBUG
 #endif//WIN32
 
 // *************************************************
