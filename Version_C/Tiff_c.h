@@ -2,13 +2,17 @@
 #define __TIFF_C_H__ 
 
 #include <stdio.h>
+#ifdef WIN32
+#include "..\Src\SysInfo.h"
+#endif //WIN32
+
 
 #ifndef _WINDEF_
  typedef	unsigned char 			BYTE;
  typedef	unsigned short 			WORD;
- typedef	unsigned long 			DWORD;
- typedef	unsigned short*			LPWORD;
- typedef	unsigned long*			LPDWORD;
+ typedef	unsigned int 			DWORD;
+ typedef	WORD*					LPWORD;
+ typedef	DWORD*					LPDWORD;
  typedef	const char*				LPCTSTR;
  typedef	unsigned char*			LPBYTE;
 #endif //_WINDEF_
@@ -120,12 +124,24 @@ typedef enum FieldType{
 	Double						= 0x000BL
 	}FieldType;
 
+typedef enum Tiff_Err {
+	Tiff_OK = 0,
+	FileOpenErr = -1,
+	VersionErr = -2,/*!< Check Win or Mac version.*/
+	TooManyTags = -3,/*!< Tags > MaxTag; */
+	TagStripErr = -4,/*!< StripByteCount.n != StripOffset.n;*/
+	MemoryAllocFail = -5,
+	DataTypeErr = -6,
+	CompressData = -7,
+	UnDefineErr = -9999,
+	Tiff_NEW_TAG = 1
+}Tiff_Err;
 
 /*********************************************************
 IO Interface of C Language.
 *********************************************************/
-//#define IO_c
-#ifdef IO_c
+#define IO_c 1
+#if IO_c
 #define IO_Interface					FILE //Type
 #define IO_C							File //Argument
 #define IO_In_C(FileName, option)				fopen(FileName, option)

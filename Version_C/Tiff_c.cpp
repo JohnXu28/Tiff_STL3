@@ -1037,7 +1037,7 @@ int Tiff_SetIccProfile(Tiff *This, char *IccFile)
 {
 	int FileSize = 0;
 	TiffTag *Icc = NULL;
-	IO_Interface *IO_C = IO_In_C(IccFile);
+	IO_Interface *IO_C = IO_In_C(IccFile, "rb");
 
 	if (IO_C == NULL)
 		return -1;
@@ -1065,7 +1065,7 @@ void Tiff_SaveIccProfile(Tiff *This, char *OutIccFile)
 	TiffTag *TempTag = GetTag(IccProfile);
 	if (TempTag != NULL)
 	{
-		IO_Interface *IO_C = IO_Out_C(OutIccFile);
+		IO_Interface *IO_C = IO_Out_C(OutIccFile, "wb+");
 		if (IO_C != NULL)
 		{
 			if (TempTag->lpData != NULL)
