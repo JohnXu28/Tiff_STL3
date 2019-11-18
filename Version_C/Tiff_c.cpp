@@ -45,8 +45,11 @@ const int DataType[FieldTypeSize] = {
 TiffTag* TiffTag_Create()
 {
 	TiffTag *This = (TiffTag*)malloc(sizeof(TiffTag));
+	if (This == nullptr)
+		return nullptr;
+
 	This->tag = NullTag;
-	This->lpData = NULL;
+	This->lpData = nullptr;
 	This->type = UnknownType;
 	This->n = 0;
 	This->value = 0;
@@ -56,7 +59,7 @@ TiffTag* TiffTag_Create()
 //Destructor of TiffTag
 void TiffTag_Delete(TiffTag *This)
 {
-	if (This->lpData != NULL)
+	if (This->lpData != nullptr)
 		free(This->lpData);
 	free(This);
 }
@@ -64,17 +67,22 @@ void TiffTag_Delete(TiffTag *This)
 TiffTag* TiffTag_TiffTag0(TiffTagSignature Tag)
 {
 	TiffTag *This = (TiffTag*)malloc(sizeof(TiffTag));
+	if (This == nullptr)
+		return nullptr;
+
 	This->tag = Tag;
 	This->type = UnknownType;
 	This->n = 0;
 	This->value = 0;
-	This->lpData = NULL;
+	This->lpData = nullptr;
 	return This;
 }
 
 TiffTag* TiffTag_TiffTag1(TiffTagSignature Tag, FieldType Type, DWORD n, DWORD value, LPBYTE lpBuf)
 {
 	TiffTag *This = (TiffTag*)malloc(sizeof(TiffTag));
+	if (This == nullptr)
+		return nullptr;
 	This->tag = Tag;
 	This->type = Type;
 	This->n = n;
@@ -88,6 +96,9 @@ TiffTag* TiffTag_TiffTag2(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_
 	int DataSize;
 	TiffTag *NewTag;
 	NewTag = (TiffTag*)malloc(sizeof(TiffTag));
+	if (NewTag == nullptr)
+		return nullptr;
+
 	NewTag->tag = (TiffTagSignature)(0xFFFF & SigType);
 	NewTag->type = (FieldType)(0XFFFF & (SigType >> 16));
 	NewTag->n = n;
@@ -96,7 +107,7 @@ TiffTag* TiffTag_TiffTag2(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_
 	DataSize = DataType[NewTag->type] * NewTag->n;
 	if (DataSize > 4)
 	{//memory address
-		if (IO_C != NULL)
+		if (IO_C != nullptr)
 		{
 			NewTag->lpData = (LPBYTE)malloc(DataSize);
 			IO_Seek_C(value, SEEK_SET);
@@ -105,10 +116,10 @@ TiffTag* TiffTag_TiffTag2(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_
 		else
 			//Not from file, Setting directly, 
 			//for example setting BitsPerSample, It will set up the data in the constructor.
-			NewTag->lpData = NULL;
+			NewTag->lpData = nullptr;
 	}
 	else
-		NewTag->lpData = NULL;
+		NewTag->lpData = nullptr;
 
 	return NewTag;
 }
@@ -129,7 +140,7 @@ DWORD TiffTag_GetValue_BitsPerSampleTag(PTiffTag This)
 	if (This->n == 1)
 		return This->value;
 	else
-		if (This->lpData != NULL)
+		if (This->lpData != nullptr)
 			return (DWORD)(*(LPWORD)This->lpData);
 		else
 			return 0;
@@ -140,11 +151,11 @@ DWORD TiffTag_GetValue_ResolutionTag(PTiffTag This)
 	return (DWORD)(*(LPDWORD)(This->lpData) / *(LPDWORD)(This->lpData + 4));
 }
 
-
+/*
 DWORD TiffTag_GetValue_Exif_IFD(PTiffTag This)
 {
 	return (DWORD)(This->lpData);
-}
+}*/
 
 //////////////////////////////////////////////////////////////////////
 // CTiffFile
@@ -152,9 +163,13 @@ DWORD TiffTag_GetValue_Exif_IFD(PTiffTag This)
 Tiff* Tiff_Create()
 {
 	Tiff *This = (Tiff*)malloc(sizeof(Tiff));
-	m_IFD.EntryCounts = 0;
-	m_IFD.NextIFD = 0;
-	memset(m_IFD.TagList, 0, sizeof(TiffTag*) * MAXTAG);
+	if (This != nullptr)
+	{	
+		m_IFD.EntryCounts = 0;
+		m_IFD.NextIFD = 0;
+		memset(m_IFD.TagList, 0, sizeof(TiffTag*) * MAXTAG);
+	}
+	m_lpHeader = nullptr;
 	return This;
 }
 
@@ -172,6 +187,11 @@ void Tiff_Reset(Tiff *This)
 	for (i = 0; i < TagCount; i++)
 		TiffTag_Delete(TagList[i]);
 	This->IFD.EntryCounts = 0;
+	if (m_lpHeader != nullptr)
+	{
+		free(m_lpHeader);
+		m_lpHeader = nullptr;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -180,7 +200,7 @@ void Tiff_Reset(Tiff *This)
 TiffTag* Tiff_GetTag(Tiff *This, const TiffTagSignature Signature)
 {
 	TiffTag **TagList = m_IFD.TagList;
-	TiffTag *Tag = NULL;
+	TiffTag *Tag = nullptr;
 	int TagCount = m_IFD.EntryCounts;
 	int index = 0;
 	for (index = 0; index < TagCount; index++)
@@ -195,7 +215,7 @@ TiffTag* Tiff_GetTag(Tiff *This, const TiffTagSignature Signature)
 DWORD Tiff_GetTagValue(Tiff *This, const TiffTagSignature Signature)
 {
 	TiffTag *Tag = GetTag(Signature);
-	if (Tag != NULL)
+	if (Tag != nullptr)
 		return Tag->GetValue(Tag);
 	else
 		return 0;
@@ -209,7 +229,7 @@ int Tiff_SetTag(Tiff *This, TiffTag *NewTag)
 	int index = 0;
 	bool TagFound = false;
 
-	if (NewTag == NULL)
+	if (NewTag == nullptr)
 		return 0;
 
 	for (index = 0; index < TagCount; index++)
@@ -237,14 +257,14 @@ int Tiff_SetTag(Tiff *This, TiffTag *NewTag)
 int Tiff_SetTag2(Tiff *This, TiffTagSignature Signature, WORD type, DWORD n, DWORD value, LPBYTE lpBuf)
 {
 	DWORD SigType = (Signature) | (type << 16);
-	TiffTag *New = CreateTag(SigType, n, value, NULL);
+	TiffTag *New = CreateTag(SigType, n, value, nullptr);
 	return SetTag(New);
 }
 
 DWORD Tiff_SetTagValue(Tiff *This, const TiffTagSignature Signature, DWORD Value)
 {
 	TiffTag* lpTag = GetTag(Signature);
-	if (lpTag != NULL)
+	if (lpTag != nullptr)
 		lpTag->value = Value;
 	return SetTag(lpTag);
 }
@@ -257,15 +277,15 @@ int Tiff_ReadFile(Tiff *This, const char *FileName)
 	IO_Interface *IO;
 
 	Reset();
-	if (FileName == NULL)
+	if (FileName == nullptr)
 		return -1;//FileOpenErr;
 
-	IO = IO_In_C(FileName, "rb");
+	IO = IO_File(FileName, "rb");
 
 	if (Tiff_Read(This, IO) != 0)
 		return -1;
 
-	IO_Close_C(IO);
+	IO_File_Close(IO);
 	return 0;
 }
 
@@ -277,7 +297,7 @@ int Tiff_Read(Tiff *This, IO_Interface *IO_C)
 	DWORD	Temp[MAXTAG * 3];
 	int i;
 
-	if (IO_C == NULL)
+	if (IO_C == nullptr)
 		return -1;//FileOpenErr;
 
 	IO_Seek_C(0, SEEK_SET);
@@ -285,8 +305,8 @@ int Tiff_Read(Tiff *This, IO_Interface *IO_C)
 
 	if (TiffVersion != 0x002A4949)
 	{//PC Version
-		IO_Close_C(IO_C);
-		IO_C = NULL;
+		IO_File_Close(IO_C);
+		IO_C = nullptr;
 		return -1;//VersionErr;	
 	}
 
@@ -295,7 +315,7 @@ int Tiff_Read(Tiff *This, IO_Interface *IO_C)
 	IO_Read_C(&TagCount, 1, 2);
 	if (TagCount >= MAXTAG)
 	{//Too many m_Tags
-		IO_Close_C(IO_C);
+		IO_File_Close(IO_C);
 		return -1;//TooManyTags;
 	};
 
@@ -313,10 +333,11 @@ int Tiff_Read(Tiff *This, IO_Interface *IO_C)
 	m_Length = GetTagValue(ImageLength);
 	m_SamplesPerPixel = GetTagValue(SamplesPerPixel);
 	m_BitsPerSample = GetTagValue(BitsPerSample);
-	m_BytesPerLine = (int)ceil(m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
+	m_BytesPerLine = (int)ceil((double)m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
 	m_Resolution = GetTagValue(XResolution);
 	TempTag = GetTag(StripOffsets);
 	m_lpImageBuf = TempTag->lpData;
+	m_lpHeader = nullptr;
 
 	return 0;
 }
@@ -325,7 +346,7 @@ int Tiff_Read(Tiff *This, IO_Interface *IO_C)
 int Tiff_SaveFile(Tiff *This, const char *FileName)
 {
 	int ret;
-	IO_Interface *IO_C = IO_Out_C(FileName, "wb+");
+	IO_Interface *IO_C = IO_File(FileName, "wb+");
 	if (m_IFD.EntryCounts == 0)
 		return -1;
 	ret = Tiff_WriteHeader(This, IO_C);
@@ -333,13 +354,13 @@ int Tiff_SaveFile(Tiff *This, const char *FileName)
 	ret = Tiff_WriteTagData(This, IO_C);
 	ret = Tiff_WriteImageData(This, IO_C);
 	ret = Tiff_Write_Exif_IFD_Tag(This, IO_C);
-	IO_Close_C(IO_C);
+	IO_File_Close(IO_C);
 	return ret;
 }
 
 TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_C)
 {	
-	TiffTag *NewTag = NULL;
+	TiffTag *NewTag = nullptr;
 
 	//Some special tag need to take care.
 	switch ((0xFFFF & SigType))
@@ -349,9 +370,9 @@ TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_C)
 	{//NewTag = new BitsPerSampleTag(SigType, n, value, File);
 		NewTag = TiffTag_TiffTag2(SigType, n, value, IO_C);
 		NewTag->GetValue = (PGetValue)&TiffTag_GetValue_BitsPerSampleTag;
-		if (IO_C == NULL)
+		if (IO_C == nullptr)
 		{//For CreateNew File, SetTag(BitsPerSampleTag)
-			if (NewTag->lpData != NULL)
+			if (NewTag->lpData != nullptr)
 				free(NewTag->lpData);
 
 			if (n != 1)
@@ -365,7 +386,7 @@ TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_C)
 			else
 			{
 				NewTag->value = value;
-				NewTag->lpData = NULL;
+				NewTag->lpData = nullptr;
 			}
 		}
 	}
@@ -376,7 +397,7 @@ TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_C)
 	{//            NewTag = new ResolutionTag(SigType, n, value, File);
 		NewTag = TiffTag_TiffTag2(SigType, n, value, IO_C);
 		NewTag->GetValue = (PGetValue)&TiffTag_GetValue_ResolutionTag;
-		if (IO_C == NULL)
+		if (IO_C == nullptr)
 		{
 			LPDWORD lpTemp = (LPDWORD)malloc(4 * 2);// DWORD[2];
 			lpTemp[0] = (DWORD)(value * 100);
@@ -400,7 +421,7 @@ TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO_C)
 		NewTag->lpData = (LPBYTE)malloc(Exif_IFD_Size);
 		IO_Seek_C(NewTag->value, SEEK_SET);
 		IO_Read_C(NewTag->lpData, 1, Exif_IFD_Size);
-		NewTag->GetValue = (PGetValue)&TiffTag_GetValue_Exif_IFD;
+		//NewTag->GetValue = (PGetValue)&TiffTag_GetValue_Exif_IFD;
 		break;
 	}
 	break;
@@ -419,7 +440,7 @@ void Tiff_AddTags(Tiff *This, DWORD TypeSignature, DWORD n, DWORD value, IO_Inte
 	TiffTag *tag = CreateTag(TypeSignature, n, value, File);
 	TiffTag **TagList = m_IFD.TagList;
 	int index = m_IFD.EntryCounts;
-	if (tag != NULL)
+	if (tag != nullptr)
 	{
 		TagList[index] = tag;
 		m_IFD.EntryCounts++;
@@ -435,12 +456,12 @@ int Tiff_ReadImage(Tiff *This, IO_Interface *IO_C)
 	DWORD planarConfiguration = GetTagValue(PlanarConfiguration);
 	DWORD bitsPerSample = GetTagValue(BitsPerSample);
 	DWORD samplesPerPixel = GetTagValue(SamplesPerPixel);
-	LPBYTE lpImageBuf = NULL;
+	LPBYTE lpImageBuf = nullptr;
 	if (Length == rowsPerStrip)
 	{//Single Strip
 		if ((planarConfiguration == 0) || (planarConfiguration == 1))
 		{//RGBRGB
-			TiffTag *TempTag = NULL;
+			TiffTag *TempTag = nullptr;
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
 			lpImageBuf = (LPBYTE)malloc(stripByteCounts);
 			IO_Seek_C(stripOffsets, SEEK_SET);
@@ -453,7 +474,7 @@ int Tiff_ReadImage(Tiff *This, IO_Interface *IO_C)
 		{//PlanarConfiguration == 2, 
 			if (bitsPerSample == 1)
 			{//Undocument, just for avision, CMYKcm(4 or 6) 1bit.
-				TiffTag *TempTag = NULL;
+				TiffTag *TempTag = nullptr;
 				DWORD stripByteCounts = (Width >> 3) * Length * samplesPerPixel;
 				lpImageBuf = (LPBYTE)malloc(stripByteCounts);
 				IO_Seek_C(stripOffsets, SEEK_SET);
@@ -520,7 +541,7 @@ int Tiff_ReadMultiStripOffset(Tiff *This, IO_Interface *IO_C)
 	//		TagStripOffsets->value = lpImageBuf;//Don't care, It mean's nothing.
 
 	free(TagStripByteCounts->lpData);
-	TagStripByteCounts->lpData = NULL;
+	TagStripByteCounts->lpData = nullptr;
 	TagStripByteCounts->type = Short;
 	TagStripByteCounts->n = 1;
 	TagStripByteCounts->value = stripByteCounts;
@@ -698,7 +719,7 @@ int Tiff_WriteIFD(Tiff *This, IO_Interface *IO_C)
 	OffsetValue += GetTagValue(StripByteCounts);
 
 	TempTag = GetTag(Exif_IFD);
-	if (TempTag != NULL)
+	if (TempTag != nullptr)
 		TempTag->value = OffsetValue;
 
 
@@ -749,7 +770,7 @@ int Tiff_Write_Exif_IFD_Tag(Tiff *This, IO_Interface *IO_C)
 {
 
 	TiffTag *TempTag = GetTag(Exif_IFD);
-	if (TempTag != NULL)
+	if (TempTag != nullptr)
 		IO_Write_C(TempTag->lpData, 1, Exif_IFD_Size);
 	return 0;
 }
@@ -802,14 +823,14 @@ Tiff* Tiff_CreateNew(Tiff *This, int width, int length, int resolution, int samp
 
 	if (AllocBuf == 1)
 	{//Create StripOffsets Tag directly.
-		TiffTag *StripOffsetsTag = TiffTag_TiffTag1(StripOffsets, Long, 1, 0, NULL);
+		TiffTag *StripOffsetsTag = TiffTag_TiffTag1(StripOffsets, Long, 1, 0, nullptr);
 		StripOffsetsTag->lpData = (LPBYTE)malloc(stripByteCounts);
 		memset(StripOffsetsTag->lpData, 0, stripByteCounts);
 		SetTag(StripOffsetsTag);
 		m_lpImageBuf = StripOffsetsTag->lpData;
 	}
 	else
-		m_lpImageBuf = NULL;
+		m_lpImageBuf = nullptr;
 
 	SetTag2(XResolution, Rational, 1, resolution);
 
@@ -843,8 +864,8 @@ Tiff* Tiff_CreateNewFile(int width, int length, int resolution, int samplesperpi
 	int TotalBytes;
 	LPBYTE lpBuf;
 
-	if ((stream = fopen(InName, "r")) == NULL)
-		return NULL;
+	if ((stream = fopen(InName, "r")) == nullptr)
+		return nullptr;
 
 	This = Tiff_CreateNew2(width, length, resolution, samplesperpixel, bitspersample, 1);
 	TotalBytes = m_BytesPerLine * m_Length;
@@ -954,7 +975,7 @@ int Tiff_GetRowColumn_BYTE(Tiff *This, LPBYTE lpBuf, int x, int y, int RecX, int
 
 	for (i = StartY; i < EndY; i++)
 	{
-		LPBYTE lpStartX = NULL;
+		LPBYTE lpStartX = nullptr;
 
 #ifdef __cplusplus
 		Tiff_GetRow(This, lpWidthBuf, i, 0);
@@ -1024,7 +1045,7 @@ LPBYTE Tiff_GetImageBuf(Tiff *This)
 void Tiff_SetImageBuf(Tiff *This, LPBYTE lpBuf)
 {
 	TiffTag *StripOffsetTag = GetTag(StripOffsets);
-	if (StripOffsetTag->lpData != NULL)
+	if (StripOffsetTag->lpData != nullptr)
 		free(StripOffsetTag->lpData);
 	StripOffsetTag->lpData = lpBuf;
 	m_lpImageBuf = lpBuf;
@@ -1036,26 +1057,26 @@ void Tiff_SetImageBuf(Tiff *This, LPBYTE lpBuf)
 int Tiff_SetIccProfile(Tiff *This, char *IccFile)
 {
 	int FileSize = 0;
-	TiffTag *Icc = NULL;
-	IO_Interface *IO_C = IO_In_C(IccFile, "rb");
+	TiffTag *Icc = nullptr;
+	IO_Interface *IO_C = IO_File(IccFile, "rb");
 
-	if (IO_C == NULL)
+	if (IO_C == nullptr)
 		return -1;
 
 	IO_Read_C(&FileSize, 1, 4);
 	FileSize = SwapDWORD(FileSize);
 
 	Icc = GetTag(IccProfile);
-	if (Icc != NULL)
+	if (Icc != nullptr)
 	{
-		if (Icc->lpData != NULL)
+		if (Icc->lpData != nullptr)
 			free(Icc->lpData);
 		Icc->lpData = (LPBYTE)malloc(FileSize);
 		Icc->n = FileSize;
 		Icc->value = 0;//Offset, recaculating when saveing file.
 		IO_Seek_C(0, SEEK_SET);
 		IO_Read_C(Icc->lpData, 1, FileSize);
-		IO_Close_C(IO_C);
+		IO_File_Close(IO_C);
 	}
 	return 0;
 }
@@ -1063,14 +1084,14 @@ int Tiff_SetIccProfile(Tiff *This, char *IccFile)
 void Tiff_SaveIccProfile(Tiff *This, char *OutIccFile)
 {
 	TiffTag *TempTag = GetTag(IccProfile);
-	if (TempTag != NULL)
+	if (TempTag != nullptr)
 	{
-		IO_Interface *IO_C = IO_Out_C(OutIccFile, "wb+");
-		if (IO_C != NULL)
+		IO_Interface *IO_C = IO_File(OutIccFile, "wb+");
+		if (IO_C != nullptr)
 		{
-			if (TempTag->lpData != NULL)
+			if (TempTag->lpData != nullptr)
 				IO_Write_C(TempTag->lpData, 1, TempTag->n);
-			IO_Close_C(IO_C);
+			IO_File_Close(IO_C);
 		}
 	}
 }
@@ -1080,14 +1101,33 @@ void Tiff_RemoveIcc(Tiff *This)
 	TiffTag *TempTag = GetTag(IccProfile);
 	if (TempTag->n != 0)
 	{
-		if (TempTag->lpData != NULL)
+		if (TempTag->lpData != nullptr)
 			free(TempTag->lpData);
 
-		TempTag->lpData = NULL;
+		TempTag->lpData = nullptr;
 		TempTag->n = 0;
 		TempTag->value = 0;
 	}
 }
+
+int Tiff_GetHeader(Tiff* This, unsigned char **lpBuf, int *Size)
+{
+	int ret;
+	if (m_IFD.EntryCounts == 0)
+		return -1;
+
+	int BufSize = 1024 * 2;
+	*lpBuf = (LPBYTE)malloc(BufSize);
+	IO_Interface* IO_C = IO_Buf(*lpBuf, BufSize);
+	ret = Tiff_WriteHeader(This, IO_C);
+	ret = Tiff_WriteIFD(This, IO_C);
+	ret = Tiff_WriteTagData(This, IO_C);
+	ret = Tiff_WriteImageData(This, IO_C);
+	ret = Tiff_Write_Exif_IFD_Tag(This, IO_C);
+	IO_Buf_Close(IO_C);
+	return ret;
+}
+
 
 //*********************************************************************
 //Test Example
