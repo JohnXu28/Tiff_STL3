@@ -140,12 +140,12 @@ typedef enum Tiff_Err {
 /*********************************************************
 IO Interface of C Language.
 *********************************************************/
-#define IO_c 1
+#define IO_c 0
 #if IO_c
 #define IO_Interface					FILE //Type
 #define IO_C							File //Argument
-#define IO_In_C(FileName, option)				fopen(FileName, option)
-#define IO_Out_C(FileName, option)				fopen(FileName, option)
+#define IO_In_C(FileName, option)		fopen(FileName, option)
+#define IO_Out_C(FileName, option)		fopen(FileName, option)
 #define IO_Close_C(IO_C)				fclose(IO_C)
 #define IO_Read_C(Str, Size, Count)		fread(Str, Size, Count, IO_C)
 #define IO_Write_C(Str, Size, Count)	fwrite(Str, Size, Count, IO_C)
@@ -199,6 +199,7 @@ typedef struct  Tiff
 	//useful property
 	int Width, Length, samplesPerPixel, bitsPerSample, BytesPerLine, Resolution;
 	LPBYTE			lpImageBuf;
+	LPBYTE			lpHeader;//Used for GetHeader option.
 }Tiff, *LPTIFF;
 
 
@@ -212,7 +213,7 @@ DWORD TiffTag_GetValue_DWORD(PTiffTag This);
 DWORD TiffTag_GetValue_DWORD(PTiffTag This);
 DWORD TiffTag_GetValue_BitsPerSampleTag(PTiffTag This);
 DWORD TiffTag_GetValue_ResolutionTag(PTiffTag This);
-DWORD TiffTag_GetValue_Exif_IFD(PTiffTag This);
+//DWORD TiffTag_GetValue_Exif_IFD(PTiffTag This);
 
 
 //Private:
@@ -279,6 +280,7 @@ void Tiff_RemoveIcc(Tiff *This);
 #define m_IFD_Offset		This->IFD_Offset
 #define m_EntryCounts		This->IFD.EntryCounts
 #define m_lpImageBuf		This->lpImageBuf
+#define m_lpHeader			This->lpHeader
 
 #define ReadFile(FileName)	Tiff_ReadFile(This, FileName)
 #define SaveFile(FileName)	Tiff_SaveFile(This, FileName)
