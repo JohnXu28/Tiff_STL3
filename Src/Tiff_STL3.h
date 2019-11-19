@@ -527,19 +527,11 @@ namespace AV_Tiff_STL3 {
 		Tiff_Err	ReadFile_Ext(LPCSTR FileName);
 #endif //TIFF_EXT
 
-#ifdef DUMP_TIFF
-		int DumpTiff(LPCSTR FileName);
-		void DumpTags(DWORD TypeSignature, DWORD n, DWORD value, FILE* File);
-#endif //DUMP_TIFF
-
 	private:
 		//useful property
 		int m_Width, m_Length, m_SamplesPerPixel, m_BitsPerSample, m_BytesPerLine, m_Resolution;
 		LPBYTE m_lpImageBuf;
 	};
-
-	
-
 }//namespace AV_Tiff_STL3 or AV_Tiff
 
 using namespace AV_Tiff_STL3;
@@ -588,7 +580,7 @@ using namespace AV_Tiff_STL3;
 #define Artist						        TiffTagSignature::eArtist
 #define HostComputer				        TiffTagSignature::eHostComputer
 #define Predicator					        TiffTagSignature::ePredicator
-//#define WhitePoint				        TiffTagSignature::eWhitePoint
+#define WhitePoint					        TiffTagSignature::eWhitePoint
 #define PrimaryChromaticities		        TiffTagSignature::ePrimaryChromaticities
 #define ColorMap					        TiffTagSignature::eColorMap
 #define HalftoneHints				        TiffTagSignature::eHalftoneHints
