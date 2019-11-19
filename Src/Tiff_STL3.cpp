@@ -51,6 +51,17 @@ namespace AV_Tiff_STL3 {
 	//************************************************************
 	// Just for writing code easily, for fun......(^_^) John.....
 	//*************************************************************j
+#ifndef SWAP 
+	inline DWORD SwapDWORD(const DWORD x)
+	{
+		return (((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | (x << 24));
+	}
+
+	inline WORD SwapWORD(const WORD x)
+	{
+		return (((x & 0xFF) << 8) | (x >> 8));
+	}
+#endif //SWAP
 
 	inline WORD Tiff_encode_L(double data)
 	{//range 0 ~ 100

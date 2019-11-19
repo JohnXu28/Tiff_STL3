@@ -147,18 +147,6 @@ Virtual IO
 	#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
 #endif //WIN32
 
-#ifndef SWAP 
-inline DWORD SwapDWORD(const DWORD x)
-{
-	return (((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | (x << 24));
-}
-
-inline WORD SwapWORD(const WORD x)
-{
-	return (((x & 0xFF) << 8) | (x >> 8));
-}
-#endif //SWAP
-
 #define MAXTAG 40
 
 #include <vector>
