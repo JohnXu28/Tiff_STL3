@@ -1410,3 +1410,99 @@ void CTiff::RemoveIcc()
 		m_IFD.m_TagList.erase(pos);
 	}
 }
+
+
+#ifdef TIFF_EXT
+#include <jpeglib\jpegfile.h>
+//Only for color right now.
+ErrCode	CTiff::ReadJPG(LPCSTR FileName)
+{
+	unsigned int width, length;
+	CJpeg jpeg;
+	LPBYTE lpBuf = jpeg.JpegFileToRGB(FileName, &width, &length);
+	if (lpBuf == NULL)
+		return FileOpenErr;
+
+	CreateNew(width, length, 72, 3, 8, 0);
+	SetImageBuf(lpBuf);
+
+	return Tiff_OK;
+}
+
+ErrCode	CTiff::SaveJPG(LPCSTR FileName)
+{
+	CJpeg jpeg;
+	int quality = 75;
+	jpeg.RGBToJpegFile(FileName, m_lpImageBuf, m_Width, m_Length, TRUE, quality);
+	return Tiff_OK;
+}
+#endif //TIFF_EXT
+
+//Not Finish yet.
+#ifdef TIFF_EXT
+
+Read_Lzw
+void TEST_LibTiff()
+{
+	char Lzw_In[128];
+	char Lzw_Out[128];
+	char Out_Tif[128];
+	ConfigGetString("WorkTemp", "Lzw_In", "lzw.tif", (char*)Lzw_In);
+	ConfigGetString("WorkTemp", "Lzw_Out", "lzw_Out.tif", (char*)Lzw_Out);
+	ConfigGetString("WorkTemp", "Out_Tif", "Out.tif", (char*)Out_Tif);
+
+	int width, length;
+	float resolution;
+	WORD samplesperlixel, bitspersample;
+
+	//Get Input Tiff Info
+	TIFF* tif = TIFFOpen(Lzw_In, "r");
+	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
+	TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &length);
+	TIFFGetField(tif, TIFFTAG_XRESOLUTION, &resolution);
+	TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &samplesperlixel);
+	TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
+
+	CTiff tiff;
+	tiff.CreateNew(width, length, (int)resolution, samplesperlixel, bitspersample);
+
+	//Create Output Tiff Info.
+	TIFF* tif2 = TIFFOpen(Lzw_Out, "w");
+	//TIFFSetField(tif2, TIFFTAG_IMAGEWIDTH, width);
+	TIFFSetField(tif2, TIFFTAG_IMAGEWIDTH, width);
+	TIFFSetField(tif2, TIFFTAG_IMAGELENGTH, length);
+
+	TIFFSetField(tif2, TIFFTAG_BITSPERSAMPLE, bitspersample);
+	//TIFFSetField(tif2, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+	TIFFSetField(tif2, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
+	TIFFSetField(tif2, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+
+	TIFFSetField(tif2, TIFFTAG_SAMPLESPERPIXEL, samplesperlixel);
+	TIFFSetField(tif2, TIFFTAG_ROWSPERSTRIP, length);
+
+	TIFFSetField(tif2, TIFFTAG_XRESOLUTION, resolution);
+	TIFFSetField(tif2, TIFFTAG_YRESOLUTION, resolution);
+	TIFFSetField(tif2, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH);
+
+	TIFFSetField(tif2, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+	TIFFSetField(tif2, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+
+
+	void* buf = _TIFFmalloc(TIFFScanlineSize(tif));
+	LPBYTE lpBuf = new BYTE[width * 3];
+	//LPBYTE lpBuf = new BYTE[Width * 3];
+	for (int row = 0; row < length; row++)
+	{
+		TIFFReadScanline(tif, buf, row);
+		tiff.GetRow(lpBuf, row, width);
+		memcpy(lpBuf, buf, width * 3);
+		tiff.PutRow(lpBuf, row, width);
+		TIFFWriteScanline(tif2, lpBuf, row);
+	}
+	tiff.SaveFile(Out_Tif);
+	TIFFClose(tif);
+	TIFFClose(tif2);
+	_TIFFfree(buf);
+	delete[]lpBuf;
+}
+#endif //TIFF_EXT
