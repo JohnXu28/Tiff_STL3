@@ -94,58 +94,57 @@ main(int argc, _TCHAR* argv[]))
 #include "SysInfo.h"
 #endif //SYS_INFO
 
-#ifdef WIN32
-#include <windows.h>
-#pragma warning(disable : 4996)//for Net
-
 /***************************************************************************
 Virtual IO
 ***************************************************************************/
 //#define VIRTUAL_IO	
-//#define VIRTUAL_IO_STL	
+#define VIRTUAL_IO_STL	
 
-#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
-#include <SysInfo\Virtual_IO.h>
-#define IO_In(FileName)					new IO_File(FileName, "rb")
-#define IO_Out(FileName)				new IO_File(FileName, "wb")
-#define IO_Close(IO)					delete IO
-#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-#define IO_GetHandle()					IO->GetHandle()
+#ifdef WIN32 //Windows
+	#include <windows.h>
+	#pragma warning(disable : 4996)//for Net
 
-#elif defined(VIRTUAL_IO_STL)//Fastest
-#include <fstream>
-#include <SysInfo\Virtual_IO.h>
+	#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
+		#include <SysInfo\Virtual_IO.h>
+		#define IO_In(FileName)					new IO_File(FileName, "rb")
+		#define IO_Out(FileName)				new IO_File(FileName, "wb")
+		#define IO_Close(IO)					delete IO
+		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+		#define IO_GetHandle()					IO->GetHandle()
+	#elif defined(VIRTUAL_IO_STL)//Fastest
+		#include <fstream>
+		#include <SysInfo\Virtual_IO.h>
 
-#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
-#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
-#define IO_Close(IO)					delete IO
-#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-#define IO_GetHandle()					IO->GetHandle()
+		#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
+		#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
+		#define IO_Close(IO)					delete IO
+		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+		#define IO_GetHandle()					IO->GetHandle()
 
-#else //Almost the same with VIRTUAL_IO_STL
-#define IO_Interface					FILE //Type
-#define IO								File //Argument
-#define IO_In(FileName)					fopen(FileName, "rb")
-#define IO_Out(FileName)				fopen(FileName, "wb+")
-#define IO_Close(File)					fclose(File)
-#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-#endif //VIRTUAL_IO
+	#else //Almost the same with VIRTUAL_IO_STL
+		#define IO_Interface					FILE //Type
+		#define IO								File //Argument
+		#define IO_In(FileName)					fopen(FileName, "rb")
+		#define IO_Out(FileName)				fopen(FileName, "wb+")
+		#define IO_Close(File)					fclose(File)
+		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+	#endif //VIRTUAL_IO
 
-#else //WIN64
-#define IO_Interface					FILE //Type
-#define IO								File //Argument
-#define IO_In(FileName)					fopen(FileName, "rb")
-#define IO_Out(FileName)				fopen(FileName, "wb+")
-#define IO_Close(File)					fclose(File)
-#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+#else //Linux
+	#define IO_Interface					FILE //Type
+	#define IO								File //Argument
+	#define IO_In(FileName)					fopen(FileName, "rb")
+	#define IO_Out(FileName)				fopen(FileName, "wb+")
+	#define IO_Close(File)					fclose(File)
+	#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+	#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+	#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
 #endif //WIN32
 
 #ifndef SWAP 
@@ -551,55 +550,7 @@ namespace AV_Tiff_STL3 {
 		LPBYTE m_lpImageBuf;
 	};
 
-	//************************************************************
-	// Just for writing code easily, for fun......(^_^) John.....
-	//*************************************************************j
-
-	inline WORD Tiff_encode_L(double data)
-	{//range 0 ~ 100
-		int intPart, rationPart;
-
-		if (data < 0)
-			return 0x0;
-		else
-		{
-			intPart = (int)data;
-			rationPart = (int)((data - intPart) * 256 + 0.5);
-			return (0xFF00 & (int)(intPart * 255 / 100 + 0.5) << 8) | (0xFF & rationPart);
-		}
-	}
-
-	inline WORD Tiff_encode_ab(double data)
-	{
-		return (short)(data * 256);
-	}
-
-	inline double Tiff_decode_L(WORD data)
-	{
-		return (double)data * 100 / 65535.0;
-	}
-
-	//bug???
-	inline double Tiff_decode_ab(WORD data)
-	{
-		if (data < 0x8000)
-			return (short)data / 256.0;
-		else
-			return (data - 0xFFFF) / 256.0;
-	}
-
-	inline double Tiff_decode_L_8(BYTE data)
-	{
-		return (double)data * 100 / 255.0;
-	}
-
-	inline double Tiff_decode_ab_8(BYTE data)
-	{
-		if (data < 128)
-			return (double)data;
-		else
-			return data - 255;
-	}
+	
 
 }//namespace AV_Tiff_STL3 or AV_Tiff
 
