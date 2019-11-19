@@ -775,7 +775,7 @@ unsigned char* CTiff::PutData(unsigned char *lpImageBufIndex, unsigned char *lpB
 
 unsigned short* CTiff::PutData(unsigned short *lpImageBufIndex, unsigned short *lpBuf, int WordCounts)
 {
-	wmemcpy(lpImageBufIndex, lpBuf, WordCounts);
+	memcpy(lpImageBufIndex, lpBuf, WordCounts);
 	return lpImageBufIndex + WordCounts;
 }
 
