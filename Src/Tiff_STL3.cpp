@@ -47,6 +47,56 @@ namespace AV_Tiff_STL3 {
 		1,//Unknown						= 0x000EL,
 		1,//Unknown						= 0x000FL,
 	};
+
+	//************************************************************
+	// Just for writing code easily, for fun......(^_^) John.....
+	//*************************************************************j
+
+	inline WORD Tiff_encode_L(double data)
+	{//range 0 ~ 100
+		int intPart, rationPart;
+
+		if (data < 0)
+			return 0x0;
+		else
+		{
+			intPart = (int)data;
+			rationPart = (int)((data - intPart) * 256 + 0.5);
+			return (0xFF00 & (int)(intPart * 255 / 100 + 0.5) << 8) | (0xFF & rationPart);
+		}
+	}
+
+	inline WORD Tiff_encode_ab(double data)
+	{
+		return (short)(data * 256);
+	}
+
+	inline double Tiff_decode_L(WORD data)
+	{
+		return (double)data * 100 / 65535.0;
+	}
+
+	//bug???
+	inline double Tiff_decode_ab(WORD data)
+	{
+		if (data < 0x8000)
+			return (short)data / 256.0;
+		else
+			return (data - 0xFFFF) / 256.0;
+	}
+
+	inline double Tiff_decode_L_8(BYTE data)
+	{
+		return (double)data * 100 / 255.0;
+	}
+
+	inline double Tiff_decode_ab_8(BYTE data)
+	{
+		if (data < 128)
+			return (double)data;
+		else
+			return data - 255;
+	}
 };//AV_Tiff_STL3 or AV_Tiff.
 
 //////////////////////////////////////////////////////////////////////
@@ -378,11 +428,11 @@ Tiff_Err Tiff::CheckFile(IO_Interface *IO)
 #if defined(VIRTUAL_IO_STL)
 	fstream *file = reinterpret_cast<fstream*>(dynamic_cast<IO_fstream*>(IO)->GetHandle());
 	if (file->is_open() == false)
-		return FileOpenErr);
+		return FileOpenErr;
 
 #elif defined(VIRTUAL_IO)
 	if (IO->GetHandle() == nullptr)
-		return FileOpenErr);
+		return FileOpenErr;
 
 #else //C version.
 	if (IO == nullptr)
@@ -1074,15 +1124,15 @@ Tiff_Err CTiff::ReadFile(LPCSTR FileName)
 Tiff_Err CTiff::ReadMemory(LPBYTE Buffer, size_t BufSize)
 {
 	if (Tiff::ReadMemory(Buffer, BufSize) != Tiff_OK)
-		return FileOpenErr);
+		return FileOpenErr;
 	//Basic Property for easy using.
-	m_Width = GetTagValue(ImageWidth));
-	m_Length = GetTagValue(ImageLength));
-	m_SamplesPerPixel = GetTagValue(SamplesPerPixel));
-	m_BitsPerSample = GetTagValue(BitsPerSample));
-	m_BytesPerLine = (int)ceil(m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
-	m_Resolution = GetTagValue(XResolution));
-	TiffTagPtr TempTag = Tiff::GetTag(StripOffsets));
+	m_Width = GetTagValue(ImageWidth);
+	m_Length = GetTagValue(ImageLength);
+	m_SamplesPerPixel = GetTagValue(SamplesPerPixel);
+	m_BitsPerSample = GetTagValue(BitsPerSample);
+	m_BytesPerLine = (int)ceil((double)m_Width * m_SamplesPerPixel * m_BitsPerSample * 0.125);
+	m_Resolution = GetTagValue(XResolution);
+	TiffTagPtr TempTag = Tiff::GetTag(StripOffsets);
 	m_lpImageBuf = TempTag->lpData;
 	return Tiff_OK;
 }
