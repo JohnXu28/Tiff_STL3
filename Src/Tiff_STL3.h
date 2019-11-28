@@ -580,7 +580,7 @@ using namespace AV_Tiff_STL3;
 #define Artist						        TiffTagSignature::eArtist
 #define HostComputer				        TiffTagSignature::eHostComputer
 #define Predicator					        TiffTagSignature::ePredicator
-#define WhitePoint					        TiffTagSignature::eWhitePoint
+#define TiffWhitePoint				        TiffTagSignature::eWhitePoint
 #define PrimaryChromaticities		        TiffTagSignature::ePrimaryChromaticities
 #define ColorMap					        TiffTagSignature::eColorMap
 #define HalftoneHints				        TiffTagSignature::eHalftoneHints

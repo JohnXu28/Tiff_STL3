@@ -557,7 +557,7 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *IO
 	case Artist:
 	case HostComputer:
 	case Predicator:
-	case WhitePoint:
+	case TiffWhitePoint:
 	case PrimaryChromaticities:
 	case ColorMap:
 	case HalftoneHints:
