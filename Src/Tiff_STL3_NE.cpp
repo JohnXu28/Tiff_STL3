@@ -826,10 +826,11 @@ ErrCode Tiff::WriteIFD(IO_Interface *IO)
 	IO_Write((LPBYTE)&EntryCounts, sizeof(WORD), 1);
 
 	//Recaculate Tag Offset.	
-	for (auto pos = TiffTag_Begin; pos != TiffTag_End; ++pos)
+	//for (auto pos = TiffTag_Begin; pos != TiffTag_End; ++pos)
+	for (auto& pos : m_IFD.m_TagList)
 	{
 		bool Offset = false;
-		switch ((*(pos))->type)
+		switch (pos->type)
 		{
 		case SBYTE:
 		case UndefineType:
@@ -841,16 +842,16 @@ ErrCode Tiff::WriteIFD(IO_Interface *IO)
 		int DataSize;
 		if (Offset == true)
 		{//Now Just for Icc profile
-			DataSize = DataType[(*(pos))->type] * (*(pos))->n;
-			(*pos)->value = OffsetValue;
+			DataSize = DataType[(int)pos->type] * pos->n;
+			pos->value = OffsetValue;
 			OffsetValue += DataSize;
 		}
 		else
 		{
-			DataSize = DataType[(*(pos))->type] * (*(pos))->n;
+			DataSize = DataType[(int)pos->type] * pos->n;
 			if (DataSize > 4)
 			{
-				(*pos)->value = OffsetValue;
+				pos->value = OffsetValue;
 				OffsetValue += DataSize;
 			}
 		}
