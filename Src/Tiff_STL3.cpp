@@ -483,7 +483,7 @@ Tiff_Err Tiff::ReadTiff(IO_Interface *IO)
 	if (TiffVersion != 0x002A4949)
 	{//PC Version
 		ret = VersionErr;
-		IO_Close(IO);
+		//IO_Close(IO); //Don't close, it will been closed later.
 		throw " *** Tiff is not PC version. *** ";
 	}
 
@@ -1111,7 +1111,11 @@ Tiff_Err CTiff::ReadFile(LPCSTR FileName)
 
 		Tiff_Err ret = ReadTiff(IO);
 
+		if (ret != Tiff_OK)
+			cout << FileName << ":Read Fail." << endl;
+
 		IO_Close(IO);
+
 		return ret;
 	}
 	catch (const char* ErrMsg)
