@@ -17,7 +17,7 @@ struct IO_S
 //#define io_file 1
 #define io_buf 1
 
-#define IO_Interface					IO_S //Type
+#define IO_INTERFACE					IO_S //Type
 #define IO_C							IO_S //Argument
 //#define IO_In_C(FileName)				IO_Buf_In(FileName)
 //#define IO_Out_C(FileName)			IO_Buf_Out(FileName)

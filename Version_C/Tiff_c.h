@@ -142,7 +142,7 @@ IO Interface of C Language.
 *********************************************************/
 #define IO_c 0
 #if IO_c
-#define IO_Interface					FILE //Type
+#define IO_INTERFACE					FILE //Type
 #define IO_C							File //Argument
 #define IO_In_C(FileName, option)		fopen(FileName, option)
 #define IO_Out_C(FileName, option)		fopen(FileName, option)
@@ -218,15 +218,15 @@ DWORD TiffTag_GetValue_ResolutionTag(PTiffTag This);
 
 //Private:
 //For Saving file.
-int Tiff_WriteHeader(Tiff *This, IO_Interface *File);
-int Tiff_WriteIFD(Tiff *This, IO_Interface *File);
-int Tiff_WriteTagData(Tiff *This, IO_Interface *File);
-int Tiff_WriteImageData(Tiff *This, IO_Interface *File);
-int Tiff_Write_Exif_IFD_Tag(Tiff *This, IO_Interface *File);
+int Tiff_WriteHeader(Tiff *This, IO_INTERFACE *File);
+int Tiff_WriteIFD(Tiff *This, IO_INTERFACE *File);
+int Tiff_WriteTagData(Tiff *This, IO_INTERFACE *File);
+int Tiff_WriteImageData(Tiff *This, IO_INTERFACE *File);
+int Tiff_Write_Exif_IFD_Tag(Tiff *This, IO_INTERFACE *File);
 
 //Tag Operation
-void Tiff_AddTags(Tiff *This, DWORD TypeSignature, DWORD n, DWORD value, IO_Interface *File);
-TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_Interface *File);
+void Tiff_AddTags(Tiff *This, DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE *File);
+TiffTag* Tiff_CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *File);
 int Tiff_SetTag(Tiff *This, TiffTag *NewTag);
 int Tiff_SetTag2(Tiff *This, TiffTagSignature Signature, WORD type, DWORD n, DWORD value, LPBYTE lpBuf);
 DWORD Tiff_SetTagValue(Tiff *This, const TiffTagSignature Signature, DWORD Value);
@@ -234,8 +234,8 @@ TiffTag* Tiff_GetTag(Tiff *This, const TiffTagSignature Signature);
 DWORD Tiff_GetTagValue(Tiff *This, const TiffTagSignature Signature);
 
 //Read Image
-int Tiff_ReadImage(Tiff *This, IO_Interface *File);
-int Tiff_ReadMultiStripOffset(Tiff *This, IO_Interface *File);
+int Tiff_ReadImage(Tiff *This, IO_INTERFACE *File);
+int Tiff_ReadMultiStripOffset(Tiff *This, IO_INTERFACE *File);
 void Pack_BYTE(Tiff *This, int Width, int Length);
 void Pack_WORD(Tiff *This, int Width, int Length);
 
@@ -244,7 +244,7 @@ Tiff* Tiff_Create();
 void Tiff_Close(Tiff *This);
 void Tiff_Reset(Tiff *This);
 int  Tiff_ReadFile(Tiff *This, const char *FileName);
-int  Tiff_Read(Tiff *This, IO_Interface *IO_C);
+int  Tiff_Read(Tiff *This, IO_INTERFACE *IO_C);
 int  Tiff_SaveFile(Tiff *This, const char *FileName);
 
 #ifdef __cplusplus
