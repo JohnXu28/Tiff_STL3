@@ -112,6 +112,7 @@ Virtual IO
 		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
 		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
 		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+		#define IO_Tell()						IO->Tell()
 		#define IO_GetHandle()					IO->GetHandle()
 	#elif defined(VIRTUAL_IO_STL)//Fastest
 		#include <fstream>
@@ -123,10 +124,11 @@ Virtual IO
 		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
 		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
 		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+		#define IO_Tell()						IO->Tell()
 		#define IO_GetHandle()					IO->GetHandle()
 
 	#else //Almost the same with VIRTUAL_IO_STL
-		#define IO_Interface					FILE //Type
+		#define IO_INTERFACE					FILE //Type
 		#define IO								File //Argument
 		#define IO_In(FileName)					fopen(FileName, "rb")
 		#define IO_Out(FileName)				fopen(FileName, "wb+")
@@ -134,10 +136,11 @@ Virtual IO
 		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
 		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
 		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+		#define IO_Tell()						ftell(File)
 	#endif //VIRTUAL_IO
 
 #else //Linux
-	#define IO_Interface					FILE //Type
+	#define IO_INTERFACE					FILE //Type
 	#define IO								File //Argument
 	#define IO_In(FileName)					fopen(FileName, "rb")
 	#define IO_Out(FileName)				fopen(FileName, "wb+")
@@ -145,6 +148,7 @@ Virtual IO
 	#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
 	#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
 	#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+	#define IO_Tell()						ftell(File)
 #endif //WIN32
 
 #define MAXTAG 40
@@ -310,11 +314,11 @@ namespace AV_Tiff_STL3 {
 		TiffTag& operator=(TiffTag&& other) noexcept; // move assignment
 
 		TiffTag(TiffTagSignature Signature);
-		TiffTag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
+		TiffTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		TiffTag(TiffTagSignature Tag, FieldType Type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
 		bool operator()(const TiffTag& Data) const { return tag == Data.tag; };
 		virtual DWORD GetValue() const;
-		virtual int SaveFile(IO_Interface* IO);
+		virtual int SaveFile(IO_INTERFACE* IO);
 		virtual LPBYTE GetData() const { return lpData; }
 		int ValueIsOffset() const;
 
@@ -346,21 +350,21 @@ namespace AV_Tiff_STL3 {
 	class BitsPerSampleTag :public TiffTag
 	{
 	public:
-		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
+		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		DWORD GetValue() const;
 	};
 
 	class ResolutionTag :public TiffTag
 	{
 	public:
-		ResolutionTag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
+		ResolutionTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		virtual DWORD GetValue() const;
 	};
 
 	class Exif_IFD_Tag :public TiffTag
 	{
 	public:
-		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_Interface* IO);
+		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		//***Don't save anything. This tag broke all rule, just skip it.		
 	};
 
@@ -419,9 +423,9 @@ namespace AV_Tiff_STL3 {
 		Tiff(LPCSTR FileName);
 		virtual		~Tiff();
 		virtual		void Reset();
-		virtual		Tiff_Err CheckFile(IO_Interface* IO);
-		virtual		Tiff_Err	ReadTiff(IO_Interface* IO);
-		virtual		Tiff_Err SaveTiff(IO_Interface* IO);
+		virtual		Tiff_Err CheckFile(IO_INTERFACE* IO);
+		virtual		Tiff_Err	ReadTiff(IO_INTERFACE* IO);
+		virtual		Tiff_Err SaveTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
 		virtual		Tiff_Err	SaveFile(LPCSTR FileName);
 		virtual		Tiff_Err	SaveRaw(LPCSTR FileName);
@@ -439,20 +443,20 @@ namespace AV_Tiff_STL3 {
 
 	protected:
 		//Read Image
-		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_Interface* IO);
-		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_Interface* IO);
-		Tiff_Err		ReadImage(IO_Interface* IO);
-		Tiff_Err		ReadMultiStripOffset(IO_Interface* IO);
+		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_INTERFACE* IO);
+		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
+		Tiff_Err		ReadImage(IO_INTERFACE* IO);
+		Tiff_Err		ReadMultiStripOffset(IO_INTERFACE* IO);
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
 		//Write Image
-		virtual		Tiff_Err	WriteHeader(IO_Interface* IO);
-		Tiff_Err		WriteIFD(IO_Interface* IO);
-		Tiff_Err		WriteTagData(IO_Interface* IO);
-		Tiff_Err		WriteImageData(IO_Interface* IO);
-		Tiff_Err		WriteData_Exif_IFD_Tag(IO_Interface* IO);
+		virtual		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
+		Tiff_Err		WriteIFD(IO_INTERFACE* IO);
+		Tiff_Err		WriteTagData(IO_INTERFACE* IO);
+		Tiff_Err		WriteImageData(IO_INTERFACE* IO);
+		Tiff_Err		WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;
@@ -467,7 +471,7 @@ namespace AV_Tiff_STL3 {
 		CTiff(LPCSTR FileName);
 		CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		virtual		~CTiff();
-		virtual		Tiff_Err	ReadTiff(IO_Interface* IO);
+		virtual		Tiff_Err	ReadTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
