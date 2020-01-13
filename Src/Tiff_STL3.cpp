@@ -328,6 +328,7 @@ DWORD ResolutionTag::GetValue() const
 //const int Exif_IFD_Size = 44; //photoshop 7
 //const int Exif_IFD_Size = 80; //photoshop cs3 
 //Exif_IFD_Tag::Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO)
+int Exif_IFD_Tag::ExifBufSize = 0;
 Exif_IFD_Tag::Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO)
 	:TiffTag(SigType, n, value, IO)
 {//Actually, we know nothing about this tag.
@@ -346,7 +347,7 @@ Exif_IFD_Tag::Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 	IO_Read(lpData, 1, size);
 
 	//Special condition, We need to change the value of the this->n.
-	this->n = size;
+	Exif_IFD_Tag::ExifBufSize = size;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -604,6 +605,7 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 			* If you want to save this tag.
 			* You may need to pay more expense.
 			* Sometimes I wonder if it's worth it.
+			* And this tag must been read at the end of tiff.
 			*/
 			NewTag = new Exif_IFD_Tag(SigType, n, value, IO);
 			break;
@@ -908,7 +910,7 @@ Tiff_Err Tiff::WriteData_Exif_IFD_Tag(IO_INTERFACE *IO)
 {
 	TiffTagPtr TempTag = GetTag(Exif_IFD);
 	if (TempTag != nullptr)
-		IO_Write(TempTag->lpData, 1, TempTag->n);
+		IO_Write(TempTag->lpData, 1, Exif_IFD_Tag::ExifBufSize);
 	return Tiff_OK;
 }
 

@@ -365,7 +365,8 @@ namespace AV_Tiff_STL3 {
 	{
 	public:
 		Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
-		//***Don't save anything. This tag broke all rule, just skip it.		
+		//***Don't save anything. This tag broke all rule, just skip it.
+		static int ExifBufSize;//Because the bufsize is out of control, type is long, n is always 1.
 	};
 
 	class TAG//funtor, For find_if
