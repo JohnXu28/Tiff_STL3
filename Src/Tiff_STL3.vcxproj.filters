@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Version_C\Virtual_IO_C.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tiff_STL3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Version_C\tiff.cpp">
+      <Filter>Source Files\Other Version</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Version_C\Tiff_c.cpp">
+      <Filter>Source Files\Other Version</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Version_C\Tiff_STL.cpp">
+      <Filter>Source Files\Other Version</Filter>
+    </ClCompile>
+    <ClCompile Include="Tiff_STL3_NE.cpp">
+      <Filter>Source Files\Other Version</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Version_C\Tiff_c.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Version_C\Tiff_STL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tiff_STL3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Virtual_IO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Version_C\Virtual_IO_C.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Version_C\tiff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{b44c27f1-d1b2-4a37-8540-924a11c9f152}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{3d45971d-bebc-4fd4-b3d2-961251e6caf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Other Version">
+      <UniqueIdentifier>{eb41dfb9-b6dc-47fa-aaa0-500c358fbc0b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
