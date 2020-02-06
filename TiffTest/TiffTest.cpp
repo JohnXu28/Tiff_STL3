@@ -11,17 +11,19 @@ using namespace std;
 //#define Chunyen_yang
 
 #ifdef John
-//#define Tiff_C
+#define Tiff_C		0
+#define Tiff_STL3	1
 
-#define Tiff_Test 1
-#define Tiff_STL
-//#define Tag_Test 1
+#define Tiff_Test	1
+#define Single_Test	0
+
+#define Tag_Test 0
 //#define CREATE_TIFF
 //#define CREATE_TIFF_4_1
-#define FREQUENCE 1
 
-#ifdef Tiff_STL
-#include <Src\tiff_stl3.h>
+
+#if Tiff_STL3
+#include <Tiff_STL3\Src\Tiff_STL3.h>
 
 #define STiff CTiff
 #define Tiff_Create() new CTiff
@@ -38,14 +40,12 @@ using namespace std;
 
 #endif//Tiff_STL
 
-#ifdef Tiff_C
-#include "tiff_c.h"
+#if Tiff_C
+#include "..\Tiff_STL3\Version_C\Tiff_c.h"
 #define STiff Tiff
 //	#define Tiff_ReadFile(lpTiff, fileName) Tiff_ReadFile(lpTiff, (char*)fileName)
 //	#define Tiff_SaveFile(lpTiff, fileNmae) Tiff_SaveFile(lpTiff, (char*)fileNmae)
-
 #endif //Tiff_C
-
 
 #endif//John
 
@@ -80,7 +80,7 @@ using namespace std;
 #endif
 
 #ifdef _TiffTagSignature_
-enum TiffTagSignature{
+enum TiffTagSignature {
 	NullTag = 0x0000L,
 	NewSubfileType = 0x00FEL,
 	SubfileType = 0x00FFL,
@@ -168,19 +168,19 @@ int ImageTest1(string FileName)
 	string FileIn = FileName + ".tif";
 	string FileOut = "Output\\" + FileName + "out.tif";
 
-	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != 0)
+	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != Tiff_OK)
 	{
 		Tiff_Close(lpTiff);
 		return -1;
 	}
 
-	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != 0)//Test for Memory Leaks.
+	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != Tiff_OK)//Test for Memory Leaks.
 	{
 		Tiff_Close(lpTiff);
 		return -1;
 	}
 
-	if (Tiff_SaveFile(lpTiff, FileOut.c_str()) != 0)
+	if (Tiff_SaveFile(lpTiff, FileOut.c_str()) != Tiff_OK)
 	{
 		Tiff_Close(lpTiff);
 		return -1;
@@ -208,21 +208,55 @@ void TiffCopy(STiff *lpTiffDest, STiff *lpTiffSrc)
 	delete[]lpBuf;
 }
 
+//Raw Test
 int ImageTest2(string FileName)
+{
+	string FileIn = "Output\\" + FileName + "out.tif";
+	string FileRaw = FileName + ".raw";
+
+	cout << "Raw Test : " << FileName.c_str() << "out.tif\n";
+	STiff *lpTiff = Tiff_Create();	
+	Tiff_ReadFile(lpTiff, FileIn.c_str());
+
+	//Compare
+	int ret = 0;
+	int stripByteCounts = Tiff_GetTagValue(lpTiff, StripByteCounts);
+	unsigned char *lpTemp1 = (unsigned char *)Tiff_GetImageBuf(lpTiff);
+
+	//Get Raw
+	FILE* file = fopen(FileRaw.c_str(), "rb");
+	LPBYTE lpRaw = new BYTE[stripByteCounts];
+	fread(lpRaw, 1, stripByteCounts, file);
+	unsigned char* lpTemp2 = lpRaw;
+	
+	for (int i = 0; i < stripByteCounts; i++)
+		if (*(lpTemp1++) != *(lpTemp2++))
+		{
+			cout << "Raw Test error! " << FileName.c_str() << "\n";
+			ret = -1;
+			break;
+		}
+	Tiff_Close(lpTiff);
+	delete[]lpRaw;
+
+	return ret;
+}
+
+int ImageTest3(string FileName)
 {
 	string FileIn = "Output\\" + FileName + "out.tif";
 	string FileOut = "Output\\" + FileName + "out2.tif";
 
 	cout << "Copy Test : " << FileName.c_str() << "out.tif\n";
-	STiff *lpTiff = Tiff_Create();
-	STiff *lpTiff2 = Tiff_Create();
+	STiff* lpTiff = Tiff_Create();
+	STiff* lpTiff2 = Tiff_Create();
 	Tiff_ReadFile(lpTiff, FileIn.c_str());
 	Tiff_CreateNew(lpTiff2, Tiff_GetTagValue(lpTiff, ImageWidth),
 		Tiff_GetTagValue(lpTiff, ImageLength),
 		Tiff_GetTagValue(lpTiff, XResolution),
 		Tiff_GetTagValue(lpTiff, SamplesPerPixel),
 		Tiff_GetTagValue(lpTiff, BitsPerSample)
-		);
+	);
 
 	//For memory leak test.
 	Tiff_CreateNew(lpTiff2, Tiff_GetTagValue(lpTiff, ImageWidth),
@@ -230,8 +264,7 @@ int ImageTest2(string FileName)
 		Tiff_GetTagValue(lpTiff, XResolution),
 		Tiff_GetTagValue(lpTiff, SamplesPerPixel),
 		Tiff_GetTagValue(lpTiff, BitsPerSample)
-		);
-
+	);
 
 	//copy test
 	if (Tiff_GetTagValue(lpTiff, BitsPerSample) == 16)
@@ -248,21 +281,20 @@ int ImageTest2(string FileName)
 	//Compare
 	int ret = 0;
 	int stripByteCounts = Tiff_GetTagValue(lpTiff, StripByteCounts);
-	unsigned char *lpTemp1 = (unsigned char *)Tiff_GetImageBuf(lpTiff);
-	unsigned char * lpTemp2 = (unsigned char *)Tiff_GetImageBuf(lpTiff2);
+	unsigned char* lpTemp1 = (unsigned char*)Tiff_GetImageBuf(lpTiff);
+	unsigned char* lpTemp2 = (unsigned char*)Tiff_GetImageBuf(lpTiff2);
 	for (int i = 0; i < stripByteCounts; i++)
 		if (*(lpTemp1++) != *(lpTemp2++))
 		{
-		cout << "test error! " << FileOut.c_str() << "\n";
-		ret = -1;
-		break;
+			cout << "test error! " << FileOut.c_str() << "\n";
+			ret = -1;
+			break;
 		}
 	Tiff_Close(lpTiff);
 	Tiff_Close(lpTiff2);
 
 	return ret;
 }
-
 template<class T>
 int GetXY_Test(STiff *lpTiff1, STiff *lpTiff2)
 {
@@ -278,15 +310,15 @@ int GetXY_Test(STiff *lpTiff1, STiff *lpTiff2)
 	for (int i = 0; i < Length; i++)
 		for (int j = 0; j < Width; j++)
 		{
-		lpTemp2 = (T*)Tiff_GetXY(lpTiff2, j, i);
-		for (int k = 0; k < samplesPerPixel; k++)
-			if ((*lpTemp1++) != *(lpTemp2++))
-				return -1;
+			lpTemp2 = (T*)Tiff_GetXY(lpTiff2, j, i);
+			for (int k = 0; k < samplesPerPixel; k++)
+				if ((*lpTemp1++) != *(lpTemp2++))
+					return -1;
 		}
 	return 0;
 }
 
-int ImageTest3(string FileName)
+int ImageTest4(string FileName)
 {
 	STiff *lpTiff1 = Tiff_Create();
 	STiff *lpTiff2 = Tiff_Create();
@@ -316,23 +348,30 @@ string FileName[] = { "0NULL",
 "1LineArt", "2gray8", "3RGB8", "4CMYK8", "5Lab8",
 "6gray16", "7RGB16", "8CMYK16", "9Lab16", "10RGB82",
 "11RGB162", "12CMYK82", "13CMYK162", "14Lab82", "15Lab162",
-"16MultiStrip", "17Ycc8", "18"};
+"16MultiStrip", "17Ycc8", "18CLR68", "19CLR616" };
 
-const int TestNum = 19;
+const int TestNum = 20;
 
 int FullTest1()
 {
 	for (int i = 1; i < TestNum; i++)
 		if (ImageTest1(FileName[i]) != 0)
+		{
+			cout << "Test 1 fail, FileName : " << FileName[i] << endl;
 			return -1;
+		}
 	return 0;
 }
 
 int FullTest2()
 {
-	for (int i = 1; i < TestNum; i++)
+	for (int i = 2; i < TestNum; i++)
 		if (ImageTest2(FileName[i]) != 0)
+		{
+			cout << "Test 2 fail, FileName : " << FileName[i] << endl;
 			return -1;
+		}
+
 	return 0;
 }
 
@@ -340,27 +379,49 @@ int FullTest3()
 {
 	for (int i = 1; i < TestNum; i++)
 		if (ImageTest3(FileName[i]) != 0)
+		{
+			cout << "Test 3 fail, FileName : " << FileName[i] << endl;
 			return -1;
+		}
+
 	return 0;
 }
 
-void SingleTest()
+int FullTest4()
 {
-	STiff *lpTiff = Tiff_Create();
-	Tiff_ReadFile(lpTiff, "10RGB82.tif");
-	Tiff_SaveFile(lpTiff, "10RGB82Out.tif");
-	Tiff_Close(lpTiff);
+	for (int i = 1; i < TestNum; i++)
+		if (ImageTest4(FileName[i]) != 0)
+		{
+			cout << "Test 4 fail, FileName : " << FileName[i] << endl;
+			return -1;
+		}
+
+	return 0;
 }
 
 #endif //Tiff_Test
+
+#if Single_Test
+void SingleTest()
+{
+	STiff* lpTiff = Tiff_Create();
+	if (Tiff_ReadFile(lpTiff, "3RGB8.tif") == Tiff_OK)
+	{
+		Tiff_SaveFile(lpTiff, "3RGB8Out.tif");
+		Tiff_Close(lpTiff);
+	}
+}
+#endif //Single_Test
+
+
 class GL
 {
 public:
-	GL(){};
-	~GL(){ 
-		cout << "End" << endl; 
+	GL() {};
+	~GL() {
+		cout << "End" << endl;
 	};
-	void display(){ cout << "GL" << endl; }
+	void display() { cout << "GL" << endl; }
 	char Data[65536];
 };
 
@@ -377,7 +438,7 @@ void DumpMemory(void)
 
 //TiffTag& NEWTAG()
 //{
-//	TiffTag NewTag(ImageWidth, Long, 1, 100, nullptr);
+//	TiffTag NewTag(ImageWidth), Long, 1, 100, nullptr);
 //	return NewTag;
 //}
 
@@ -387,13 +448,14 @@ void Tag_Test_Construct()
 	TiffTag Temp1, Temp2;
 	Temp1 = NewTag;
 
-	Temp2 = TiffTag(TiffTag(ImageWidth, Long, 1, 100, nullptr));
+	//Temp2 = TiffTag(TiffTag(ImageWidth), Long, 1, 100, nullptr));
 
 	//LPBYTE lpBuf = new BYTE[1024];
 
 }
 #endif //Tag_Test
 
+#ifdef Tiff_STL
 void CreateTiff(int argc, _TCHAR* argv[])
 {
 	if (argc != 8)
@@ -416,8 +478,8 @@ void CreateTiff(int argc, _TCHAR* argv[])
 		cout << "Bitspersample : " << bitspersample << endl;
 		cout << "Raw : " << raw << endl;
 		cout << "Tif : " << tif << endl;
-		CTiff tiff;
-		tiff.CreateNew(width, length, resolution, samplesperpixel, bitspersample, raw, tif);
+		STiff *lpTiff = Tiff_Create();;
+		Tiff_CreateNew(lpTiffwidth, length, resolution, samplesperpixel, bitspersample, raw, tif);
 	}
 }
 
@@ -445,61 +507,33 @@ void ProcessTemplate()
 		LPBYTE lpTemp = lpBuf;
 		for (int j = 0; j < Width; j++)
 			//Process(lpBuf, Width); //Add your process here.
-		In.PutRow(lpBuf, i);
+			In.PutRow(lpBuf, i);
 	}
 	delete[]lpBuf;
 
 	Out.SaveFile("Output.tif");
 }
 
-void CREATE_TIFF41()
+#endif //Tiff_STL3
+
+
+//#include <SysInfo\Virtual_IO.h>
+void GetTiffHeader(char* FileName)
 {
-	FILE *C, *M, *Y, *K;
-	C = fopen("4800x6784_errdif_c.bin", "rb");
-	M = fopen("4800x6784_errdif_m.bin", "rb");
-	Y = fopen("4800x6784_errdif_y.bin", "rb");
-	K = fopen("4800x6784_errdif_k.bin", "rb");
-	int Width = 4800;
-	int Length = 6784;
-	int BytesPerLine = Width / 8;
-	CTiff Out;
-	Out.CreateNew(Width, Length, 600, 4, 1);
+	CTiff tiff;
+	tiff.ReadFile(FileName);
+	int Width = tiff.GetTagValue(ImageWidth);
+	int Length = tiff.GetTagValue(ImageLength);
+	int Samples = tiff.GetTagValue(SamplesPerPixel);
+	int Bits = tiff.GetTagValue(BitsPerSample);
 
-	LPBYTE lpC = new BYTE[BytesPerLine];
-	LPBYTE lpM = new BYTE[BytesPerLine];
-	LPBYTE lpY = new BYTE[BytesPerLine];
-	LPBYTE lpK = new BYTE[BytesPerLine];
-	LPBYTE lpOut = Out.GetImageBuf();
+	CTiff tiff2;
+	tiff2.CreateNew(Width, Length, 72, Samples, Bits, 0);
 
-	for (int i = 0; i < Length; i++)
-	{
-		fread(lpC, 1, BytesPerLine, C);
-		memcpy(lpOut, lpC, BytesPerLine);
-		lpOut += BytesPerLine;
-
-		fread(lpM, 1, BytesPerLine, M);
-		memcpy(lpOut, lpM, BytesPerLine);
-		lpOut += BytesPerLine;
-
-		fread(lpY, 1, BytesPerLine, Y);
-		memcpy(lpOut, lpY, BytesPerLine);
-		lpOut += BytesPerLine;
-
-		fread(lpK, 1, BytesPerLine, K);
-		memcpy(lpOut, lpK, BytesPerLine);
-		lpOut += BytesPerLine;
-	}
-
-	Out.SaveFile("CMYK_err.tif");
-
-	delete[]lpC;
-	delete[]lpM;
-	delete[]lpY;
-	delete[]lpK;
-	fclose(C);
-	fclose(M);
-	fclose(Y);
-	fclose(K);
+	//unsigned char* lpBuf = new unsigned char[1024];
+	//IO_Buf *lpBuf = new IO_Buf(lpBuf, 1024);
+	//tiff2.SaveFile
+	//delete lpBuf;
 }
 
 
@@ -508,20 +542,27 @@ void CREATE_TIFF41()
 /*********************************************************************************************************/
 int main(int argc, _TCHAR* argv[])
 //int main1(int argc, char* argv[])
-{	
+{
 #ifdef _DEBUG
 	//_CrtSetBreakAlloc(192);
-	_crtBreakAlloc = 198;
+	//_crtBreakAlloc = 184;
 	atexit(DumpMemory);
 #endif //_DEBUG
+
+	char Dir[128];
+	int size = GetCurrentDirectory(128, Dir);
+	cout << "Dir : " << Dir << endl;
 
 #if Tiff_Test
 	FullTest1();
 	FullTest2();
 	FullTest3();
-	//	SingleTest();
+	FullTest4();
 #endif//
 
+#if	Single_Test
+	SingleTest();
+#endif //Single_Test
 #ifdef CREATE_TIFF
 	CreateTiff(argc, argv);
 #endif //CREATE_TIFF
@@ -530,14 +571,11 @@ int main(int argc, _TCHAR* argv[])
 	ProcessTemplate()
 #endif //0
 
-#ifdef CREATE_TIFF_4_1
-		//Read 4 files (CMYK 1bit raw) combine to 1 tif.
-		CREATE_TIFF41();
-#endif //CREATE_TIFF_4_1
-
-#ifdef	Tag_Test
+#if	Tag_Test
 	Tag_Test_Construct();
 #endif //Tag_Test
+
+	char* lpBuf = new char[128];
 
 	return 0;
 }
