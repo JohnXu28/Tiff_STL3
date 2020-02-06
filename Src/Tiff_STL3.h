@@ -98,7 +98,7 @@ main(int argc, _TCHAR* argv[]))
 Virtual IO
 ***************************************************************************/
 //#define VIRTUAL_IO	
-#define VIRTUAL_IO_STL	
+//#define VIRTUAL_IO_STL	
 
 #ifdef WIN32 //Windows
 	#include <windows.h>
