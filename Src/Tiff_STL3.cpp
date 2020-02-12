@@ -371,10 +371,10 @@ Tiff::~Tiff()
 
 void Tiff::Reset()
 {
-#ifndef SHARED_POINTER
+#ifndef SMART_POINTER
 	for_each(TiffTag_Begin, TiffTag_End,
 		[](TiffTag* pos) {delete pos; });
-#endif //SHARED_POINTER
+#endif //SMART_POINTER
 
 	m_IFD.m_TagList.clear();
 }
@@ -385,7 +385,7 @@ void Tiff::Reset()
 TiffTagPtr Tiff::GetTag(const TiffTagSignature Signature)
 {
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
-		[&Signature](TiffTagPtr pos) {return pos->tag == Signature; });
+		[&Signature](const TiffTagPtr& pos) {return pos->tag == Signature; });
 
 	if (pos != TiffTag_End)
 		return *pos;
@@ -410,20 +410,20 @@ Tiff_Err Tiff::SetTag(TiffTagPtr NewTag)
 	TiffTagSignature sig = NewTag->tag;
 
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
-		[&sig](TiffTagPtr pos) {return pos->tag == sig; });
+		[&sig](const TiffTagPtr& pos) {return pos->tag == sig; });
 
 	if (pos == TiffTag_End)
 	{
 		m_IFD.m_TagList.push_back(NewTag);
-		m_IFD.m_TagList.size();//for what??? I forget it.
+		int size = m_IFD.m_TagList.size();//for what??? I forget it.
 	}
 	else
 	{//Replace
 		if (*pos != NewTag)
 		{
-#ifndef SHARED_POINTER
+#ifndef SMART_POINTER
 			delete *pos;
-#endif //SHARED_POINTER
+#endif //SMART_POINTER
 
 			*pos = NewTag;
 		}
@@ -589,12 +589,12 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 		{
 		//	Special Tag
 		case BitsPerSample:
-			NewTag = new BitsPerSampleTag(SigType, n, value, IO);
+			NewTag = new BitsPerSampleTag(SigType, n, value, IO);			
 			break;
 
 		case XResolution:
 		case YResolution:
-			NewTag = new ResolutionTag(SigType, n, value, IO);
+			NewTag = new ResolutionTag(SigType, n, value, IO);			
 			break;
 
 			//Just Skip this tag.
@@ -607,11 +607,11 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 			* Sometimes I wonder if it's worth it.
 			* And this tag must been read at the end of tiff.
 			*/
-			NewTag = new Exif_IFD_Tag(SigType, n, value, IO);
+			NewTag = new Exif_IFD_Tag(SigType, n, value, IO);			
 			break;
 
 		default:			
-			NewTag = new TiffTag(SigType, n, value, IO);
+			NewTag = new TiffTag(SigType, n, value, IO);			
 			break;
 		}
 	}
@@ -623,12 +623,14 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 		cerr << "bad_alloc caught: " << ba.what() << endl;
 		return NULL;
 	}
+
 	return (TiffTagPtr)NewTag;
 }
 
 void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE *IO)
 {
-	TiffTagPtr tag = CreateTag(TypeSignature, n, value, IO);
+	TiffTagPtr tag = CreateTag(TypeSignature, n, value, IO);	
+	
 	if (tag != nullptr)
 		m_IFD.m_TagList.push_back(tag);
 }
@@ -650,7 +652,11 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE *IO)
 	if (rowsPerStrip == 0)
 	{
 		rowsPerStrip = Length;
-		TiffTagPtr NewTag = SHARED_PTR(TiffTag, new TiffTag(RowsPerStrip, Short, 1, Length));
+#ifdef SMART_POINTER
+		TiffTagPtr NewTag = make_shared<TiffTag>(RowsPerStrip, Short, 1, Length);
+#else
+		TiffTagPtr NewTag = new TiffTag(RowsPerStrip, Short, 1, Length);
+#endif
 		m_IFD.m_TagList.push_back(NewTag);
 	}
 
@@ -874,7 +880,7 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE *IO)
 	DWORD *lpTemp = lpOutData;
 
 	for_each(TiffTag_Begin, TiffTag_End,
-		[&lpTemp](TiffTagPtr pos)
+		[&lpTemp](const TiffTagPtr& pos)
 	{
 		*lpTemp++ = (int)(pos->tag) | ((int)(pos->type) << 16);
 		*lpTemp++ = pos->n;
@@ -894,7 +900,7 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE *IO)
 Tiff_Err Tiff::WriteTagData(IO_INTERFACE *IO)
 {
 	for_each(TiffTag_Begin, TiffTag_End,
-		[&IO](TiffTagPtr pos) {pos->SaveFile(IO); });
+		[&IO](const TiffTagPtr& pos) {pos->SaveFile(IO); });
 	return Tiff_OK;
 }
 
@@ -1416,7 +1422,7 @@ void CTiff::RemoveIcc()
 	TiffTagSignature sig = IccProfile;
 
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
-		[&sig](TiffTagPtr pos) {return pos->tag == sig; });
+		[&sig](const TiffTagPtr& pos) {return pos->tag == sig; });
 
 	if (pos != m_IFD.m_TagList.end())
 	{

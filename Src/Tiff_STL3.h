@@ -98,57 +98,57 @@ main(int argc, _TCHAR* argv[]))
 Virtual IO
 ***************************************************************************/
 //#define VIRTUAL_IO	
-//#define VIRTUAL_IO_STL	
+#define VIRTUAL_IO_STL	
 
 #ifdef WIN32 //Windows
-	#include <windows.h>
-	#pragma warning(disable : 4996)//for Net
+#include <windows.h>
+#pragma warning(disable : 4996)//for Net
 
-	#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
-		#include <SysInfo\Virtual_IO.h>
-		#define IO_In(FileName)					new IO_File(FileName, "rb")
-		#define IO_Out(FileName)				new IO_File(FileName, "wb")
-		#define IO_Close(IO)					delete IO
-		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-		#define IO_Tell()						IO->Tell()
-		#define IO_GetHandle()					IO->GetHandle()
-	#elif defined(VIRTUAL_IO_STL)//Fastest
-		#include <fstream>
-		#include <SysInfo\Virtual_IO.h>
+#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
+#include <SysInfo\Virtual_IO.h>
+#define IO_In(FileName)					new IO_File(FileName, "rb")
+#define IO_Out(FileName)				new IO_File(FileName, "wb")
+#define IO_Close(IO)					delete IO
+#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+#define IO_Tell()						IO->Tell()
+#define IO_GetHandle()					IO->GetHandle()
+#elif defined(VIRTUAL_IO_STL)//Fastest
+#include <fstream>
+#include <SysInfo\Virtual_IO.h>
 
-		#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
-		#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
-		#define IO_Close(IO)					delete IO
-		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-		#define IO_Tell()						IO->Tell()
-		#define IO_GetHandle()					IO->GetHandle()
+#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
+#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
+#define IO_Close(IO)					delete IO
+#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+#define IO_Tell()						IO->Tell()
+#define IO_GetHandle()					IO->GetHandle()
 
-	#else //Almost the same with VIRTUAL_IO_STL
-		#define IO_INTERFACE					FILE //Type
-		#define IO								File //Argument
-		#define IO_In(FileName)					fopen(FileName, "rb")
-		#define IO_Out(FileName)				fopen(FileName, "wb+")
-		#define IO_Close(File)					fclose(File)
-		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-		#define IO_Tell()						ftell(File)
-	#endif //VIRTUAL_IO
+#else //Almost the same with VIRTUAL_IO_STL
+#define IO_INTERFACE					FILE //Type
+#define IO								File //Argument
+#define IO_In(FileName)					fopen(FileName, "rb")
+#define IO_Out(FileName)				fopen(FileName, "wb+")
+#define IO_Close(File)					fclose(File)
+#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+#define IO_Tell()						ftell(File)
+#endif //VIRTUAL_IO
 
 #else //Linux
-	#define IO_INTERFACE					FILE //Type
-	#define IO								File //Argument
-	#define IO_In(FileName)					fopen(FileName, "rb")
-	#define IO_Out(FileName)				fopen(FileName, "wb+")
-	#define IO_Close(File)					fclose(File)
-	#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-	#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-	#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-	#define IO_Tell()						ftell(File)
+#define IO_INTERFACE					FILE //Type
+#define IO								File //Argument
+#define IO_In(FileName)					fopen(FileName, "rb")
+#define IO_Out(FileName)				fopen(FileName, "wb+")
+#define IO_Close(File)					fclose(File)
+#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+#define IO_Tell()						ftell(File)
 #endif //WIN32
 
 #define MAXTAG 40
@@ -282,16 +282,16 @@ namespace AV_Tiff_STL3 {
 	/***************************************************************************
 	***************************************************************************/
 	enum class Tiff_Err {
-		eTiff_OK		= 0,
-		eFileOpenErr	= -1,
-		eVersionErr		= -2,/*!< Check Win or Mac version.*/
-		eTooManyTags	= -3,/*!< Tags > MaxTag; */
-		eTagStripErr	= -4,/*!< StripByteCount.n != StripOffset.n;*/
-		eMemoryAllocFail= -5,
-		eDataTypeErr	= -6,
-		eCompressData	= -7,
-		eUnDefineErr	= -9999,
-		eTiff_NEW_TAG	= 1
+		eTiff_OK = 0,
+		eFileOpenErr = -1,
+		eVersionErr = -2,/*!< Check Win or Mac version.*/
+		eTooManyTags = -3,/*!< Tags > MaxTag; */
+		eTagStripErr = -4,/*!< StripByteCount.n != StripOffset.n;*/
+		eMemoryAllocFail = -5,
+		eDataTypeErr = -6,
+		eCompressData = -7,
+		eUnDefineErr = -9999,
+		eTiff_NEW_TAG = 1
 	};
 
 	/***************************************************************************
@@ -377,14 +377,18 @@ namespace AV_Tiff_STL3 {
 		TiffTagSignature Signature;
 	};
 
-#ifdef SHARED_POINTER
-	typedef shared_ptr<TiffTag> TiffTagPtr;
+#ifdef SMART_POINTER
+	//typedef shared_ptr<TiffTag> TiffTagPtr;
+	using TiffTagPtr = shared_ptr<TiffTag>;		
 #else
 	typedef TiffTag* TiffTagPtr;
-#endif //SHARED_POINTER
+#endif //SMART_POINTER
 
-	typedef vector<TiffTagPtr> TagList;
-	typedef TagList::iterator TiffTag_iter;
+	//	typedef vector<TiffTagPtr> TagList;
+	//	typedef TagList::iterator TiffTag_iter;
+	using  TagList = vector<TiffTagPtr>;
+	using  TiffTag_iter = TagList::iterator;
+
 #define TiffTag_Begin m_IFD.m_TagList.begin()
 #define TiffTag_End m_IFD.m_TagList.end()	
 
@@ -425,11 +429,11 @@ namespace AV_Tiff_STL3 {
 		virtual		~Tiff();
 		virtual		void Reset();
 		virtual		Tiff_Err CheckFile(IO_INTERFACE* IO);
-		virtual		Tiff_Err	ReadTiff(IO_INTERFACE* IO);
+		virtual		Tiff_Err ReadTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err SaveTiff(IO_INTERFACE* IO);
-		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
-		virtual		Tiff_Err	SaveFile(LPCSTR FileName);
-		virtual		Tiff_Err	SaveRaw(LPCSTR FileName);
+		virtual		Tiff_Err ReadFile(LPCSTR FileName);
+		virtual		Tiff_Err SaveFile(LPCSTR FileName);
+		virtual		Tiff_Err SaveRaw(LPCSTR FileName);
 
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
@@ -439,25 +443,25 @@ namespace AV_Tiff_STL3 {
 		//	Tag Operation
 		TiffTagPtr	GetTag(const TiffTagSignature Signature);
 		DWORD		GetTagValue(const TiffTagSignature Signature);
-		Tiff_Err		SetTag(TiffTagPtr NewTag);
-		Tiff_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tiff_Err	SetTag(TiffTagPtr NewTag);
+		Tiff_Err	SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 	protected:
 		//Read Image
 		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
-		Tiff_Err		ReadImage(IO_INTERFACE* IO);
-		Tiff_Err		ReadMultiStripOffset(IO_INTERFACE* IO);
+		Tiff_Err	ReadImage(IO_INTERFACE* IO);
+		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
 		//Write Image
 		virtual		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
-		Tiff_Err		WriteIFD(IO_INTERFACE* IO);
-		Tiff_Err		WriteTagData(IO_INTERFACE* IO);
-		Tiff_Err		WriteImageData(IO_INTERFACE* IO);
-		Tiff_Err		WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
+		Tiff_Err	WriteIFD(IO_INTERFACE* IO);
+		Tiff_Err	WriteTagData(IO_INTERFACE* IO);
+		Tiff_Err	WriteImageData(IO_INTERFACE* IO);
+		Tiff_Err	WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;
@@ -479,11 +483,11 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
 #endif //VIRTUAL_IO
 
-		Tiff_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
-		Tiff_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
-		Tiff_Err		CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
-		Tiff_Err		SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
-		Tiff_Err		SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
+		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
+		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
+		Tiff_Err	SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf = nullptr);
+		Tiff_Err	SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 		//operation
 		template<class T>
@@ -517,7 +521,7 @@ namespace AV_Tiff_STL3 {
 		void		SetXY_MQ(int X, int Y, BYTE Value) { *(GetXY_MQ(X, Y)) = Value; };
 
 		//Icc profile Operation.
-		Tiff_Err		SetIccProfile(char* IccFile);
+		Tiff_Err	SetIccProfile(char* IccFile);
 		void		SaveIccProfile(char* OutIccFile);
 		void		RemoveIcc();
 
@@ -543,85 +547,85 @@ using namespace AV_Tiff_STL3;
 
 //For fix C26812, for VS2019
 #define NullTag								TiffTagSignature::eNullTag
-#define NewSubfileType				        TiffTagSignature::eNewSubfileType
-#define SubfileType					        TiffTagSignature::eSubfileType
-#define ImageWidth					        TiffTagSignature::eImageWidth
-#define ImageLength					        TiffTagSignature::eImageLength
-#define BitsPerSample				        TiffTagSignature::eBitsPerSample
-#define Compression					        TiffTagSignature::eCompression
-#define PhotometricInterpretation	        TiffTagSignature::ePhotometricInterpretation
-#define Threshholding				        TiffTagSignature::eThreshholding
-#define CellWidth					        TiffTagSignature::eCellWidth
-#define CellLength					        TiffTagSignature::eCellLength
-#define FillOrder					        TiffTagSignature::eFillOrder
-#define DocumentName				        TiffTagSignature::eDocumentName
-#define ImageDescription			        TiffTagSignature::eImageDescription
-#define Make						        TiffTagSignature::eMake
-#define Model						        TiffTagSignature::eModel
-#define StripOffsets				        TiffTagSignature::eStripOffsets
-#define Orientation					        TiffTagSignature::eOrientation
-#define SamplesPerPixel				        TiffTagSignature::eSamplesPerPixel
-#define RowsPerStrip				        TiffTagSignature::eRowsPerStrip
-#define StripByteCounts				        TiffTagSignature::eStripByteCounts
-#define MinSampleValue				        TiffTagSignature::eMinSampleValue
-#define MaxSampleValue				        TiffTagSignature::eMaxSampleValue
-#define XResolution					        TiffTagSignature::eXResolution
-#define YResolution					        TiffTagSignature::eYResolution
-#define PlanarConfiguration			        TiffTagSignature::ePlanarConfiguration
-#define PageName					        TiffTagSignature::ePageName
-#define XPosition					        TiffTagSignature::eXPosition
-#define YPosition					        TiffTagSignature::eYPosition
-#define FreeOffsets					        TiffTagSignature::eFreeOffsets
-#define FreeByteCounts				        TiffTagSignature::eFreeByteCounts
-#define GrayResponseUnit			        TiffTagSignature::eGrayResponseUnit
-#define GrayResponsCurve			        TiffTagSignature::eGrayResponsCurve
-#define T4Options					        TiffTagSignature::eT4Options
-#define T6Options					        TiffTagSignature::eT6Options
-#define ResolutionUnit				        TiffTagSignature::eResolutionUnit
-#define PageNumber					        TiffTagSignature::ePageNumber
-#define TransferFunction			        TiffTagSignature::eTransferFunction
-#define Software					        TiffTagSignature::eSoftware
-#define DateTime					        TiffTagSignature::eDateTime
-#define Artist						        TiffTagSignature::eArtist
-#define HostComputer				        TiffTagSignature::eHostComputer
-#define Predicator					        TiffTagSignature::ePredicator
-#define TiffWhitePoint				        TiffTagSignature::eWhitePoint
-#define PrimaryChromaticities		        TiffTagSignature::ePrimaryChromaticities
-#define ColorMap					        TiffTagSignature::eColorMap
-#define HalftoneHints				        TiffTagSignature::eHalftoneHints
-#define TileWidth					        TiffTagSignature::eTileWidth
-#define TileLength					        TiffTagSignature::eTileLength
-#define TileOffsets					        TiffTagSignature::eTileOffsets
-#define TileByteCounts				        TiffTagSignature::eTileByteCounts
-#define InkSet						        TiffTagSignature::eInkSet
-#define InkNames					        TiffTagSignature::eInkNames
-#define NumberOfInks				        TiffTagSignature::eNumberOfInks
-#define DotRange					        TiffTagSignature::eDotRange
-#define TargetPrinter				        TiffTagSignature::eTargetPrinter
-#define ExtraSamples				        TiffTagSignature::eExtraSamples
-#define SampleFormat				        TiffTagSignature::eSampleFormat
-#define SMinSampleValue				        TiffTagSignature::eSMinSampleValue
-#define SMaxSampleValue				        TiffTagSignature::eSMaxSampleValue
-#define TransforRange				        TiffTagSignature::eTransforRange
-#define JPEGProc					        TiffTagSignature::eJPEGProc
-#define JPEGInterchangeFormat		        TiffTagSignature::eJPEGInterchangeFormat
-#define JPEGIngerchangeFormatLength         TiffTagSignature::eJPEGIngerchangeFormatLength
-#define JPEGRestartInterval			        TiffTagSignature::eJPEGRestartInterval
-#define JPEGLosslessPredicators		        TiffTagSignature::eJPEGLosslessPredicators
-#define JPEGPointTransforms			        TiffTagSignature::eJPEGPointTransforms
-#define JPEGQTable					        TiffTagSignature::eJPEGQTable
-#define JPEGDCTable					        TiffTagSignature::eJPEGDCTable
-#define JPEGACTable					        TiffTagSignature::eJPEGACTable
-#define YCbCrCoefficients			        TiffTagSignature::eYCbCrCoefficients
-#define YCbCrSampling				        TiffTagSignature::eYCbCrSampling
-#define YCbCrPositioning			        TiffTagSignature::eYCbCrPositioning
-#define ReferenceBlackWhite			        TiffTagSignature::eReferenceBlackWhite
-#define XML_Data					        TiffTagSignature::eXML_Data
-#define CopyRight					        TiffTagSignature::eCopyRight
-#define IPTC						        TiffTagSignature::eIPTC
-#define Photoshop					        TiffTagSignature::ePhotoshop
-#define Exif_IFD					        TiffTagSignature::eExif_IFD
-#define IccProfile					        TiffTagSignature::eIccProfile
+#define NewSubfileType						TiffTagSignature::eNewSubfileType
+#define SubfileType							TiffTagSignature::eSubfileType
+#define ImageWidth							TiffTagSignature::eImageWidth
+#define ImageLength							TiffTagSignature::eImageLength
+#define BitsPerSample						TiffTagSignature::eBitsPerSample
+#define Compression							TiffTagSignature::eCompression
+#define PhotometricInterpretation			TiffTagSignature::ePhotometricInterpretation
+#define Threshholding						TiffTagSignature::eThreshholding
+#define CellWidth							TiffTagSignature::eCellWidth
+#define CellLength							TiffTagSignature::eCellLength
+#define FillOrder							TiffTagSignature::eFillOrder
+#define DocumentName						TiffTagSignature::eDocumentName
+#define ImageDescription					TiffTagSignature::eImageDescription
+#define Make								TiffTagSignature::eMake
+#define Model								TiffTagSignature::eModel
+#define StripOffsets						TiffTagSignature::eStripOffsets
+#define Orientation							TiffTagSignature::eOrientation
+#define SamplesPerPixel						TiffTagSignature::eSamplesPerPixel
+#define RowsPerStrip						TiffTagSignature::eRowsPerStrip
+#define StripByteCounts						TiffTagSignature::eStripByteCounts
+#define MinSampleValue						TiffTagSignature::eMinSampleValue
+#define MaxSampleValue						TiffTagSignature::eMaxSampleValue
+#define XResolution							TiffTagSignature::eXResolution
+#define YResolution							TiffTagSignature::eYResolution
+#define PlanarConfiguration					TiffTagSignature::ePlanarConfiguration
+#define PageName							TiffTagSignature::ePageName
+#define XPosition							TiffTagSignature::eXPosition
+#define YPosition							TiffTagSignature::eYPosition
+#define FreeOffsets							TiffTagSignature::eFreeOffsets
+#define FreeByteCounts						TiffTagSignature::eFreeByteCounts
+#define GrayResponseUnit					TiffTagSignature::eGrayResponseUnit
+#define GrayResponsCurve					TiffTagSignature::eGrayResponsCurve
+#define T4Options							TiffTagSignature::eT4Options
+#define T6Options							TiffTagSignature::eT6Options
+#define ResolutionUnit						TiffTagSignature::eResolutionUnit
+#define PageNumber							TiffTagSignature::ePageNumber
+#define TransferFunction					TiffTagSignature::eTransferFunction
+#define Software							TiffTagSignature::eSoftware
+#define DateTime							TiffTagSignature::eDateTime
+#define Artist								TiffTagSignature::eArtist
+#define HostComputer						TiffTagSignature::eHostComputer
+#define Predicator							TiffTagSignature::ePredicator
+#define TiffWhitePoint						TiffTagSignature::eWhitePoint
+#define PrimaryChromaticities				TiffTagSignature::ePrimaryChromaticities
+#define ColorMap							TiffTagSignature::eColorMap
+#define HalftoneHints						TiffTagSignature::eHalftoneHints
+#define TileWidth							TiffTagSignature::eTileWidth
+#define TileLength							TiffTagSignature::eTileLength
+#define TileOffsets							TiffTagSignature::eTileOffsets
+#define TileByteCounts						TiffTagSignature::eTileByteCounts
+#define InkSet								TiffTagSignature::eInkSet
+#define InkNames							TiffTagSignature::eInkNames
+#define NumberOfInks						TiffTagSignature::eNumberOfInks
+#define DotRange							TiffTagSignature::eDotRange
+#define TargetPrinter						TiffTagSignature::eTargetPrinter
+#define ExtraSamples						TiffTagSignature::eExtraSamples
+#define SampleFormat						TiffTagSignature::eSampleFormat
+#define SMinSampleValue						TiffTagSignature::eSMinSampleValue
+#define SMaxSampleValue						TiffTagSignature::eSMaxSampleValue
+#define TransforRange						TiffTagSignature::eTransforRange
+#define JPEGProc							TiffTagSignature::eJPEGProc
+#define JPEGInterchangeFormat				TiffTagSignature::eJPEGInterchangeFormat
+#define JPEGIngerchangeFormatLength			TiffTagSignature::eJPEGIngerchangeFormatLength
+#define JPEGRestartInterval					TiffTagSignature::eJPEGRestartInterval
+#define JPEGLosslessPredicators				TiffTagSignature::eJPEGLosslessPredicators
+#define JPEGPointTransforms					TiffTagSignature::eJPEGPointTransforms
+#define JPEGQTable							TiffTagSignature::eJPEGQTable
+#define JPEGDCTable							TiffTagSignature::eJPEGDCTable
+#define JPEGACTable							TiffTagSignature::eJPEGACTable
+#define YCbCrCoefficients					TiffTagSignature::eYCbCrCoefficients
+#define YCbCrSampling						TiffTagSignature::eYCbCrSampling
+#define YCbCrPositioning					TiffTagSignature::eYCbCrPositioning
+#define ReferenceBlackWhite					TiffTagSignature::eReferenceBlackWhite
+#define XML_Data							TiffTagSignature::eXML_Data
+#define CopyRight							TiffTagSignature::eCopyRight
+#define IPTC								TiffTagSignature::eIPTC
+#define Photoshop							TiffTagSignature::ePhotoshop
+#define Exif_IFD							TiffTagSignature::eExif_IFD
+#define IccProfile							TiffTagSignature::eIccProfile
 
 #define UnknownType							FieldType::eUnknownType
 #define	Byte								FieldType::eByte
@@ -641,14 +645,14 @@ using namespace AV_Tiff_STL3;
 #define	Unknown4							FieldType::eUnknown4
 
 #define Tiff_OK								Tiff_Err::eTiff_OK
-#define FileOpenErr		                    Tiff_Err::eFileOpenErr
-#define VersionErr			                Tiff_Err::eVersionErr
-#define TooManyTags	    	                Tiff_Err::eTooManyTags
-#define TagStripErr	     	    	        Tiff_Err::eTagStripErr
-#define MemoryAllocFail     	            Tiff_Err::eMemoryAllocFail
-#define DataTypeErr	                	    Tiff_Err::eDataTypeErr
-#define CompressData	                    Tiff_Err::eCompressData
-#define UnDefineErr	                    	Tiff_Err::eUnDefineErr
-#define Tiff_NEW_TAG	                    Tiff_Err::eTiff_NEW_TAG
+#define FileOpenErr							Tiff_Err::eFileOpenErr
+#define VersionErr							Tiff_Err::eVersionErr
+#define TooManyTags							Tiff_Err::eTooManyTags
+#define TagStripErr							Tiff_Err::eTagStripErr
+#define MemoryAllocFail						Tiff_Err::eMemoryAllocFail
+#define DataTypeErr							Tiff_Err::eDataTypeErr
+#define CompressData						Tiff_Err::eCompressData
+#define UnDefineErr							Tiff_Err::eUnDefineErr
+#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG
 
 #endif // !DEFINED(_tIFF_STL3)

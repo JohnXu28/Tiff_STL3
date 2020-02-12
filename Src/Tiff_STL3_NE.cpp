@@ -300,10 +300,10 @@ Tiff::~Tiff()
 
 void Tiff::Reset()
 {
-#ifndef SHARED_POINTER
+#ifndef SMART_POINTER
 	for_each(TiffTag_Begin, TiffTag_End,
 		[](TiffTag* pos) {delete pos; });
-#endif //SHARED_POINTER
+#endif //SMART_POINTER
 
 	m_IFD.m_TagList.clear();
 }
@@ -350,9 +350,9 @@ ErrCode Tiff::SetTag(TiffTagPtr NewTag)
 	{//Replace
 		if (*pos != NewTag)
 		{
-#ifndef SHARED_POINTER
+#ifndef SMART_POINTER
 			delete *pos;
-#endif //SHARED_POINTER
+#endif //SMART_POINTER
 
 			*pos = NewTag;
 		}
@@ -650,7 +650,7 @@ ErrCode Tiff::ReadImage(IO_INTERFACE *IO)
 	if (rowsPerStrip == 0)
 	{
 		rowsPerStrip = Length;
-		TiffTagPtr NewTag = SHARED_PTR(TiffTag, new TiffTag(RowsPerStrip, Short, 1, Length));
+		TiffTagPtr NewTag = SMART_PTR(TiffTag, new TiffTag(RowsPerStrip, Short, 1, Length));
 		m_IFD.m_TagList.push_back(NewTag);
 	}
 
@@ -874,7 +874,7 @@ ErrCode Tiff::WriteIFD(IO_INTERFACE *IO)
 	DWORD *lpTemp = lpOutData;
 
 	for_each(TiffTag_Begin, TiffTag_End,
-		[&lpTemp](TiffTagPtr pos)
+		[&lpTemp](const TiffTagPtr& pos)
 	{
 		*lpTemp++ = pos->tag | (pos->type << 16);
 		*lpTemp++ = pos->n;
@@ -894,7 +894,7 @@ ErrCode Tiff::WriteIFD(IO_INTERFACE *IO)
 ErrCode Tiff::WriteTagData(IO_INTERFACE *IO)
 {
 	for_each(TiffTag_Begin, TiffTag_End,
-		[&IO](TiffTagPtr pos) {pos->SaveFile(IO); });
+		[&IO](const TiffTagPtr& pos) {pos->SaveFile(IO); });
 	return Tiff_OK;
 }
 
