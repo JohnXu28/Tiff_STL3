@@ -166,7 +166,8 @@ struct TIFFHEADER
 
 //*************************************************************y
 
-typedef vector<TIFFTAG> TAG_LIST;
+//typedef vector<TIFFTAG> TAG_LIST;
+using  TAG_LIST = vector<TIFFTAG>;
 class CTiff  
 {
 public:

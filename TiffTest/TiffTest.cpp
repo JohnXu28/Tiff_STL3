@@ -405,9 +405,10 @@ int FullTest4()
 void SingleTest()
 {
 	STiff* lpTiff = Tiff_Create();
-	if (Tiff_ReadFile(lpTiff, "3RGB8.tif") == Tiff_OK)
+	if (Tiff_ReadFile(lpTiff, "1LineArt.tif") == Tiff_OK)
 	{
-		Tiff_SaveFile(lpTiff, "3RGB8Out.tif");
+		lpTiff->SetTag(PhotometricInterpretation, Short, 1, 1, 0);
+		Tiff_SaveFile(lpTiff, "1LineArtOut3.tif");
 		Tiff_Close(lpTiff);
 	}
 }
@@ -545,7 +546,7 @@ int main(int argc, _TCHAR* argv[])
 {
 #ifdef _DEBUG
 	//_CrtSetBreakAlloc(192);
-	//_crtBreakAlloc = 184;
+	_crtBreakAlloc = 186;
 	atexit(DumpMemory);
 #endif //_DEBUG
 
@@ -575,7 +576,7 @@ int main(int argc, _TCHAR* argv[])
 	Tag_Test_Construct();
 #endif //Tag_Test
 
-	char* lpBuf = new char[128];
+//	char* lpBuf = new char[128];
 
 	return 0;
 }
