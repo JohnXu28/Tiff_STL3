@@ -127,11 +127,12 @@ inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
 #define ENABLE_SHARED_POINTER
 
 #ifdef ENABLE_SHARED_POINTER
-	#define SHARED_POINTER
-	#define SHARED_PTR(CLASS, ptr) shared_ptr<CLASS>(ptr)
+	#define SMART_POINTER
+	//#define SMART_PTR(CLASS, ptr) shared_ptr<CLASS>(ptr)
+	#define SMART_PTR(CLASS, ptr) unique_ptr<CLASS>(ptr)
 	#define GetPtr(ptr) ptr.get()
 #else
-	#define SHARED_PTR(CLASS, ptr) ptr
+	#define SMART_PTR(CLASS, ptr) ptr
 	#define GetPtr(ptr) ptr
 #endif //SHARED_POINTER
 
