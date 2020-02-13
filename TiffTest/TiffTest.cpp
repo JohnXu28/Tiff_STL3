@@ -423,7 +423,7 @@ public:
 		cout << "End" << endl;
 	};
 	void display() { cout << "GL" << endl; }
-	char Data[65536];
+	char Data[65536] = {0};
 };
 
 GL *gl = new GL;
