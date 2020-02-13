@@ -371,9 +371,11 @@ Tiff::~Tiff()
 
 void Tiff::Reset()
 {
-#ifndef SMART_POINTER
-	for_each(TiffTag_Begin, TiffTag_End,
-		[](TiffTag* pos) {delete pos; });
+#if (!SMART_POINTER)
+	//for_each(TiffTag_Begin, TiffTag_End, [](TiffTag* pos) {delete pos; });
+	for (const auto& pos : m_IFD.m_TagList)
+		delete pos;
+
 #endif //SMART_POINTER
 
 	m_IFD.m_TagList.clear();
@@ -421,7 +423,7 @@ Tiff_Err Tiff::SetTag(TiffTagPtr NewTag)
 	{//Replace
 		if (*pos != NewTag)
 		{
-#ifndef SMART_POINTER
+#if (!SMART_POINTER)
 			delete *pos;
 #endif //SMART_POINTER
 
@@ -652,7 +654,7 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE *IO)
 	if (rowsPerStrip == 0)
 	{
 		rowsPerStrip = Length;
-#ifdef SMART_POINTER
+#if SMART_POINTER
 		TiffTagPtr NewTag = make_shared<TiffTag>(RowsPerStrip, Short, 1, Length);
 #else
 		TiffTagPtr NewTag = new TiffTag(RowsPerStrip, Short, 1, Length);
@@ -879,13 +881,14 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE *IO)
 	memset(lpOutData, 0, EntryCounts * 3 + 12);
 	DWORD *lpTemp = lpOutData;
 
-	for_each(TiffTag_Begin, TiffTag_End,
-		[&lpTemp](const TiffTagPtr& pos)
+	//for_each(TiffTag_Begin, TiffTag_End,
+	//	[&lpTemp](const TiffTagPtr& pos)
+	for(const auto& pos: m_IFD.m_TagList)
 	{
 		*lpTemp++ = (int)(pos->tag) | ((int)(pos->type) << 16);
 		*lpTemp++ = pos->n;
 		*lpTemp++ = pos->value;
-	});
+	};
 
 	IO_Write((LPBYTE)lpOutData, sizeof(DWORD), EntryCounts * 3);
 	delete[]lpOutData;
@@ -899,8 +902,14 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE *IO)
 
 Tiff_Err Tiff::WriteTagData(IO_INTERFACE *IO)
 {
+	// For C++11 or C++14
+	for (const auto& pos : m_IFD.m_TagList)
+		pos->SaveFile(IO);
+	
+	/*
 	for_each(TiffTag_Begin, TiffTag_End,
 		[&IO](const TiffTagPtr& pos) {pos->SaveFile(IO); });
+	*/
 	return Tiff_OK;
 }
 

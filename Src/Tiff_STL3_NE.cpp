@@ -300,9 +300,10 @@ Tiff::~Tiff()
 
 void Tiff::Reset()
 {
-#ifndef SMART_POINTER
-	for_each(TiffTag_Begin, TiffTag_End,
-		[](TiffTag* pos) {delete pos; });
+#if (!SMART_POINTER)
+	//for_each(TiffTag_Begin, TiffTag_End, [](TiffTag* pos) {delete pos; });
+	for(const auto& pos: m_IFD.m_TagList)
+		delete pos; 
 #endif //SMART_POINTER
 
 	m_IFD.m_TagList.clear();
@@ -350,7 +351,7 @@ ErrCode Tiff::SetTag(TiffTagPtr NewTag)
 	{//Replace
 		if (*pos != NewTag)
 		{
-#ifndef SMART_POINTER
+#if (!SMART_POINTER)
 			delete *pos;
 #endif //SMART_POINTER
 
@@ -873,13 +874,13 @@ ErrCode Tiff::WriteIFD(IO_INTERFACE *IO)
 	memset(lpOutData, 0, EntryCounts * 3 + 12);
 	DWORD *lpTemp = lpOutData;
 
-	for_each(TiffTag_Begin, TiffTag_End,
-		[&lpTemp](const TiffTagPtr& pos)
+	//for_each(TiffTag_Begin, TiffTag_End, [&lpTemp](const TiffTagPtr& pos)
+	for (const auto& pos : m_IFD.m_TagList)
 	{
 		*lpTemp++ = pos->tag | (pos->type << 16);
 		*lpTemp++ = pos->n;
 		*lpTemp++ = pos->value;
-	});
+	};
 
 	IO_Write((LPBYTE)lpOutData, sizeof(DWORD), EntryCounts * 3);
 	delete[]lpOutData;
@@ -893,8 +894,10 @@ ErrCode Tiff::WriteIFD(IO_INTERFACE *IO)
 
 ErrCode Tiff::WriteTagData(IO_INTERFACE *IO)
 {
-	for_each(TiffTag_Begin, TiffTag_End,
-		[&IO](const TiffTagPtr& pos) {pos->SaveFile(IO); });
+//	for_each(TiffTag_Begin, TiffTag_End,[&IO](const TiffTagPtr& pos) {pos->SaveFile(IO); });
+	for (const auto& pos : m_IFD.m_TagList)
+		pos->SaveFile(IO);
+
 	return Tiff_OK;
 }
 

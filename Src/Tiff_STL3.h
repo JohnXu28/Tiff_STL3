@@ -377,7 +377,7 @@ namespace AV_Tiff_STL3 {
 		TiffTagSignature Signature;
 	};
 
-#ifdef SMART_POINTER
+#if SMART_POINTER
 	//typedef shared_ptr<TiffTag> TiffTagPtr;
 	using TiffTagPtr = shared_ptr<TiffTag>;		
 #else
