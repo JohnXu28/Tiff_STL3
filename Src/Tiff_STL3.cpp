@@ -417,7 +417,7 @@ Tiff_Err Tiff::SetTag(TiffTagPtr NewTag)
 	if (pos == TiffTag_End)
 	{
 		m_IFD.m_TagList.push_back(NewTag);
-		int size = m_IFD.m_TagList.size();//for what??? I forget it.
+		//m_IFD.m_TagList.size();//for what??? I forget it.
 	}
 	else
 	{//Replace
