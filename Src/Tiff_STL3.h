@@ -97,58 +97,60 @@ main(int argc, _TCHAR* argv[]))
 /***************************************************************************
 Virtual IO
 ***************************************************************************/
+//Don't define Virtual_IO in Linux enviornment
 //#define VIRTUAL_IO	
-#define VIRTUAL_IO_STL	
+//#define VIRTUAL_IO_STL	
 
 #ifdef WIN32 //Windows
-#include <windows.h>
-#pragma warning(disable : 4996)//for Net
+	#include <windows.h>
+	#pragma warning(disable : 4996)//for Net
 
-#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
-#include <SysInfo\Virtual_IO.h>
-#define IO_In(FileName)					new IO_File(FileName, "rb")
-#define IO_Out(FileName)				new IO_File(FileName, "wb")
-#define IO_Close(IO)					delete IO
-#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-#define IO_Tell()						IO->Tell()
-#define IO_GetHandle()					IO->GetHandle()
-#elif defined(VIRTUAL_IO_STL)//Fastest
-#include <fstream>
-#include <SysInfo\Virtual_IO.h>
+	#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
+		#include <SysInfo\Virtual_IO.h>
+		#define IO_In(FileName)					new IO_File(FileName, "rb")
+		#define IO_Out(FileName)				new IO_File(FileName, "wb")
+		#define IO_Close(IO)					delete IO
+		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+		#define IO_Tell()						IO->Tell()
+		#define IO_GetHandle()					IO->GetHandle()
 
-#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
-#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
-#define IO_Close(IO)					delete IO
-#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-#define IO_Tell()						IO->Tell()
-#define IO_GetHandle()					IO->GetHandle()
+	#elif defined(VIRTUAL_IO_STL)//Fastest
+		#include <fstream>
+		#include <SysInfo\Virtual_IO.h>
 
-#else //Almost the same with VIRTUAL_IO_STL
-#define IO_INTERFACE					FILE //Type
-#define IO								File //Argument
-#define IO_In(FileName)					fopen(FileName, "rb")
-#define IO_Out(FileName)				fopen(FileName, "wb+")
-#define IO_Close(File)					fclose(File)
-#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-#define IO_Tell()						ftell(File)
-#endif //VIRTUAL_IO
+		#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
+		#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
+		#define IO_Close(IO)					delete IO
+		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+		#define IO_Tell()						IO->Tell()
+		#define IO_GetHandle()					IO->GetHandle()
+
+	#else //Almost the same with VIRTUAL_IO_STL
+		#define IO_INTERFACE					FILE //Type
+		#define IO								File //Argument
+		#define IO_In(FileName)					fopen(FileName, "rb")
+		#define IO_Out(FileName)				fopen(FileName, "wb+")
+		#define IO_Close(File)					fclose(File)
+		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+		#define IO_Tell()						ftell(File)
+	#endif //VIRTUAL_IO
 
 #else //Linux
-#define IO_INTERFACE					FILE //Type
-#define IO								File //Argument
-#define IO_In(FileName)					fopen(FileName, "rb")
-#define IO_Out(FileName)				fopen(FileName, "wb+")
-#define IO_Close(File)					fclose(File)
-#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-#define IO_Tell()						ftell(File)
+	#define IO_INTERFACE					FILE //Type
+	#define IO								File //Argument
+	#define IO_In(FileName)					fopen(FileName, "rb")
+	#define IO_Out(FileName)				fopen(FileName, "wb+")
+	#define IO_Close(File)					fclose(File)
+	#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+	#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+	#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+	#define IO_Tell()						ftell(File)
 #endif //WIN32
 
 #define MAXTAG 40

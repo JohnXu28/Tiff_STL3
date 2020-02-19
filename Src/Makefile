@@ -2,7 +2,7 @@ include ../../Makefile.inc
 
 CPPS = 	Tiff_STL3.cpp 
 		
-CPPFLAGS += -fPIC
+CPPFLAGS += -fPIC -I ../../
 
 #================================================================
 .PHONY:release
