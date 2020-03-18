@@ -668,7 +668,15 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE *IO)
 		{//RGBRGB
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
 #if 1//Liao's Bug, data Error.
-			int ImgSize = (Width * Length * samplesPerPixel * bitsPerSample) >> 3;
+			int ImgSize = 0;
+			if (bitsPerSample == 1)
+			{
+				int BytesPerLine = (int)ceil((double)Width / 8.0);
+				ImgSize = Length * BytesPerLine;
+			}
+			else
+				ImgSize = (Width * Length * samplesPerPixel * bitsPerSample) >> 3;
+
 			if (ImgSize != (int)stripByteCounts)
 			{
 				stripByteCounts = ImgSize;
