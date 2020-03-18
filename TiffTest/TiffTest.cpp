@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include <string>
 #include <iostream>
+#include <memory>
 using namespace std;
 
 #define John
@@ -18,6 +19,8 @@ using namespace std;
 #define Single_Test	0
 
 #define Tag_Test 0
+#define RGB2CMY 0
+#define DOTCOUNT 0
 //#define CREATE_TIFF
 //#define CREATE_TIFF_4_1
 
@@ -414,24 +417,24 @@ void SingleTest()
 }
 #endif //Single_Test
 
+//
+//class GL
+//{
+//public:
+//	GL() {};
+//	~GL() {
+//		cout << "End" << endl;
+//	};
+//	void display() { cout << "GL" << endl; }
+//	char Data[65536] = {0};
+//};
 
-class GL
-{
-public:
-	GL() {};
-	~GL() {
-		cout << "End" << endl;
-	};
-	void display() { cout << "GL" << endl; }
-	char Data[65536] = {0};
-};
-
-GL *gl = new GL;
-GL g2;
-
+//GL *gl = new GL;
+//GL g2;
+//
 void DumpMemory(void)
 {
-	delete gl;
+	//delete gl;
 	DETECT_MEMORY_LEAKS;
 }
 
@@ -537,6 +540,86 @@ void GetTiffHeader(char* FileName)
 	//delete lpBuf;
 }
 
+void RGB2CMYK()
+{
+	CTiff* lpTiff = new CTiff("sRGB.tif"); 
+	int Width = lpTiff->GetTagValue(ImageWidth);
+	int Length = lpTiff->GetTagValue(ImageLength);
+	CTiff *lpCMYK = new CTiff(Width, Length, 72, 4, 8);
+
+	LPBYTE lpIn = lpTiff->GetImageBuf();
+	LPBYTE lpOut = lpCMYK->GetImageBuf();
+	int Size = Width * Length;
+	for (int i = 0; i < Size; i++)
+	{
+		*(lpOut++) = 255 - *(lpIn++);//C
+		*(lpOut++) = 255 - *(lpIn++);//M
+		*(lpOut++) = 255 - *(lpIn++);//Y
+		*(lpOut++) = 0;		
+	}
+	lpCMYK->SaveFile("CMYK.tif");
+}
+
+#if DOTCOUNT
+unsigned char DotLut[256] = {
+	0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
+};
+
+void DotCount(char* FileName)
+{
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(FileName);
+	int Width = lpTiff->GetTagValue(ImageWidth);
+	int Length = lpTiff->GetTagValue(ImageLength);
+	int samplesPerPixel = lpTiff->GetTagValue(SamplesPerPixel);
+	int bitsPerSample = lpTiff->GetTagValue(BitsPerSample);
+	int compress = lpTiff->GetTagValue(Compression);	
+
+	if (compress != 1)
+	{
+		cout << "Only Support Uncompress data." << endl;
+		return;
+	}
+	
+	if (samplesPerPixel != 1)
+	{
+		cout << "Only Support Gray Tiff." << endl;
+		return;
+	}
+
+	if (bitsPerSample != 1)
+	{
+		cout << "Only Support Lineart." << endl;
+		return;
+	}
+
+	int BytesPerLine = (int)ceil((double)Width / 8.0);
+	int Size = BytesPerLine * Length;
+	LPBYTE lpIn = lpTiff->GetImageBuf();
+	int dotcount = 0;
+	for (int i = 0; i < Size; i++)
+		dotcount += DotLut[*(lpIn++)];
+
+	if (lpTiff->GetTagValue(PhotometricInterpretation) == 1)//Black is zero
+		cout << "DotCount : " << (Width * Length - dotcount) << ", Percent : " << (double)(Width * Length - dotcount) / (Width * Length) << endl;
+	else
+		cout << "DotCount : " << dotcount << ", Percent : " << (double)dotcount/(Width*Length) << endl;
+}
+#endif //DOTCOUNT
 
 /*********************************************************************************************************/
 //		Main ( )
@@ -552,7 +635,7 @@ int main(int argc, _TCHAR* argv[])
 
 	char Dir[128];
 	int size = GetCurrentDirectory(128, Dir);
-	cout << "Dir : " << Dir << endl;
+	cout << "Dir : " << Dir << endl;	
 
 #if Tiff_Test
 	FullTest1();
@@ -576,8 +659,18 @@ int main(int argc, _TCHAR* argv[])
 	Tag_Test_Construct();
 #endif //Tag_Test
 
-//	char* lpBuf = new char[128];
+#if	RGB2CMY
+	RGB2CMYK();
+#endif //Tag_Test
 
+	//	char* lpBuf = new char[128];
+#if DOTCOUNT
+	if (argc < 2)
+		cout << "DotCount In.tif" << endl;	
+	else
+		DotCount(argv[1]);
+#endif //DOTCOUNT
+	//cout << "test end" << endl;
 	return 0;
 }
 
