@@ -23,7 +23,7 @@ using namespace std;
 #define DOTCOUNT 0
 //#define CREATE_TIFF
 //#define CREATE_TIFF_4_1
-
+#define TEST 1
 
 #if Tiff_STL3
 #include <Tiff_STL3\Src\Tiff_STL3.h>
@@ -670,6 +670,11 @@ int main(int argc, _TCHAR* argv[])
 	else
 		DotCount(argv[1]);
 #endif //DOTCOUNT
+
+#if	TEST
+	void SaveHalftone();
+	SaveHalftone();
+#endif //TEST
 	//cout << "test end" << endl;
 	return 0;
 }
