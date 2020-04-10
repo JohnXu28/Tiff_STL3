@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <Windows.h>
+#include <Tiff_STL3\Src\Tiff_STL3.h>
 using namespace std;
 
 const UINT8 bi_600dpi_K_blue_thresh[16384] = {//128x128
@@ -2206,4 +2207,40 @@ void SaveHalftone()
     fwrite(bi_highLPI_K_cluster_thresh, 1, 96 * 96, file);
     fclose(file);
 
+}
+
+void Tiff2Dat(int argc, _TCHAR* argv[])
+{
+    if (argc < 3)
+    {
+        cout << "Tools for IPS" << endl;
+        cout << "Tiff2Dat in.tif out.dat" << endl;
+        return;
+    }
+
+    shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+    int Width = lpTiff->GetTagValue(ImageWidth);
+    if (Width == 0)//open fail
+        return;
+
+    int Length = lpTiff->GetTagValue(ImageLength);
+    int samplesPerPixel = lpTiff->GetTagValue(SamplesPerPixel);
+    int bitsPerSample = lpTiff->GetTagValue(BitsPerSample);
+    int compress = lpTiff->GetTagValue(Compression);
+
+    LPBYTE lpIndex = lpTiff->GetImageBuf();
+    FILE* file = fopen(argv[2], "w+");
+    for (int i = 0; i < Length; i++)
+    {
+        for (int j = 0; j < Width; j++)
+        {
+            for (int k = 0; k < samplesPerPixel; k++)
+            {
+                fprintf(file, "%3d,", *(lpIndex++));
+            }
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
 }
