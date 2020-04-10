@@ -15,7 +15,7 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	1
+#define Tiff_Test	0
 #define Single_Test	0
 
 #define Tag_Test 0
@@ -23,7 +23,8 @@ using namespace std;
 #define DOTCOUNT 0
 //#define CREATE_TIFF
 //#define CREATE_TIFF_4_1
-#define TEST 1
+#define TEST 0
+#define TIFF2DAT 1
 
 #if Tiff_STL3
 #include <Tiff_STL3\Src\Tiff_STL3.h>
@@ -676,6 +677,11 @@ int main(int argc, _TCHAR* argv[])
 	SaveHalftone();
 #endif //TEST
 	//cout << "test end" << endl;
+
+#if TIFF2DAT
+	void Tiff2Dat(int argc, _TCHAR * argv[]);
+	Tiff2Dat(argc, argv);
+#endif //TIFF2DAT
 	return 0;
 }
 
