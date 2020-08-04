@@ -2244,3 +2244,37 @@ void Tiff2Dat(int argc, _TCHAR* argv[])
 
     fclose(file);
 }
+
+void Gray2K(int argc, _TCHAR* argv[])
+{
+    if (argc < 3)
+    {
+        cout << "Tools for IPS, Convert Gray to K." << endl;
+        cout << "Gray2K in.tif out.tif" << endl;
+        return;
+    }
+
+    shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+    int Width = lpTiff->GetTagValue(ImageWidth);
+    if (Width == 0)//open fail
+        return;
+
+    int Length = lpTiff->GetTagValue(ImageLength);
+    int samplesPerPixel = lpTiff->GetTagValue(SamplesPerPixel);
+    int bitsPerSample = lpTiff->GetTagValue(BitsPerSample);
+    int compress = lpTiff->GetTagValue(Compression);
+
+    lpTiff->SetTagValue(PhotometricInterpretation, 0);
+    
+    LPBYTE lpIn = lpTiff->GetImageBuf();
+    LPBYTE lpOut = lpTiff->GetImageBuf();
+    int Size = Width * Length;
+
+    for (int i = 0; i < Size; i++)
+    {
+        *(lpOut++) = 255 - *(lpIn++);
+    }
+
+    lpTiff->SaveFile(argv[2]);
+    
+}
