@@ -23,8 +23,8 @@ using namespace std;
 #define DOTCOUNT 0
 //#define CREATE_TIFF
 //#define CREATE_TIFF_4_1
-#define TEST 0
-#define TIFF2DAT 1
+#define TEST 1
+#define TIFF2DAT 0
 
 #if Tiff_STL3
 #include <Tiff_STL3\Src\Tiff_STL3.h>
@@ -674,7 +674,10 @@ int main(int argc, _TCHAR* argv[])
 
 #if	TEST
 	void SaveHalftone();
-	SaveHalftone();
+	//SaveHalftone();
+
+	void Gray2K(int argc, _TCHAR * argv[]);
+	Gray2K(argc, argv);
 #endif //TEST
 	//cout << "test end" << endl;
 
