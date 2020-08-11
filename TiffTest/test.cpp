@@ -2257,7 +2257,17 @@ void Gray2K(int argc, _TCHAR* argv[])
     shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
     int Width = lpTiff->GetTagValue(ImageWidth);
     if (Width == 0)//open fail
+    {
+        cout << "Width is 0." << endl;
         return;
+    }
+
+    if (lpTiff->GetTagValue(PhotometricInterpretation) == 0)//open fail
+    {
+        cout << "PhotometricInterpretation is 0." << endl;
+        return;
+    }
+
 
     int Length = lpTiff->GetTagValue(ImageLength);
     int samplesPerPixel = lpTiff->GetTagValue(SamplesPerPixel);
