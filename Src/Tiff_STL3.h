@@ -381,7 +381,7 @@ namespace AV_Tiff_STL3 {
 
 #if SMART_POINTER
 	//typedef shared_ptr<TiffTag> TiffTagPtr;
-	using TiffTagPtr = shared_ptr<TiffTag>;		
+	using TiffTagPtr = shared_ptr<TiffTag>;
 #else
 	typedef TiffTag* TiffTagPtr;
 #endif //SMART_POINTER
