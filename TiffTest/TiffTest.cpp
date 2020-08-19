@@ -15,7 +15,7 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	0
+#define Tiff_Test	1
 #define Single_Test	0
 
 #define Tag_Test 0
@@ -23,7 +23,7 @@ using namespace std;
 #define DOTCOUNT 0
 //#define CREATE_TIFF
 //#define CREATE_TIFF_4_1
-#define TEST 1
+#define TEST 0
 #define TIFF2DAT 0
 
 #if Tiff_STL3

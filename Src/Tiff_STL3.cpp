@@ -387,7 +387,8 @@ void Tiff::Reset()
 TiffTagPtr Tiff::GetTag(const TiffTagSignature Signature)
 {
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
-		[&Signature](const TiffTagPtr& pos) {return pos->tag == Signature; });
+		[&Signature](const auto& pos) {return pos->tag == Signature; });
+
 
 	if (pos != TiffTag_End)
 		return *pos;
@@ -412,7 +413,7 @@ Tiff_Err Tiff::SetTag(TiffTagPtr NewTag)
 	TiffTagSignature sig = NewTag->tag;
 
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
-		[&sig](const TiffTagPtr& pos) {return pos->tag == sig; });
+		[&sig](const auto& pos) {return pos->tag == sig; });
 
 	if (pos == TiffTag_End)
 	{
@@ -843,7 +844,7 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE *IO)
 
 	//Recaculate Tag Offset.	
 	//for (auto pos = TiffTag_Begin; pos != TiffTag_End; ++pos)
-	for (auto &pos : m_IFD.m_TagList)
+	for (const auto& pos : m_IFD.m_TagList)
 	{
 		bool Offset = false;
 		switch (pos->type)
@@ -1439,7 +1440,7 @@ void CTiff::RemoveIcc()
 	TiffTagSignature sig = IccProfile;
 
 	auto pos = find_if(TiffTag_Begin, TiffTag_End,
-		[&sig](const TiffTagPtr& pos) {return pos->tag == sig; });
+		[&sig](const auto& pos) {return pos->tag == sig; });
 
 	if (pos != m_IFD.m_TagList.end())
 	{
