@@ -976,9 +976,8 @@ CTiff::CTiff(LPCSTR FileName):CTiff()
 	ReadFile(FileName);
 }
 
-CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf)
+CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf): CTiff()
 {
-	CTiff();
 	CreateNew(width, length, resolution, samplesperpixel, bitspersample, AllocBuf);
 }
 
