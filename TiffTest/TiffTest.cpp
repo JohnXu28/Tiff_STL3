@@ -15,8 +15,9 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	1
+#define Tiff_Test	0
 #define Single_Test	0
+#define Tiff_SWAPDWORD 1
 
 #define Tag_Test 0
 #define RGB2CMY 0
@@ -622,6 +623,26 @@ void DotCount(char* FileName)
 }
 #endif //DOTCOUNT
 
+
+#if Tiff_SWAPDWORD
+void Tiff_SwapDword(char* FileName)
+{
+	CTiff Tiff(FileName);
+	int Width = Tiff.GetTagValue(ImageWidth);
+	int Length = Tiff.GetTagValue(ImageLength);
+	
+	if ((Width % 4) != 0)
+	{
+		cout << "Width % 4 : " << Width % 4 << endl;
+		cout << "Just return." << endl;
+	}
+
+	LPBYTE lpbuf = Tiff.GetImageBuf();
+	SwapWORD_Buf((LPWORD)lpbuf, (Width / 2) * Length);
+	Tiff.SaveFile("out.tif");
+
+}
+#endif //Tiff_SWAPDWORD
 /*********************************************************************************************************/
 //		Main ( )
 /*********************************************************************************************************/
@@ -685,6 +706,11 @@ int main(int argc, _TCHAR* argv[])
 	void Tiff2Dat(int argc, _TCHAR * argv[]);
 	Tiff2Dat(argc, argv);
 #endif //TIFF2DAT
+
+#if Tiff_SWAPDWORD
+	Tiff_SwapDword(argv[1]);
+#endif //Tiff_SWAPDWORD
+
 	return 0;
 }
 
