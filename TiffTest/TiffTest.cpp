@@ -15,9 +15,9 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	0
+#define Tiff_Test	1
 #define Single_Test	0
-#define Tiff_SWAPDWORD 1
+#define Tiff_SWAPDWORD 0
 
 #define Tag_Test 0
 #define RGB2CMY 0
@@ -651,7 +651,7 @@ int main(int argc, _TCHAR* argv[])
 {
 #ifdef _DEBUG
 	//_CrtSetBreakAlloc(192);
-	_crtBreakAlloc = 186;
+	//_crtBreakAlloc = 205;
 	atexit(DumpMemory);
 #endif //_DEBUG
 

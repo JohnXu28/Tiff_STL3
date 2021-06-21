@@ -586,7 +586,8 @@ Tiff_Err Tiff::SaveRaw(LPCSTR FileName)
 
 TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO)
 {
-	TiffTag *NewTag = nullptr;
+	TiffTag *NewTag = nullptr;	
+	
 	try {
 		switch ((TiffTagSignature)(0xFFFF & SigType))
 		{
@@ -624,7 +625,7 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 		//	delete NewTag;
 		NewTag = nullptr;
 		cerr << "bad_alloc caught: " << ba.what() << endl;
-		return NULL;
+		return nullptr;
 	}
 
 	return (TiffTagPtr)NewTag;
@@ -1137,6 +1138,12 @@ Tiff_Err CTiff::ReadFile(LPCSTR FileName)
 {
 	Reset();
 	try {
+		if (FileName == nullptr)
+		{
+			cout << "FileName is NULL." << endl;
+			return FileOpenErr;
+		}
+
 		IO_INTERFACE *IO = IO_In(FileName);
 		if (IO == nullptr)
 			throw FileName;
