@@ -982,6 +982,19 @@ CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bit
 	CreateNew(width, length, resolution, samplesperpixel, bitspersample, AllocBuf);
 }
 
+
+CTiff* CTiff::Clone()
+{
+	int Width = GetTagValue(ImageWidth);
+	int Length = GetTagValue(ImageLength);
+	int resolution = GetTagValue(XResolution);
+	int samplesPerPixel = GetTagValue(SamplesPerPixel);
+	int bitspersample = GetTagValue(BitsPerSample);
+
+	CTiff* lpTiff = new CTiff(Width, Length, resolution, samplesPerPixel, bitspersample, 1);	
+	return lpTiff;
+}
+
 Tiff_Err CTiff::SetTag(TiffTagSignature Signature, FieldType type, DWORD n, DWORD value, LPBYTE lpBuf)
 {
 	DWORD SigType = (int)(Signature) | ((int)type << 16);
