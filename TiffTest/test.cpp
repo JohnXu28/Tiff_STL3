@@ -4,6 +4,7 @@
 #include <memory>
 #include <Windows.h>
 #include <Tiff_STL3\Src\Tiff_STL3.h>
+#include "Utility.h"
 using namespace std;
 
 const UINT8 bi_600dpi_K_blue_thresh[16384] = {//128x128
@@ -2209,82 +2210,66 @@ void SaveHalftone()
 
 }
 
-void Tiff2Dat(int argc, _TCHAR* argv[])
+
+
+void RGB2CMYK()
 {
-    if (argc < 3)
-    {
-        cout << "Tools for IPS" << endl;
-        cout << "Tiff2Dat in.tif out.dat" << endl;
-        return;
-    }
-
-    shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+    CTiff* lpTiff = new CTiff("sRGB.tif");
     int Width = lpTiff->GetTagValue(ImageWidth);
-    if (Width == 0)//open fail
-        return;
-
     int Length = lpTiff->GetTagValue(ImageLength);
-    int samplesPerPixel = lpTiff->GetTagValue(SamplesPerPixel);
-    int bitsPerSample = lpTiff->GetTagValue(BitsPerSample);
-    int compress = lpTiff->GetTagValue(Compression);
+    CTiff* lpCMYK = new CTiff(Width, Length, 72, 4, 8);
 
-    LPBYTE lpIndex = lpTiff->GetImageBuf();
-    FILE* file = fopen(argv[2], "w+");
-    for (int i = 0; i < Length; i++)
-    {
-        for (int j = 0; j < Width; j++)
-        {
-            for (int k = 0; k < samplesPerPixel; k++)
-            {
-                fprintf(file, "%3d,", *(lpIndex++));
-            }
-        }
-        fprintf(file, "\n");
-    }
-
-    fclose(file);
-}
-
-void Gray2K(int argc, _TCHAR* argv[])
-{
-    if (argc < 3)
-    {
-        cout << "Tools for IPS, Convert Gray to K." << endl;
-        cout << "Gray2K in.tif out.tif" << endl;
-        return;
-    }
-
-    shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
-    int Width = lpTiff->GetTagValue(ImageWidth);
-    if (Width == 0)//open fail
-    {
-        cout << "Width is 0." << endl;
-        return;
-    }
-
-    if (lpTiff->GetTagValue(PhotometricInterpretation) == 0)//open fail
-    {
-        cout << "PhotometricInterpretation is 0." << endl;
-        return;
-    }
-
-
-    int Length = lpTiff->GetTagValue(ImageLength);
-    int samplesPerPixel = lpTiff->GetTagValue(SamplesPerPixel);
-    int bitsPerSample = lpTiff->GetTagValue(BitsPerSample);
-    int compress = lpTiff->GetTagValue(Compression);
-
-    lpTiff->SetTagValue(PhotometricInterpretation, 0);
-    
     LPBYTE lpIn = lpTiff->GetImageBuf();
-    LPBYTE lpOut = lpTiff->GetImageBuf();
+    LPBYTE lpOut = lpCMYK->GetImageBuf();
     int Size = Width * Length;
-
     for (int i = 0; i < Size; i++)
     {
-        *(lpOut++) = 255 - *(lpIn++);
+        *(lpOut++) = 255 - *(lpIn++);//C
+        *(lpOut++) = 255 - *(lpIn++);//M
+        *(lpOut++) = 255 - *(lpIn++);//Y
+        *(lpOut++) = 0;
     }
+    lpCMYK->SaveFile("CMYK.tif");
+}
 
-    lpTiff->SaveFile(argv[2]);
-    
+
+#if Tag_Test
+
+//TiffTag& NEWTAG()
+//{
+//	TiffTag NewTag(ImageWidth), Long, 1, 100, nullptr);
+//	return NewTag;
+//}
+
+void Tag_Test_Construct()
+{
+    TiffTag NewTag(ImageWidth, Long, 1, 100, nullptr);
+    TiffTag Temp1, Temp2;
+    Temp1 = NewTag;
+
+    //Temp2 = TiffTag(TiffTag(ImageWidth), Long, 1, 100, nullptr));
+
+    //LPBYTE lpBuf = new BYTE[1024];
+
+}
+#endif //Tag_Test
+
+void Test(int argc, _TCHAR* argv[])
+{
+#if	Tag_Test
+    Tag_Test_Construct();
+#endif //Tag_Test
+
+#if	RGB2CMY
+    RGB2CMYK();
+#endif //Tag_Test
+
+#if	TEST
+    void SaveHalftone();
+    //SaveHalftone();
+
+    void Gray2K(int argc, _TCHAR * argv[]);
+    Gray2K(argc, argv);
+#endif //TEST
+    //cout << "test end" << endl;
 }
