@@ -24,6 +24,7 @@ using namespace std;
 
 #define STiff CTiff
 #define Tiff_Create() new CTiff
+#define Tiff_Clone() lpTiff->Clone()
 #define Tiff_CreateNew(lpTiff, width, length, resolution, samplesperpixel, bitspersample) lpTiff->CreateNew(width, length, resolution, samplesperpixel, bitspersample)
 #define Tiff_ReadFile(lpTiff, FileName) lpTiff->ReadFile(FileName)
 #define Tiff_SaveFile(lpTiff, FileName) lpTiff->SaveFile(FileName)
@@ -246,22 +247,17 @@ int ImageTest3(string FileName)
 
 	cout << "Copy Test : " << FileName.c_str() << "out.tif\n";
 	STiff* lpTiff = Tiff_Create();
-	STiff* lpTiff2 = Tiff_Create();
+	
 	Tiff_ReadFile(lpTiff, FileIn.c_str());
-	Tiff_CreateNew(lpTiff2, Tiff_GetTagValue(lpTiff, ImageWidth),
-		Tiff_GetTagValue(lpTiff, ImageLength),
-		Tiff_GetTagValue(lpTiff, XResolution),
-		Tiff_GetTagValue(lpTiff, SamplesPerPixel),
-		Tiff_GetTagValue(lpTiff, BitsPerSample)
-	);
+	STiff* lpTiff2 = Tiff_Clone();
 
 	//For memory leak test.
-	Tiff_CreateNew(lpTiff2, Tiff_GetTagValue(lpTiff, ImageWidth),
+	/*Tiff_CreateNew(lpTiff2, Tiff_GetTagValue(lpTiff, ImageWidth),
 		Tiff_GetTagValue(lpTiff, ImageLength),
 		Tiff_GetTagValue(lpTiff, XResolution),
 		Tiff_GetTagValue(lpTiff, SamplesPerPixel),
 		Tiff_GetTagValue(lpTiff, BitsPerSample)
-	);
+	);*/
 
 	//copy test
 	if (Tiff_GetTagValue(lpTiff, BitsPerSample) == 16)
