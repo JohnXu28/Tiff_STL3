@@ -485,6 +485,7 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
 #endif //VIRTUAL_IO
 
+		CTiff*		Clone();
 		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
 		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
