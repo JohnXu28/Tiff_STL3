@@ -27,6 +27,7 @@ using namespace std;
 // Helpful Class and Function
 //////////////////////////////////////////////////////////////////////
 //#define _WINDOWS
+char* strTiffErr[] = { "Tiff_OK", "FileOpenErr", "VersionErr", "TooManyTags", "TagStripErr", "MemoryAllocFail", "DataTypeErr", "CompressData", "UnDefineErr" };
 
 namespace AV_Tiff_STL3 {
 	int DataType[FieldTypeSize] = {
@@ -1133,11 +1134,11 @@ Tiff_Err CTiff::ReadTiff(IO_INTERFACE *IO)
 		cout << "*** " << ErrMsg << " Open Error. ***" << endl;
 		return FileOpenErr;
 	}
-	//catch (const Tiff_Err &Err)
-	//{
-	//	cout << "Tiff Read Filer Error:" << Err << endl;
-	//	return Err;
-	//}
+	catch (const Tiff_Err &Err)
+	{
+		cout << "Tiff Read Filer Error : " << strTiffErr[-(int)Err] << endl;
+		return Err;
+	}
 	catch (...)
 	{
 		cout << "*** CTiff::ReadFile() --> unknown Error. ***" << endl;
