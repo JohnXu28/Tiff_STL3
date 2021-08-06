@@ -656,6 +656,6 @@ using namespace AV_Tiff_STL3;
 #define DataTypeErr							Tiff_Err::eDataTypeErr
 #define CompressData						Tiff_Err::eCompressData
 #define UnDefineErr							Tiff_Err::eUnDefineErr
-#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG
+//#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG
 
 #endif // !DEFINED(_tIFF_STL3)
