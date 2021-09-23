@@ -199,7 +199,7 @@ void Tiff2Dat(int argc, _TCHAR* argv[])
 {
 	if (argc < 3)
 	{
-		cout << "Tools for IPS" << endl;
+		cout << "Tools for IPS2020" << endl;
 		cout << "Tiff2Dat in.tif out.dat" << endl;
 		return;
 	}
@@ -215,7 +215,7 @@ void Tiff2Dat(int argc, _TCHAR* argv[])
 	int compress = lpTiff->GetTagValue(Compression);
 
 	LPBYTE lpIndex = lpTiff->GetImageBuf();
-	FILE* file = fopen(argv[2], "w+");
+	FILE* file = fopen(argv[2], "wb+");
 	for (int i = 0; i < Length; i++)
 	{
 		for (int j = 0; j < Width; j++)
