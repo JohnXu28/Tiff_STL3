@@ -2254,6 +2254,30 @@ void Tag_Test_Construct()
 }
 #endif //Tag_Test
 
+#if LAB_TEST
+void LAB_Test(_TCHAR* argv[])
+{    
+    shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+    int Width = lpTiff->GetTagValue(ImageWidth);
+    int Length = lpTiff->GetTagValue(ImageLength);
+    int Size = Width * Length;
+    LPBYTE lpIn = lpTiff->GetImageBuf();
+    LPBYTE lpOut = lpIn;
+
+    for (int i = 0; i < Size; i++)
+    {
+        BYTE L = *(lpIn++);
+        BYTE a = *(lpIn++);
+        BYTE b = *(lpIn++);
+        (*lpOut++) = L;
+        (*lpOut++) = a ^ 0x80;
+        (*lpOut++) = b ^ 0x80;
+    }
+    lpTiff->SaveFile("Lab2.tif");
+}
+
+#endif //TAB_TEST
+
 void Test(int argc, _TCHAR* argv[])
 {
 #if	Tag_Test
@@ -2271,5 +2295,10 @@ void Test(int argc, _TCHAR* argv[])
     void Gray2K(int argc, _TCHAR * argv[]);
     Gray2K(argc, argv);
 #endif //TEST
+
+#if	LAB_TEST
+    LAB_Test(argv);
+#endif //Tag_Test
+
     //cout << "test end" << endl;
 }
