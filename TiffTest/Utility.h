@@ -11,7 +11,8 @@
 #define TIFF2DAT 0
 #define TEST 0
 #define Tag_Test 0
-#define LAB_TEST 1
+#define LAB_TEST 0
+#define CAM02_TEST 1
 
 void Utility(int argc, _TCHAR* argv[]);
 void Test(int argc, _TCHAR* argv[]);

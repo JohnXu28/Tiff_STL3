@@ -4,6 +4,7 @@
 #include <memory>
 #include <Windows.h>
 #include <Tiff_STL3\Src\Tiff_STL3.h>
+#include <Lch/cam02.h>
 #include "Utility.h"
 using namespace std;
 
@@ -2278,6 +2279,22 @@ void LAB_Test(_TCHAR* argv[])
 
 #endif //TAB_TEST
 
+#if CAM02_TEST
+void CAM02_Test(_TCHAR* argv[])
+{
+    cout << "Cam02 Test" << endl;
+    CAM02 cam02; //Default is D65
+    
+    double D65_XYZ[3] = { 95.05, 100, 108.89 };
+    double JCH[3] = { 0 };
+    cam02.Forward(D65_XYZ, JCH);
+    cout << "D65 X, Y, Z: " << D65_XYZ[0] << " " << D65_XYZ[1] << " " << D65_XYZ[2] << endl;
+    cout << "Cam02 Jch  : " << JCH[0] << " " << JCH[1] << " " << JCH[2] << endl;
+}
+
+#endif //CMA02
+
+
 void Test(int argc, _TCHAR* argv[])
 {
 #if	Tag_Test
@@ -2298,6 +2315,10 @@ void Test(int argc, _TCHAR* argv[])
 
 #if	LAB_TEST
     LAB_Test(argv);
+#endif //Tag_Test
+
+#if	CAM02_TEST
+    CAM02_Test(argv);
 #endif //Tag_Test
 
     //cout << "test end" << endl;
