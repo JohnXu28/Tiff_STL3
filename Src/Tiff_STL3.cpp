@@ -27,7 +27,7 @@ using namespace std;
 // Helpful Class and Function
 //////////////////////////////////////////////////////////////////////
 //#define _WINDOWS
-char* strTiffErr[] = { "Tiff_OK", "FileOpenErr", "VersionErr", "TooManyTags", "TagStripErr", "MemoryAllocFail", "DataTypeErr", "CompressData", "UnDefineErr" };
+const char* strTiffErr[9] = { "Tiff_OK", "FileOpenErr", "VersionErr", "TooManyTags", "TagStripErr", "MemoryAllocFail", "DataTypeErr", "CompressData", "UnDefineErr" };
 
 namespace AV_Tiff_STL3 {
 	int DataType[FieldTypeSize] = {
@@ -984,7 +984,7 @@ CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bit
 }
 
 
-CTiff* CTiff::Clone()
+CTiff* CTiff::Clone(bool copy)
 {
 	int Width = GetTagValue(ImageWidth);
 	int Length = GetTagValue(ImageLength);
@@ -992,7 +992,13 @@ CTiff* CTiff::Clone()
 	int samplesPerPixel = GetTagValue(SamplesPerPixel);
 	int bitspersample = GetTagValue(BitsPerSample);
 
-	CTiff* lpTiff = new CTiff(Width, Length, resolution, samplesPerPixel, bitspersample, 1);	
+	CTiff* lpTiff = new CTiff(Width, Length, resolution, samplesPerPixel, bitspersample, 1);
+
+	if (copy == true)
+	{
+		int Size = Width * Length * samplesPerPixel * bitspersample / 8;
+		memcpy(lpTiff->GetImageBuf(), GetImageBuf(), Size);
+	}
 	return lpTiff;
 }
 
