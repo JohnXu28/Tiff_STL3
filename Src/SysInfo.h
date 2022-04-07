@@ -1,7 +1,7 @@
 #if !defined(_SYSINFO_H__)
 #define _SYSINFO_H__
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(X64)
 	#include <stdint.h>
 
 	typedef int8_t		INT8;
@@ -91,20 +91,28 @@
 	{
 		return x;
 	}
-#else	
-	#define	SWAP
+#else		
 	#ifdef WIN32  //For VC (Little Endian)		
-		#ifdef WIN64
+			#define	SWAP
 			#define SwapWORD _byteswap_ushort 
 			#define SwapDWORD _byteswap_ulong 
-		#else
-			#define SwapWORD _byteswap_ushort 
-			#define SwapDWORD _byteswap_ulong 
-		#endif //WIN64
-	#else	
+	#endif //WIN32
+
+	#ifdef LINUX
+		#define	SWAP
 		#define SwapWORD __builtin_bswap16  
 		#define SwapDWORD __builtin_bswap32 
-#endif//WIN32
+	#endif//WIN32
+
+#ifndef SWAP
+inline DWORD SwapDWORD(const DWORD x)
+{	return (((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | (x << 24));}
+
+inline WORD SwapWORD(const WORD x)
+{	return (((x & 0xFF) << 8) | (x >> 8));}
+#endif //SWAP
+
+#endif //HiByteFirst   
 
 inline void SwapDWORD_Buf(LPDWORD lpBuf, int Size)
 {
@@ -121,7 +129,6 @@ inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
 	for (int i = 0; i < Size; i++)
 		*(lpOut++) = SwapWORD(*(lpIn++));
 }
-#endif //HiByteFirst   
 
 //For C++ 11
 #define ENABLE_SHARED_POINTER
