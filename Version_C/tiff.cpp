@@ -147,7 +147,7 @@ CTiff::~CTiff()
 
 int CTiff::Initialheader()
 {
-#ifdef Win32
+#if defined(WIN32) || defined(X64)
 	m_lpTiffHeader->Version.order = 0x4949;
 #else
 	m_lpTiffHeader->Version.order = 0x4D4D;
@@ -513,7 +513,7 @@ int CTiff::ReadFile(LPCTSTR FileName)
 	m_File = fopen(FileName, "rb");
 	fseek(m_File, 0, SEEK_SET);
 	fread(&TiffVersion, 1, 4, m_File);
-#ifdef Win32	
+#if defined(WIN32) || defined(X64)
 	if (TiffVersion != 0x002A4949)
 	{
 		return -1;

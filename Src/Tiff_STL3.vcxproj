@@ -144,7 +144,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>

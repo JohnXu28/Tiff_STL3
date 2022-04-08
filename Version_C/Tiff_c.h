@@ -2,7 +2,7 @@
 #define __TIFF_C_H__ 
 
 #include <stdio.h>
-#ifdef WIN32
+#if defined(WIN32) || defined(X64)
 #include "..\Src\SysInfo.h"
 #endif //WIN32
 
