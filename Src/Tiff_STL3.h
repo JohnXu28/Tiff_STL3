@@ -233,7 +233,7 @@ namespace AV_Tiff_STL3 {
 		eNumberOfInks = 0x014EL,
 		eDotRange = 0x0150L,
 		eTargetPrinter = 0x0151L,
-		eExtraSamples = 0x0152L,
+		eExtraSamples = 0x0152L, //Alpha channel : turn on (1)
 		eSampleFormat = 0x0153L,
 		eSMinSampleValue = 0x0154L,
 		eSMaxSampleValue = 0x0155L,
@@ -605,7 +605,7 @@ using namespace AV_Tiff_STL3;
 #define NumberOfInks						TiffTagSignature::eNumberOfInks
 #define DotRange							TiffTagSignature::eDotRange
 #define TargetPrinter						TiffTagSignature::eTargetPrinter
-#define ExtraSamples						TiffTagSignature::eExtraSamples
+#define ExtraSamples						TiffTagSignature::eExtraSamples //Alpha channel : turn on (1)
 #define SampleFormat						TiffTagSignature::eSampleFormat
 #define SMinSampleValue						TiffTagSignature::eSMinSampleValue
 #define SMaxSampleValue						TiffTagSignature::eSMaxSampleValue

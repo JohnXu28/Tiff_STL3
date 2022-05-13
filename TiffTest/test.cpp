@@ -2274,6 +2274,7 @@ void LAB_Test(_TCHAR* argv[])
         (*lpOut++) = a ^ 0x80;
         (*lpOut++) = b ^ 0x80;
     }
+    lpTiff->SetTagValue(PhotometricInterpretation, 9); /* ICC L*a*b* [Adobe TIFF Technote 4] */
     lpTiff->SaveFile("Lab2.tif");
 }
 
