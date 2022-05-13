@@ -18,6 +18,7 @@ using namespace std;
 
 #define Tiff_Test	0
 #define Single_Test	0
+#define RGBA		0
 
 #if Tiff_STL3
 #include <Tiff_STL3\Src\Tiff_STL3.h>
@@ -407,6 +408,36 @@ void SingleTest()
 }
 #endif //Single_Test
 
+#if RGBA
+void Tiff_RGBA_Test()
+{
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>("sRGB100.tif");
+	int Width = lpTiff->GetTagValue(ImageWidth);
+	int Length = lpTiff->GetTagValue(ImageLength);
+	int Size = Width * Length;
+	shared_ptr<CTiff> lpTiffOut = make_shared<CTiff>();
+	lpTiffOut->CreateNew(Width, Length, 100, 4, 8);
+	LPBYTE lpIn = lpTiff->GetImageBuf();
+	LPBYTE lpOut = lpTiffOut->GetImageBuf();
+	for (int i = 0; i < Size; i++)
+	{
+		*(lpOut++) = *(lpIn++);
+		*(lpOut++) = *(lpIn++);
+		*(lpOut++) = *(lpIn++);
+		*(lpOut++) = 255;
+
+	}
+	lpTiffOut->SetTagValue(PhotometricInterpretation, 2);
+	lpTiffOut->SetTagValue(SamplesPerPixel, 4);
+	
+	lpTiffOut->SetTag(ExtraSamples, (FieldType)1, 1, 1); //Add Alpha channel tag
+
+	lpTiffOut->SaveFile("Out.tif");
+	
+
+}
+#endif //RGBA
+
 void DumpMemory(void)
 {
 	//delete gl;
@@ -475,6 +506,10 @@ int main(int argc, _TCHAR* argv[])
 #if	Single_Test
 	SingleTest();
 #endif //Single_Test
+
+#if RGBA
+	Tiff_RGBA_Test();
+#endif //RGBA
 
 #if 0
 	ProcessTemplate()
