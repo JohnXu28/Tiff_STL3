@@ -16,9 +16,9 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	0
+#define Tiff_Test	1
 #define Single_Test	0
-#define RGBA		0
+#define RGBA		0 //Alpha
 
 #if Tiff_STL3
 #include <Tiff_STL3\Src\Tiff_STL3.h>
@@ -338,13 +338,14 @@ int ImageTest4(string FileName)
 	return ret;
 }
 
-string FileName[] = { "0NULL",
-"1LineArt", "2gray8", "3RGB8", "4CMYK8", "5Lab8",
-"6gray16", "7RGB16", "8CMYK16", "9Lab16", "10RGB82",
-"11RGB162", "12CMYK82", "13CMYK162", "14Lab82", "15Lab162",
-"16MultiStrip", "17Ycc8", "18CLR68", "19CLR616" };
+string FileName[] = { 
+"0NULL", "1LineArt", "2gray8", "3RGB8", "4CMYK8", 
+"5Lab8", "6gray16", "7RGB16", "8CMYK16", "9Lab16", 
+"10RGB82", "11RGB162", "12CMYK82", "13CMYK162", "14Lab82", 
+"15Lab162","16MultiStrip", "17Ycc8", "18CLR68", "19CLR616", 
+"20IccLab8", "21IccLab16", "22Alpha8", "23Alpha16" };
 
-const int TestNum = 20;
+const int TestNum = 24;
 
 int FullTest1()
 {
@@ -408,17 +409,17 @@ void SingleTest()
 }
 #endif //Single_Test
 
-#if RGBA
+#if RGBA //Alpha channel
 void Tiff_RGBA_Test()
 {
-	shared_ptr<CTiff> lpTiff = make_shared<CTiff>("sRGB100.tif");
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>("H:\\Git\\Tiff_STL3\\TestImg\\3RGB8.tif");
 	int Width = lpTiff->GetTagValue(ImageWidth);
 	int Length = lpTiff->GetTagValue(ImageLength);
 	int Size = Width * Length;
 	shared_ptr<CTiff> lpTiffOut = make_shared<CTiff>();
 	lpTiffOut->CreateNew(Width, Length, 100, 4, 8);
-	LPBYTE lpIn = lpTiff->GetImageBuf();
-	LPBYTE lpOut = lpTiffOut->GetImageBuf();
+	LPBYTE lpIn = (LPBYTE)lpTiff->GetImageBuf();
+	LPBYTE lpOut = (LPBYTE)lpTiffOut->GetImageBuf();
 	for (int i = 0; i < Size; i++)
 	{
 		*(lpOut++) = *(lpIn++);
@@ -432,9 +433,7 @@ void Tiff_RGBA_Test()
 	
 	lpTiffOut->SetTag(ExtraSamples, (FieldType)1, 1, 1); //Add Alpha channel tag
 
-	lpTiffOut->SaveFile("Out.tif");
-	
-
+	lpTiffOut->SaveFile("20Alpha8.tif");
 }
 #endif //RGBA
 
