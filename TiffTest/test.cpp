@@ -8,10 +8,6 @@
 #include "Utility.h"
 using namespace std;
 
-
-
-
-
 void RGB2CMYK()
 {
     CTiff* lpTiff = new CTiff("sRGB.tif");
@@ -78,7 +74,7 @@ void LAB_Test(_TCHAR* argv[])
     lpTiff->SaveFile("23IccLab16.tif");
 }
 
-#endif //TAB_TEST
+#endif //LAB_TEST
 
 #if CAM02_TEST
 void CAM02_Test(_TCHAR* argv[])
@@ -92,9 +88,24 @@ void CAM02_Test(_TCHAR* argv[])
     cout << "D65 X, Y, Z: " << D65_XYZ[0] << " " << D65_XYZ[1] << " " << D65_XYZ[2] << endl;
     cout << "Cam02 Jch  : " << JCH[0] << " " << JCH[1] << " " << JCH[2] << endl;
 }
-
 #endif //CMA02
 
+#if SWAP_TEST
+void SWAP_Test(_TCHAR* argv[])
+{
+    //shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+    shared_ptr<CTiff> lpTiff = make_shared<CTiff>("E:\\Temp\\Swap4.tif");
+    int Width = lpTiff->GetTagValue(ImageWidth);
+    int Length = lpTiff->GetTagValue(ImageLength);
+    int Size = Width * Length;
+    LPWORD lpIn = (LPWORD)lpTiff->GetImageBuf();
+    
+    SwapWORD_Buf(lpIn, Size/2);
+    
+    lpTiff->SaveFile("E:\\Temp\\SwapOut4.tif");
+}
+
+#endif //SWAP_TEST
 
 void Test(int argc, _TCHAR* argv[])
 {
@@ -122,5 +133,9 @@ void Test(int argc, _TCHAR* argv[])
     CAM02_Test(argv);
 #endif //Tag_Test
 
+
+#if	SWAP_TEST
+    SWAP_Test(argv);
+#endif //SWAP_TEST
     //cout << "test end" << endl;
 }

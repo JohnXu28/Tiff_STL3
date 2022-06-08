@@ -13,6 +13,7 @@
 #define Tag_Test 0
 #define LAB_TEST 0
 #define CAM02_TEST 0
+#define SWAP_TEST 1
 
 void Utility(int argc, char* argv[]);
 void Test(int argc, char* argv[]);
