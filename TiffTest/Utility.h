@@ -13,8 +13,10 @@
 #define Tag_Test 0
 #define LAB_TEST 0
 #define CAM02_TEST 0
-#define SWAP_TEST 1
+#define SWAP_TEST 0
+#define TIFF_APPEND 1
 
 void Utility(int argc, char* argv[]);
 void Test(int argc, char* argv[]);
+int Tiff_Append(char* Tar, char* Src);
 #endif //_TIFF_UTILITY_

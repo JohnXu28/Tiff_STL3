@@ -510,6 +510,11 @@ int main(int argc, _TCHAR* argv[])
 	Tiff_RGBA_Test();
 #endif //RGBA
 
+#if TIFF_APPEND	
+	Tiff_Append("In0.tif", "In1.tif");
+	Tiff_Append("In0.tif", "In2.tif");
+#endif //TIFF_APPEND
+
 #if 0
 	ProcessTemplate()
 #endif //0
