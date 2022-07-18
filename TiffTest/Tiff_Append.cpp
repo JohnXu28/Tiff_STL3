@@ -59,15 +59,37 @@ void Tiff_SetNextIFD(FILE *Tif_Dst, int Offset_IFD, int Offset_TifDst)
 	//ret = ftell(Tif_Dst);
 }
 
-void CheckTag(TAG* tag, int Offset)
-{
-	int ret = 0;
+void CheckTag(TAG* tag, int Offset, FILE *Tif_Src)
+{	
 	int size = DataType[tag->type] * tag->n;
+		
+	if ((tag->tag == 273) || (tag->tag == 279))//special case StripOffsets, StripByteCounts
+		if (size > 4)
+		{//Reset StripOffset data
+			int i = 0, n = tag->n;
+			unsigned int* lpBuf = (unsigned int*)malloc(n * 4);
+			memset(lpBuf, 0, n * 4);
+			unsigned int* lpIndex = lpBuf;
+
+			int current = ftell(Tif_Src);
+			fseek(Tif_Src, (tag->value), SEEK_SET);
+			
+			fread(lpBuf, 4, tag->n, Tif_Src);
+			for (i = 0; i < n; i++)
+				*(lpIndex++) += Offset;
+
+			fseek(Tif_Src, -(n*4), SEEK_CUR);
+			fwrite(lpBuf, 4, n, Tif_Src);
+
+			fseek(Tif_Src, current, SEEK_SET);
+			free(lpBuf);
+		}
+		else
+			if(tag->tag == 273)
+				tag->value += Offset;
+
 	if (size > 4)
-		tag->value += Offset;	
-	
-	if (tag->tag == 273)//special case StripOffsets
-		tag->value += Offset;		
+		tag->value += Offset;
 }
 
 void Tiff_CopyIFD(FILE* Tif_Dst, FILE* Tif_Src, int Offset_TifDst)
@@ -86,7 +108,7 @@ void Tiff_CopyIFD(FILE* Tif_Dst, FILE* Tif_Src, int Offset_TifDst)
 
 	lpTag = lpBuf;
 	for (index = 0; index < Count; index++)
-		CheckTag(lpTag++, Offset_TifDst - 8);//Skip Tif_Src Header(IFD Offset) 8 bytes
+		CheckTag(lpTag++, Offset_TifDst - 8, Tif_Src);//Skip Tif_Src Header(IFD Offset) 8 bytes
 		
 	fwrite(lpBuf, 12, Count, Tif_Dst);
 	free(lpBuf);
@@ -108,7 +130,7 @@ void Tiff_CopyRaw(FILE* Tiff_Dst, FILE* Tif_Src)
 int Tiff_Append(char* Tar, char* Src)
 {
 	FILE* Tif_Dst = fopen(Tar, "r+b");
-	FILE* Tif_Src = fopen(Src, "rb");
+	FILE* Tif_Src = fopen(Src, "r+b");
 	int Offset_IFD = Tiff_FindNextIFD(Tif_Dst);
 
 	int Offset_TifDst;

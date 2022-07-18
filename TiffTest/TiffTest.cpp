@@ -511,8 +511,8 @@ int main(int argc, _TCHAR* argv[])
 #endif //RGBA
 
 #if TIFF_APPEND	
-	Tiff_Append("In0.tif", "In1.tif");
-	Tiff_Append("In0.tif", "In2.tif");
+	Tiff_Append("In0.tif", "In1L.tif");
+	Tiff_Append("In0.tif", "In2J.tif");
 #endif //TIFF_APPEND
 
 #if 0
