@@ -408,7 +408,9 @@ namespace AV_Tiff_STL3 {
 	***************************************************************************/
 	struct IFD_STRUCTURE
 	{
+#ifdef WIN32
 		IFD_STRUCTURE() { NextIFD = 0; }
+#endif//WIN32
 		TagList		m_TagList;
 		DWORD		NextIFD;
 	};
