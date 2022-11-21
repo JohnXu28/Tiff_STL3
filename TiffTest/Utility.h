@@ -14,7 +14,7 @@
 #define LAB_TEST 0
 #define CAM02_TEST 0
 #define SWAP_TEST 0
-#define TIFF_APPEND 1
+#define TIFF_APPEND 0
 
 void Utility(int argc, char* argv[]);
 void Test(int argc, char* argv[]);

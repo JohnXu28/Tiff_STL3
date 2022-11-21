@@ -119,7 +119,7 @@ void Tiff2Raw(int argc, _TCHAR* argv[])
 	sprintf(FileName, "%dX%d_%d_%d.raw", Width, Length, samplesPerPixel, bitsPerSample);
 	LPBYTE lpIndex = lpTiff->GetImageBuf();
 
-	FILE* file = fopen(FileName, "w+");
+	FILE* file = fopen(FileName, "wb+");
 	fwrite(lpIndex, 1, Size, file);
 	fclose(file);
 
