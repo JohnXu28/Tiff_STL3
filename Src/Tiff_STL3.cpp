@@ -978,6 +978,11 @@ CTiff::CTiff(LPCSTR FileName):CTiff()
 	ReadFile(FileName);
 }
 
+CTiff::CTiff(string FileName) :CTiff()
+{
+	ReadFile(FileName);
+}
+
 CTiff::CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf): CTiff()
 {
 	CreateNew(width, length, resolution, samplesperpixel, bitspersample, AllocBuf);
@@ -1194,6 +1199,10 @@ Tiff_Err CTiff::ReadFile(LPCSTR FileName)
 	}
 }
 
+Tiff_Err CTiff::ReadFile(string FileName)
+{
+	return ReadFile(FileName.c_str());
+}
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 Tiff_Err CTiff::ReadMemory(LPBYTE Buffer, size_t BufSize)

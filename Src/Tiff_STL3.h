@@ -478,10 +478,12 @@ namespace AV_Tiff_STL3 {
 	public:
 		CTiff();
 		CTiff(LPCSTR FileName);
+		CTiff(string FileName);
 		CTiff(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		virtual		~CTiff();
 		virtual		Tiff_Err	ReadTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
+		virtual		Tiff_Err	ReadFile(string FileName);
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
