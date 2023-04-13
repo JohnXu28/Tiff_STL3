@@ -662,4 +662,7 @@ using namespace AV_Tiff_STL3;
 #define UnDefineErr							Tiff_Err::eUnDefineErr
 //#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG
 
+typedef CTiff* PTIFF;
+typedef shared_ptr<CTiff> SPTIFF;
+
 #endif // !DEFINED(_tIFF_STL3)
