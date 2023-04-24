@@ -56,16 +56,16 @@ using namespace std;
 //using namespace AV_Tiff_STL3; Don't need anymore...
 main(int argc, _TCHAR* argv[]))
 {
-	CTiff In, Out;
-	In.ReadFile("Input.tif");
+	SPTIFF lpIn, lpOut;
+	lpIn->ReadFile("Input.tif");
 
-	int Width = In.GetTagValue(ImageWidth));
-	int Length = In.GetTagValue(ImageLength));
-	int resolution = In.GetTagValue(XResolution));
-	int samplesPerPixel = In.GetTagValue(SamplesPerPixel));
-	int bitspersample = In.GetTagValue(BitsPerSample));
+	int Width = lpIn->GetTagValue(ImageWidth));
+	int Length = lpIn->GetTagValue(ImageLength));
+	int resolution = lpIn->GetTagValue(XResolution));
+	int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel));
+	int bitspersample = lpIn->GetTagValue(BitsPerSample));
 
-	Out.CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
+	lpOut->CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
 
 	int BytesPerLine = Width * samplesPerPixel * bitspersample / 8;
 
@@ -73,15 +73,15 @@ main(int argc, _TCHAR* argv[]))
 
 	for(int i = 0; i < Length; i++)
 	{
-		In.GetRow(lpBuf, i);
+		lpIn->GetRow(lpBuf, i);
 		LPBYTE lpTemp = lpBuf;
 		for(int j = 0; j < Width; j++)
 		Process(lpBuf, Width); //Add your process here.
-		In.PutRow(lpBuf, i);
+		lpOut->PutRow(lpBuf, i);
 	}
 	delete []lpBuf;
 
-	Out.SaveFile("Output.tif");
+	lpOut->SaveFile("Output.tif");
 }
 *
 * @endcode
