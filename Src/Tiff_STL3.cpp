@@ -671,14 +671,14 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE *IO)
 		{//RGBRGB
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
 #if 1//Liao's Bug, data Error.
-			int ImgSize = 0;
+			unsigned int ImgSize = 0;
 			if (bitsPerSample == 1)
 			{
 				int BytesPerLine = (int)ceil((double)Width / 8.0);
 				ImgSize = Length * BytesPerLine;
 			}
-			else
-				ImgSize = (Width * Length * samplesPerPixel * bitsPerSample) >> 3;
+			else //*** ImgSize Width * Length * samplesPerPixel * bitsPerSample may out of range ***
+				ImgSize = (Width * bitsPerSample  >> 3) * Length * samplesPerPixel ;
 
 			if (ImgSize != (int)stripByteCounts)
 			{
