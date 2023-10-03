@@ -34,7 +34,11 @@ IO_S* IO_File(const char *FileName, const char *Option)
 	This->Read = IO_File_Read;
 	This->Write = IO_File_Write;
 	This->Seek = IO_File_Seek;	
-	This->GetHandle = IO_File_GetHandle;	
+	This->GetHandle = IO_File_GetHandle;
+	This->pStart = nullptr;
+	This->pEnd = nullptr;
+	This->pCurrent = nullptr;
+	This->Close = nullptr; //?
 	return This;
 }
 
@@ -123,6 +127,7 @@ IO_S* IO_Buf(LPBYTE Buffer, size_t Size)
 	m_Current = Buffer;
 	m_End = Buffer + Size;
 	
+	This->Close = nullptr;
 	return This;
 }
 

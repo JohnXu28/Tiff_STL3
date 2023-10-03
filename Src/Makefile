@@ -1,22 +1,19 @@
 include ../../Makefile.inc
 
-CPPS = 	Tiff_STL3.cpp 
+CPPS = Tiff_STL3.cpp 
+OBJS = Tiff_STL3.o
+all: $(OBJS)
 		
-CPPFLAGS += -fPIC -I ../../
+CPPFLAGS += -fPIC
 
 #================================================================
 .PHONY:release
-release :
-	${CC} ${CPPFLAGS} -O2 ${CPPS}
+%.o : %.cpp
+	${CC} ${CPPFLAGS} -o $@ $<
 	${CP} *.o ../../Lib
-
-#================================================================	
-.PHONY:debug
-debug :
-	${CC} ${CPPFLAGS} -O0 ${CPPS}
-	${CP} *.o ../../Lib
-
-#================================================================		
+	@echo "*****************************Tiff_STL3:Release************************"
+	
+#================================================================
 clean :
 	${RM} *.o
 
