@@ -16,6 +16,7 @@
 #define SWAP_TEST 0
 #define TIFF_APPEND 0
 #define GRAY2CMYK 1
+#define CMYK8_CMYK1 1
 
 void Utility(int argc, char* argv[]);
 void Test(int argc, char* argv[]);
