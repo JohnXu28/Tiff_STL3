@@ -232,8 +232,28 @@ void Tiff2Dat(int argc, _TCHAR* argv[])
 }
 #endif //TIFF2DAT
 
-#if CMYK8_CMYK1
+#if CMYK1_CMYK8
+#if 1//swap dord
 //LUT 1bit to 8 bits
+unsigned int LUT18[16] = {
+	0x00000000, //0000
+	0xFF000000, //0001
+	0x00FF0000, //0010
+	0xFFFF0000, //0011
+	0x0000FF00, //0100
+	0xFF00FF00, //0101
+	0x00FFFF00, //0110
+	0xFFFFFF00, //0111
+	0x000000FF, //1000
+	0xFF0000FF, //1001
+	0x00FF00FF, //1010
+	0xFFFF00FF, //1011
+	0x0000FFFF, //1100
+	0xFF00FFFF, //1101
+	0x00FFFFFF, //1110
+	0xFFFFFFFF, //1111
+};
+#else
 unsigned int LUT18[16] = {
 	0x00000000, //0000
 	0x000000FF, //0001
@@ -252,7 +272,7 @@ unsigned int LUT18[16] = {
 	0xFFFFFF00, //1110
 	0xFFFFFFFF, //1111
 };
-
+#endif //0
 void Extend_1To8(LPBYTE lpIn1, LPBYTE lpOut8, int width)
 {
 	LPBYTE lpIn = lpIn1;
@@ -268,64 +288,73 @@ void Extend_1To8(LPBYTE lpIn1, LPBYTE lpOut8, int width)
 	}
 }
 
-void CMYK8_KYMC(int argc, _TCHAR* argv[])
+void KYMC1_CMYK8(int argc, _TCHAR* argv[])
 {
-	if (argc != 8)
+	if (argc != 5)
 	{
-		cout << "KYMC2Tiff Width Length Resolution Samplesperpixel Bitspersample In.raw out.tif" << endl;
+		cout << "KYMC2Tiff Width Length In.raw out.tif" << endl;
 		cout << "Input KYMC 1bit, Output CMYK 8 bits" << endl;
 		return;
 	}
 
 	int width = atoi(argv[1]);
 	int length = atoi(argv[2]);
-	int resolution = atoi(argv[3]);
-	int samplesperpixel = atoi(argv[4]);
-	int bitspersample = atoi(argv[5]);
-	char* raw = argv[6];
-	char* tif = argv[7];
+	char* raw = argv[3];
+	char* tif = argv[4];
 	cout << "Width : " << width << endl;
 	cout << "Length : " << length << endl;
-	cout << "Resolution : " << resolution << endl;
-	cout << "Samplesperpixel : " << samplesperpixel << endl;
-	cout << "Bitspersample : " << bitspersample << endl;
 	cout << "Raw : " << raw << endl;
 	cout << "Tif : " << tif << endl;
 
-	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(width, length, resolution, 4, 8);
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(width, length, 600, 4, 8);
 	FILE* file = fopen(raw, "rb");
+	if (file == nullptr)
+	{
+		cout << raw << " Open fail." << endl;
+		return;
+	}
+	
 	int bytesPerLine1 = width / 8;
 	int bytesPerLine8 = width * 4;
-	LPBYTE lpIn = new BYTE[bytesPerLine1];
-	LPBYTE lpC = new BYTE[width];
-	LPBYTE lpM = new BYTE[width];
-	LPBYTE lpY = new BYTE[width];
-	LPBYTE lpK = new BYTE[width];
+	int bytesPerPlane1 = bytesPerLine1 * length;
+	LPBYTE lpRaw = new BYTE[bytesPerLine1 * length * 4];
+	fread(lpRaw, 1, bytesPerLine1 * length * 4, file);
+
+	
+	LPBYTE lpC8 = new BYTE[width];
+	LPBYTE lpM8 = new BYTE[width];
+	LPBYTE lpY8 = new BYTE[width];
+	LPBYTE lpK8 = new BYTE[width];
+	LPBYTE lpC1 = lpRaw;
+	LPBYTE lpM1 = lpRaw + bytesPerPlane1 * 1;
+	LPBYTE lpY1 = lpRaw + bytesPerPlane1 * 2;
+	LPBYTE lpK1 = lpRaw + bytesPerPlane1 * 3;
+
 	LPBYTE lpOut = new BYTE[bytesPerLine8];
-	memset(lpC, 0, width);
-	memset(lpM, 0, width);
-	memset(lpY, 0, width);
-	memset(lpK, 0, width);
+	memset(lpC8, 0, width);
+	memset(lpM8, 0, width);
+	memset(lpY8, 0, width);
+	memset(lpK8, 0, width);
 
 	for (int i = 0; i < length; i++)
-	{
-		fread(lpIn, 1, bytesPerLine1, file);		
-		Extend_1To8(lpIn, lpK, bytesPerLine1);
-
-		fread(lpIn, 1, bytesPerLine1, file);		
-		Extend_1To8(lpIn, lpY, bytesPerLine1);
-
-		fread(lpIn, 1, bytesPerLine1, file);		
-		Extend_1To8(lpIn, lpM, bytesPerLine1);
-
-		fread(lpIn, 1, bytesPerLine1, file);		
-		Extend_1To8(lpIn, lpC, bytesPerLine1);
+	{		
+		Extend_1To8(lpC1, lpC8, bytesPerLine1);
+		lpC1 += bytesPerLine1;
 		
+		Extend_1To8(lpM1, lpM8, bytesPerLine1);
+		lpM1 += bytesPerLine1;
+
+		Extend_1To8(lpY1, lpY8, bytesPerLine1);
+		lpY1 += bytesPerLine1;
+
+		Extend_1To8(lpK1, lpK8, bytesPerLine1);
+		lpK1 += bytesPerLine1;
+
 		LPBYTE lpTemp = lpOut;
-		LPBYTE lpTempC = lpC;
-		LPBYTE lpTempM = lpM;
-		LPBYTE lpTempY = lpY;
-		LPBYTE lpTempK = lpK;
+		LPBYTE lpTempC = lpC8;
+		LPBYTE lpTempM = lpM8;
+		LPBYTE lpTempY = lpY8;
+		LPBYTE lpTempK = lpK8;
 		for (int j = 0; j < width; j++)
 		{
 			*(lpTemp++) = *(lpTempC++);
@@ -338,15 +367,44 @@ void CMYK8_KYMC(int argc, _TCHAR* argv[])
 	
 	fclose(file);
 	lpTiff->SaveFile(tif);
-	delete[]lpIn;
-	delete[]lpC;
-	delete[]lpM;
-	delete[]lpY;
-	delete[]lpK;
-	delete[]lpOut;
 	
+	delete[]lpC8;
+	delete[]lpM8;
+	delete[]lpY8;
+	delete[]lpK8;
+	delete[]lpOut;	
 }
-#endif //CMYK8_CMYK1
+
+#endif //CMYK1_CMYK8
+
+#if KYM_Tiff
+void KYM2Tiff(int argc, _TCHAR* argv[])
+{
+	SPTIFF lpTiff = make_shared<CTiff>(argv[1]);
+	int width = lpTiff->GetTagValue(ImageWidth);
+	int length = lpTiff->GetTagValue(ImageLength);
+	SPTIFF lpCMYK = make_shared<CTiff>(width, length, 600, 4, 8);
+
+	LPBYTE lpIn = lpTiff->GetImageBuf();
+	LPBYTE lpOut = lpCMYK->GetImageBuf();
+	
+	int size = width * length;
+	BYTE K, Y, M, C;
+	C = M = Y = K = 0;
+	for (int i = 0; i < size; i++)
+	{
+		M = *(lpIn++);
+		Y = *(lpIn++);
+		K = *(lpIn++);
+		*(lpOut++) = C;
+		*(lpOut++) = M;
+		*(lpOut++) = Y;
+		*(lpOut++) = K;
+	}
+
+	lpCMYK->SaveFile("out.tif");
+}
+#endif //KYM_Tiff
 
 void Utility(int argc, _TCHAR* argv[])
 {
@@ -378,8 +436,11 @@ void Utility(int argc, _TCHAR* argv[])
 	Gray2K(argc, argv);
 #endif //GRAY2K
 
-#if CMYK8_CMYK1
-	CMYK8_KYMC(argc, argv);
+#if CMYK1_CMYK8
+	KYMC1_CMYK8(argc, argv);
 #endif //GRAY2K
 
+#if KYM_Tiff
+	KYM2Tiff(argc, argv);
+#endif //GRAY2K
 }
