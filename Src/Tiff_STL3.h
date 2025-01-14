@@ -59,11 +59,11 @@ main(int argc, _TCHAR* argv[]))
 	SPTIFF lpIn, lpOut;
 	lpIn->ReadFile("Input.tif");
 
-	int Width = lpIn->GetTagValue(ImageWidth));
-	int Length = lpIn->GetTagValue(ImageLength));
-	int resolution = lpIn->GetTagValue(XResolution));
-	int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel));
-	int bitspersample = lpIn->GetTagValue(BitsPerSample));
+	int Width = lpIn->GetTagValue(ImageWidth);
+	int Length = lpIn->GetTagValue(ImageLength);
+	int resolution = lpIn->GetTagValue(XResolution);
+	int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel);
+	int bitspersample = lpIn->GetTagValue(BitsPerSample);
 
 	lpOut->CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
 
