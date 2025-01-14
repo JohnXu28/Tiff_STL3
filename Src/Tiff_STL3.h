@@ -55,11 +55,8 @@ using namespace std;
 #include "Tiff_STL3.h" //Has claimed the namespace...
 //using namespace AV_Tiff_STL3; Don't need anymore...
 main(int argc, _TCHAR* argv[]))
-{
-	SPTIFF lpIn, lpOut;	
-	lpIn = make_shared<CTiff>();
-	lpIn->ReadFile("Input.tif");
-	// or lpIn = make_shared<CTiff>("Input.tif");
+{	
+	SPTIFF lpIn = make_shared<CTiff>("Input.tif");
 
 	int Width = lpIn->GetTagValue(ImageWidth);
 	int Length = lpIn->GetTagValue(ImageLength);
@@ -67,9 +64,7 @@ main(int argc, _TCHAR* argv[]))
 	int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel);
 	int bitspersample = lpIn->GetTagValue(BitsPerSample);
 
-	lpOut = make_shared<CTiff>();
-	lpOut->CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
-	//or lpOut = make_shared<CTiff>(Width, Length, resolution, samplesPerPixel, bitspersample);
+	SPTIFF lpOut = make_shared<CTiff>(Width, Length, resolution, samplesPerPixel, bitspersample);
 
 	int BytesPerLine = Width * samplesPerPixel * bitspersample / 8;
 
