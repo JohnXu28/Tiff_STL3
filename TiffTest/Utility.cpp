@@ -232,8 +232,8 @@ void Tiff2Dat(int argc, _TCHAR* argv[])
 }
 #endif //TIFF2DAT
 
-#if CMYK1_CMYK8
-#if 1//swap dord
+
+#if 1//swap DWORD
 //LUT 1bit to 8 bits
 unsigned int LUT18[16] = {
 	0x00000000, //0000
@@ -273,6 +273,9 @@ unsigned int LUT18[16] = {
 	0xFFFFFFFF, //1111
 };
 #endif //0
+
+#if KYMC1RAW_CMYK8
+
 void Extend_1To8(LPBYTE lpIn1, LPBYTE lpOut8, int width)
 {
 	LPBYTE lpIn = lpIn1;
@@ -288,7 +291,7 @@ void Extend_1To8(LPBYTE lpIn1, LPBYTE lpOut8, int width)
 	}
 }
 
-void KYMC1_CMYK8(int argc, _TCHAR* argv[])
+void KYMC1Raw_CMYK8(int argc, _TCHAR* argv[])
 {
 	if (argc != 5)
 	{
@@ -375,7 +378,7 @@ void KYMC1_CMYK8(int argc, _TCHAR* argv[])
 	delete[]lpOut;	
 }
 
-#endif //CMYK1_CMYK8
+#endif //KYMC1RAW_CMYK8
 
 #if KYM_Tiff
 void KYM2Tiff(int argc, _TCHAR* argv[])
@@ -405,6 +408,99 @@ void KYM2Tiff(int argc, _TCHAR* argv[])
 	lpCMYK->SaveFile("out.tif");
 }
 #endif //KYM_Tiff
+
+
+#if KYMC1_2_CMYK8
+
+void Extend_1To8(LPBYTE lpIn1, LPBYTE lpOut8, int width)
+{
+	LPBYTE lpIn = lpIn1;
+	LPINT lpOut = (LPINT)lpOut8;
+	BYTE Hi, Lo;
+	for (int i = 0; i < width; i++)
+	{
+		Hi = (*lpIn & 0xF0) >> 4;
+		Lo = *(lpIn) & 0x0F;
+		lpIn++;
+		*(lpOut++) = LUT18[Hi];
+		*(lpOut++) = LUT18[Lo];
+	}
+}
+
+void KYMC1_CMYK8(int argc, _TCHAR* argv[])
+{
+	if (argc != 3)
+	{
+		cout << "KYMC1_To_CMYK8 In.tif out.tif" << endl;
+		cout << "Input KYMC 1bit Tiff, Output CMYK 8 bits" << endl;
+		return;
+	}
+
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+	int width = lpTiff->GetTagValue(ImageWidth);
+	int length = lpTiff->GetTagValue(ImageLength);
+	
+	shared_ptr<CTiff> lpTiffOut = make_shared<CTiff>(width, length, 600, 4, 8);
+	
+	int bytesPerLine1 = width / 8;
+	int bytesPerLine8 = width * 4;
+	int bytesPerPlane1 = bytesPerLine1 * length;
+	LPBYTE lpRaw = lpTiff->GetImageBuf();
+
+	LPBYTE lpC8 = new BYTE[width];
+	LPBYTE lpM8 = new BYTE[width];
+	LPBYTE lpY8 = new BYTE[width];
+	LPBYTE lpK8 = new BYTE[width];
+	LPBYTE lpC1 = lpRaw;
+	LPBYTE lpM1 = lpRaw + bytesPerPlane1 * 1;
+	LPBYTE lpY1 = lpRaw + bytesPerPlane1 * 2;
+	LPBYTE lpK1 = lpRaw + bytesPerPlane1 * 3;
+
+	LPBYTE lpOut = new BYTE[bytesPerLine8];
+	memset(lpC8, 0, width);
+	memset(lpM8, 0, width);
+	memset(lpY8, 0, width);
+	memset(lpK8, 0, width);
+
+	for (int i = 0; i < length; i++)
+	{
+		Extend_1To8(lpC1, lpC8, bytesPerLine1);
+		lpC1 += bytesPerLine1;
+
+		Extend_1To8(lpM1, lpM8, bytesPerLine1);
+		lpM1 += bytesPerLine1;
+
+		Extend_1To8(lpY1, lpY8, bytesPerLine1);
+		lpY1 += bytesPerLine1;
+
+		Extend_1To8(lpK1, lpK8, bytesPerLine1);
+		lpK1 += bytesPerLine1;
+
+		LPBYTE lpTemp = lpOut;
+		LPBYTE lpTempC = lpC8;
+		LPBYTE lpTempM = lpM8;
+		LPBYTE lpTempY = lpY8;
+		LPBYTE lpTempK = lpK8;
+		for (int j = 0; j < width; j++)
+		{
+			*(lpTemp++) = *(lpTempC++);
+			*(lpTemp++) = *(lpTempM++);
+			*(lpTemp++) = *(lpTempY++);
+			*(lpTemp++) = *(lpTempK++);
+		}
+		lpTiffOut->PutRow(lpOut, i);
+	}
+
+	lpTiffOut->SaveFile(argv[2]);
+
+	delete[]lpC8;
+	delete[]lpM8;
+	delete[]lpY8;
+	delete[]lpK8;
+	delete[]lpOut;
+}
+
+#endif //KYMC1_CMYK8
 
 void Utility(int argc, _TCHAR* argv[])
 {
@@ -436,11 +532,17 @@ void Utility(int argc, _TCHAR* argv[])
 	Gray2K(argc, argv);
 #endif //GRAY2K
 
-#if CMYK1_CMYK8
-	KYMC1_CMYK8(argc, argv);
-#endif //GRAY2K
+#if KYMC1RAW_CMYK8
+	KYMC1Raw_CMYK8(argc, argv);
+#endif //KYMC1RAW_CMYK8
+
 
 #if KYM_Tiff
 	KYM2Tiff(argc, argv);
 #endif //GRAY2K
+
+#if KYMC1_2_CMYK8
+	KYMC1_CMYK8(argc, argv);
+#endif //GRAY2K
+
 }
