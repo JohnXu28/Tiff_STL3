@@ -454,7 +454,8 @@ namespace AV_Tiff_STL3 {
 		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
 		Tiff_Err	ReadImage(IO_INTERFACE* IO);
-		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
+		int			CheckMultiStrip();
+		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);		
 
 		template<class T>
 		void		Pack(int Width, int Length);

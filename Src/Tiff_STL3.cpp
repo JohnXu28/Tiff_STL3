@@ -640,6 +640,15 @@ void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE *IO)
 		m_IFD.m_TagList.push_back(tag);
 }
 
+int Tiff::CheckMultiStrip()
+{
+	TiffTagPtr Tag = GetTag(StripOffsets);
+	if (Tag->n != 1)
+		return 1;
+	else
+		return 0;
+}
+
 Tiff_Err Tiff::ReadImage(IO_INTERFACE *IO)
 {
 	if (GetTagValue(Compression) != 1)//No compress
@@ -665,12 +674,12 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE *IO)
 		m_IFD.m_TagList.push_back(NewTag);
 	}
 
-	if (Length == rowsPerStrip)
+	if ((Length == rowsPerStrip) && !CheckMultiStrip())
 	{//Single Strip
 		if ((planarConfiguration == 0) || (planarConfiguration == 1))
 		{//RGBRGB
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
-#if 1//Liao's Bug, data Error.
+#if 0//Liao's Bug, data Error.
 			unsigned int ImgSize = 0;
 			if (bitsPerSample == 1)
 			{
