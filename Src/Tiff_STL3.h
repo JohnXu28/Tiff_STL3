@@ -97,15 +97,15 @@ main(int argc, _TCHAR* argv[]))
 Virtual IO
 ***************************************************************************/
 //Don't define Virtual_IO in Linux enviornment
-//#define VIRTUAL_IO	
+//define __IO_Interface_H__ 
 //#define VIRTUAL_IO_STL	
 
 #ifdef WIN32 //Windows
 	#include <windows.h>
 	#pragma warning(disable : 4996)//for Net
 
-	#if defined(VIRTUAL_IO)//Slowest, it should be the same with fopen, but not the true.
-		#include <SysInfo\Virtual_IO.h>
+	#if defined(__IO_Interface_H__)//Slowest, it should be the same with fopen, but not the true.
+		#include <SysInfo\Virtual_IO.h>		
 		#define IO_In(FileName)					new IO_File(FileName, "rb")
 		#define IO_Out(FileName)				new IO_File(FileName, "wb")
 		#define IO_Close(IO)					delete IO

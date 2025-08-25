@@ -110,7 +110,7 @@ void SWAP_Test(_TCHAR* argv[])
 #if GRAY2CMYK
 void Gray2CMYK(_TCHAR* argv[])
 {
-    shared_ptr<CTiff> lpTiff = make_shared<CTiff>("E:\\Temp\\Gray.tif");
+    shared_ptr<CTiff> lpTiff = make_shared<CTiff>("H:\\Phoenix\\TestImg\\Gray255.tif");
     int Width = lpTiff->GetTagValue(ImageWidth);
     int Length = lpTiff->GetTagValue(ImageLength);
     shared_ptr<CTiff> lpCMYK = make_shared<CTiff>(Width, Length, 600, 4, 8);
@@ -118,15 +118,17 @@ void Gray2CMYK(_TCHAR* argv[])
     LPBYTE lpOut = lpCMYK->GetImageBuf();
 
     int Size = Width * Length;
-    lpIn += 3;
-    lpOut += 3;
+    //lpIn += 3;
+    //lpOut += 3;
     for (int i = 0; i < Size; i++)
-    {
-        *(lpOut++) = *(lpIn++);
-        lpOut += 3;
+    {   
+        lpOut++;
+        lpOut++;        
+        lpOut++;
+        *(lpOut++) = 255 - *(lpIn++);
     }
 
-    lpCMYK->SaveFile("E:\\Temp\\K600.tif");
+    lpCMYK->SaveFile("H:\\Phoenix\\TestImg\\K255.tif");
 }
 #endif //GRAY2CMYK
 

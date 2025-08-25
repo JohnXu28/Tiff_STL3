@@ -147,8 +147,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
+      <AdditionalDependencies>straw.lib</AdditionalDependencies>
     </Lib>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -229,6 +228,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>straw.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
