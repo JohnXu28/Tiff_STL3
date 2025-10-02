@@ -100,7 +100,7 @@ Virtual IO
 //define __IO_Interface_H__ 
 //#define VIRTUAL_IO_STL	
 
-#ifdef WIN32 //Windows
+#ifdef _WINDOWS //Windows
 	#include <windows.h>
 	#pragma warning(disable : 4996)//for Net
 
