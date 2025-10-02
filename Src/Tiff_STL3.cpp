@@ -351,6 +351,12 @@ Exif_IFD_Tag::Exif_IFD_Tag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE *IO
 	Exif_IFD_Tag::ExifBufSize = size;
 }
 
+
+IFD_STRUCTURE::IFD_STRUCTURE() :NextIFD(0), m_TagList()
+{
+	m_TagList.clear();
+}
+
 //////////////////////////////////////////////////////////////////////
 // Tiff
 //////////////////////////////////////////////////////////////////////

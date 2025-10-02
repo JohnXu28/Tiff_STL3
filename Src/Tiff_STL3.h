@@ -141,15 +141,17 @@ Virtual IO
 	#endif //VIRTUAL_IO
 
 #else //Linux
-	#define IO_INTERFACE					FILE //Type
-	#define IO								File //Argument
-	#define IO_In(FileName)					fopen(FileName, "rb")
-	#define IO_Out(FileName)				fopen(FileName, "wb+")
-	#define IO_Close(File)					fclose(File)
-	#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-	#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-	#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-	#define IO_Tell()						ftell(File)
+	#if !defined(__IO_Interface_H__)
+		#define IO_INTERFACE					FILE //Type
+		#define IO								File //Argument
+		#define IO_In(FileName)					fopen(FileName, "rb")
+		#define IO_Out(FileName)				fopen(FileName, "wb+")
+		#define IO_Close(File)					fclose(File)
+		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+		#define IO_Tell()						ftell(File)
+	#endif
 #endif //WIN32
 
 #define MAXTAG 40
@@ -348,18 +350,19 @@ namespace AV_Tiff_STL3 {
 	/***************************************************************************
 	***************************************************************************/
 	//Special Tag
-	class BitsPerSampleTag :public TiffTag
+    // Fix the method signature to match the base class method it is intended to override.
+    class BitsPerSampleTag : public TiffTag
 	{
-	public:
-		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
-		DWORD GetValue() const;
+    public:
+        BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
+        DWORD GetValue() const override; 
 	};
 
 	class ResolutionTag :public TiffTag
 	{
 	public:
 		ResolutionTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
-		virtual DWORD GetValue() const;
+		virtual DWORD GetValue() const override;
 	};
 
 	class Exif_IFD_Tag :public TiffTag
@@ -407,9 +410,8 @@ namespace AV_Tiff_STL3 {
 	***************************************************************************/
 	struct IFD_STRUCTURE
 	{
-#ifdef WIN32
-		IFD_STRUCTURE() { NextIFD = 0; }
-#endif//WIN32
+		IFD_STRUCTURE();
+
 		TagList		m_TagList;
 		DWORD		NextIFD;
 	};
