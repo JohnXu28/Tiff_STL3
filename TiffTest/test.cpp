@@ -113,6 +113,12 @@ void Gray2CMYK(_TCHAR* argv[])
     shared_ptr<CTiff> lpTiff = make_shared<CTiff>("H:\\Phoenix\\TestImg\\Gray255.tif");
     int Width = lpTiff->GetTagValue(ImageWidth);
     int Length = lpTiff->GetTagValue(ImageLength);
+	if ((Width == 0) || (Length == 0))
+    {
+        cout << "Open File Fail" << endl;
+        return;
+    }
+
     shared_ptr<CTiff> lpCMYK = make_shared<CTiff>(Width, Length, 600, 4, 8);
     LPBYTE lpIn = lpTiff->GetImageBuf();
     LPBYTE lpOut = lpCMYK->GetImageBuf();
