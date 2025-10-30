@@ -163,7 +163,7 @@ enum TiffTagSignature {
 int ImageTest1(string FileName)
 {
 	cout << "Read, Write Test : " << FileName.c_str() << ".tif\n";
-	STiff *lpTiff = Tiff_Create();
+	STiff* lpTiff = Tiff_Create();
 	string FileIn = FileName + ".tif";
 	string FileOut = "Output\\" + FileName + "out.tif";
 
@@ -190,7 +190,7 @@ int ImageTest1(string FileName)
 }
 
 template<class T>
-void TiffCopy(STiff *lpTiffDest, STiff *lpTiffSrc)
+void TiffCopy(STiff* lpTiffDest, STiff* lpTiffSrc)
 {
 	int Width = Tiff_GetTagValue(lpTiffSrc, ImageWidth);
 	int Length = Tiff_GetTagValue(lpTiffSrc, ImageLength);
@@ -214,20 +214,20 @@ int ImageTest2(string FileName)
 	string FileRaw = FileName + ".raw";
 
 	cout << "Raw Test : " << FileName.c_str() << "out.tif\n";
-	STiff *lpTiff = Tiff_Create();	
+	STiff* lpTiff = Tiff_Create();
 	Tiff_ReadFile(lpTiff, FileIn.c_str());
 
 	//Compare
 	int ret = 0;
 	int stripByteCounts = Tiff_GetTagValue(lpTiff, StripByteCounts);
-	unsigned char *lpTemp1 = (unsigned char *)Tiff_GetImageBuf(lpTiff);
+	unsigned char* lpTemp1 = (unsigned char*)Tiff_GetImageBuf(lpTiff);
 
 	//Get Raw
 	FILE* file = fopen(FileRaw.c_str(), "rb");
 	LPBYTE lpRaw = new BYTE[stripByteCounts];
 	fread(lpRaw, 1, stripByteCounts, file);
 	unsigned char* lpTemp2 = lpRaw;
-	
+
 	for (int i = 0; i < stripByteCounts; i++)
 		if (*(lpTemp1++) != *(lpTemp2++))
 		{
@@ -248,7 +248,7 @@ int ImageTest3(string FileName)
 
 	cout << "Copy Test : " << FileName.c_str() << "out.tif\n";
 	STiff* lpTiff = Tiff_Create();
-	
+
 	Tiff_ReadFile(lpTiff, FileIn.c_str());
 	STiff* lpTiff2 = Tiff_Clone();
 
@@ -292,15 +292,15 @@ int ImageTest3(string FileName)
 	return ret;
 }
 template<class T>
-int GetXY_Test(STiff *lpTiff1, STiff *lpTiff2)
+int GetXY_Test(STiff* lpTiff1, STiff* lpTiff2)
 {
 	if (Tiff_GetTagValue(lpTiff1, BitsPerSample) == 1)
 		return 0;
 	int Width = Tiff_GetTagValue(lpTiff1, ImageWidth);
 	int Length = Tiff_GetTagValue(lpTiff1, ImageLength);
 	int samplesPerPixel = Tiff_GetTagValue(lpTiff1, SamplesPerPixel);
-	T *lpTemp1 = (T*)Tiff_GetImageBuf(lpTiff1);
-	T *lpTemp2;
+	T* lpTemp1 = (T*)Tiff_GetImageBuf(lpTiff1);
+	T* lpTemp2;
 
 	//Get X Y pixel test, and compare to the orignal image.
 	for (int i = 0; i < Length; i++)
@@ -316,8 +316,8 @@ int GetXY_Test(STiff *lpTiff1, STiff *lpTiff2)
 
 int ImageTest4(string FileName)
 {
-	STiff *lpTiff1 = Tiff_Create();
-	STiff *lpTiff2 = Tiff_Create();
+	STiff* lpTiff1 = Tiff_Create();
+	STiff* lpTiff2 = Tiff_Create();
 	string File1 = FileName + ".tif";
 	string File2 = "Output\\" + FileName + "out2.tif";
 	Tiff_ReadFile(lpTiff1, File1.c_str());
@@ -340,11 +340,11 @@ int ImageTest4(string FileName)
 	return ret;
 }
 
-string FileName[] = { 
-"0NULL", "1LineArt", "2gray8", "3RGB8", "4CMYK8", 
-"5Lab8", "6gray16", "7RGB16", "8CMYK16", "9Lab16", 
-"10RGB82", "11RGB162", "12CMYK82", "13CMYK162", "14Lab82", 
-"15Lab162","16MultiStrip", "17Ycc8", "18CLR68", "19CLR616", 
+string FileName[] = {
+"0NULL", "1LineArt", "2gray8", "3RGB8", "4CMYK8",
+"5Lab8", "6gray16", "7RGB16", "8CMYK16", "9Lab16",
+"10RGB82", "11RGB162", "12CMYK82", "13CMYK162", "14Lab82",
+"15Lab162","16MultiStrip", "17Ycc8", "18CLR68", "19CLR616",
 "20IccLab8", "21IccLab16", "22Alpha8", "23Alpha16" };
 
 const int TestNum = 24;
@@ -432,7 +432,7 @@ void Tiff_RGBA_Test()
 	}
 	lpTiffOut->SetTagValue(PhotometricInterpretation, 2);
 	lpTiffOut->SetTagValue(SamplesPerPixel, 4);
-	
+
 	lpTiffOut->SetTag(ExtraSamples, (FieldType)1, 1, 1); //Add Alpha channel tag
 
 	lpTiffOut->SaveFile("20Alpha8.tif");
@@ -495,7 +495,7 @@ int main(int argc, _TCHAR* argv[])
 
 	char Dir[128];
 	int size = GetCurrentDirectory(128, Dir);
-	cout << "Dir : " << Dir << endl;	
+	cout << "Dir : " << Dir << endl;
 
 #if Tiff_Test
 	FullTest1();
@@ -521,7 +521,7 @@ int main(int argc, _TCHAR* argv[])
 	ProcessTemplate()
 #endif //0
 
-	Utility(argc, argv);
+		Utility(argc, argv);
 	Test(argc, argv);
 	return 0;
 }

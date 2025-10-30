@@ -55,7 +55,7 @@ using namespace std;
 #include "Tiff_STL3.h" //Has claimed the namespace...
 //using namespace AV_Tiff_STL3; Don't need anymore...
 main(int argc, _TCHAR* argv[]))
-{	
+{
 	SPTIFF lpIn = make_shared<CTiff>("Input.tif");
 
 	int Width = lpIn->GetTagValue(ImageWidth);
@@ -101,57 +101,57 @@ Virtual IO
 //#define VIRTUAL_IO_STL	
 
 #ifdef _WINDOWS //Windows
-	#include <windows.h>
-	#pragma warning(disable : 4996)//for Net
+#include <windows.h>
+#pragma warning(disable : 4996)//for Net
 
-	#if defined(__IO_Interface_H__)//Slowest, it should be the same with fopen, but not the true.
-		#include <SysInfo\Virtual_IO.h>		
-		#define IO_In(FileName)					new IO_File(FileName, "rb")
-		#define IO_Out(FileName)				new IO_File(FileName, "wb")
-		#define IO_Close(IO)					delete IO
-		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-		#define IO_Tell()						IO->Tell()
-		#define IO_GetHandle()					IO->GetHandle()
+#if defined(__IO_Interface_H__)//Slowest, it should be the same with fopen, but not the true.
+#include <SysInfo\Virtual_IO.h>		
+#define IO_In(FileName)					new IO_File(FileName, "rb")
+#define IO_Out(FileName)				new IO_File(FileName, "wb")
+#define IO_Close(IO)					delete IO
+#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+#define IO_Tell()						IO->Tell()
+#define IO_GetHandle()					IO->GetHandle()
 
-	#elif defined(VIRTUAL_IO_STL)//Fastest
-		#include <fstream>
-		#include <SysInfo\Virtual_IO.h>
+#elif defined(VIRTUAL_IO_STL)//Fastest
+#include <fstream>
+#include <SysInfo\Virtual_IO.h>
 
-		#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
-		#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
-		#define IO_Close(IO)					delete IO
-		#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
-		#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
-		#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
-		#define IO_Tell()						IO->Tell()
-		#define IO_GetHandle()					IO->GetHandle()
+#define IO_In(FileName)					new IO_fstream(FileName, ios::in)
+#define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
+#define IO_Close(IO)					delete IO
+#define IO_Read(Str, Size, Count)		IO->Read(Str, Size, Count)
+#define IO_Write(Str, Size, Count)		IO->Write(Str, Size, Count)
+#define IO_Seek(Offset, Origin)			IO->Seek(Offset, Origin)
+#define IO_Tell()						IO->Tell()
+#define IO_GetHandle()					IO->GetHandle()
 
-	#else //Almost the same with VIRTUAL_IO_STL
-		#define IO_INTERFACE					FILE //Type
-		#define IO								File //Argument
-		#define IO_In(FileName)					fopen(FileName, "rb")
-		#define IO_Out(FileName)				fopen(FileName, "wb+")
-		#define IO_Close(File)					fclose(File)
-		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-		#define IO_Tell()						ftell(File)
-	#endif //VIRTUAL_IO
+#else //Almost the same with VIRTUAL_IO_STL
+#define IO_INTERFACE					FILE //Type
+#define IO								File //Argument
+#define IO_In(FileName)					fopen(FileName, "rb")
+#define IO_Out(FileName)				fopen(FileName, "wb+")
+#define IO_Close(File)					fclose(File)
+#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+#define IO_Tell()						ftell(File)
+#endif //VIRTUAL_IO
 
 #else //Linux
-	#if !defined(__IO_Interface_H__)
-		#define IO_INTERFACE					FILE //Type
-		#define IO								File //Argument
-		#define IO_In(FileName)					fopen(FileName, "rb")
-		#define IO_Out(FileName)				fopen(FileName, "wb+")
-		#define IO_Close(File)					fclose(File)
-		#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
-		#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
-		#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
-		#define IO_Tell()						ftell(File)
-	#endif
+#if !defined(__IO_Interface_H__)
+#define IO_INTERFACE					FILE //Type
+#define IO								File //Argument
+#define IO_In(FileName)					fopen(FileName, "rb")
+#define IO_Out(FileName)				fopen(FileName, "wb+")
+#define IO_Close(File)					fclose(File)
+#define IO_Read(Str, Size, Count)		fread(Str, Size, Count, File)
+#define IO_Write(Str, Size, Count)		fwrite(Str, Size, Count, File)
+#define IO_Seek(Offset, Origin)			fseek(File, Offset, Origin)
+#define IO_Tell()						ftell(File)
+#endif
 #endif //WIN32
 
 #define MAXTAG 40
@@ -350,12 +350,12 @@ namespace AV_Tiff_STL3 {
 	/***************************************************************************
 	***************************************************************************/
 	//Special Tag
-    // Fix the method signature to match the base class method it is intended to override.
-    class BitsPerSampleTag : public TiffTag
+	// Fix the method signature to match the base class method it is intended to override.
+	class BitsPerSampleTag : public TiffTag
 	{
-    public:
-        BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
-        DWORD GetValue() const override; 
+	public:
+		BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
+		DWORD GetValue() const override;
 	};
 
 	class ResolutionTag :public TiffTag
@@ -455,8 +455,8 @@ namespace AV_Tiff_STL3 {
 		//Read Image
 		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
-		Tiff_Err	ReadImage(IO_INTERFACE* IO);		
-		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);		
+		Tiff_Err	ReadImage(IO_INTERFACE* IO);
+		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
 
 		template<class T>
 		void		Pack(int Width, int Length);
@@ -490,7 +490,7 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
 #endif //VIRTUAL_IO
 
-		CTiff*		Clone(bool copy = false);
+		CTiff* Clone(bool copy = false);
 		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, int AllocBuf = 1);
 		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName);
 		Tiff_Err	CreateNew(int width, int length, int resolution, int samplesperpixel, int bitspersample, LPCSTR InName, LPCSTR OutName);
