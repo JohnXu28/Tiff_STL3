@@ -1,7 +1,9 @@
 include ../../Makefile.inc
 
 CPPS = Tiff_STL3.cpp 
-OBJS = Tiff_STL3.o
+#OBJS : replace *.cpp to *.o
+OBJS=$(CPPS:.cpp=.o)
+
 all: $(OBJS)
 		
 CPPFLAGS += -fPIC
