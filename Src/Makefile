@@ -1,27 +1,37 @@
 include ../../Makefile.inc
 
-CPPS = Tiff_STL3.cpp 
+Module = Tiff_STL3
+CPPS = \
+Tiff_STL3.cpp \
+
 #OBJS : replace *.cpp to *.o
+#OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 OBJS=$(CPPS:.cpp=.o)
-CPPFLAGS +=
 
-all: $(OBJS)
+#---------------------------------------------------------
+# Default target
+all: test
 
-#================================================================
-.PHONY:test
-%.o : %.cpp
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} -c -o $@ $<
-	${CP} *.o ../../Lib
-	@echo "*****************************Tiff_STL3:test************************"
-
-#================================================================
-.PHONY:release
-release:
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} -c -o $@ $<
-	${CP} *.o ../../Lib
-	@echo "*****************************Tiff_STL3:Release************************"
+#---------------------------------------------------------
+# Test build
+test: CXXFLAGS += 
+test: $(OBJS)
+	@echo "======= $(Module): TEST mode ======="
+	$(CP) *.o ../../Lib
 	
-#================================================================
-clean :
-	${RM} *.o
-	@echo "*****************************Tiff_STL3:Clean************************"
+#---------------------------------------------------------
+# Release build
+release: CXXFLAGS += 
+release: clean $(OBJS)
+	@echo "======= $(Module): RELEASE mode ======="
+	$(CP) *.o ../../Lib	
+
+#---------------------------------------------------------
+# Common compile rule
+%.o : %.cpp	
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	
+#---------------------------------------------------------
+clean:
+	@echo "Cleaning object files..." $(Module)
+	$(RM) *.o

@@ -46,7 +46,7 @@
 	#include <windows.h>
 	#include <stdlib.h>
 	#ifdef _DEBUG
-		#define DBG_Printf(fmt, ...)	printf("XUJY:"##fmt, ## __VA_ARGS__)
+		#define DBG_Printf(fmt, ...)	printf("XUJY : " fmt, ## __VA_ARGS__)
 
 		//For Memory leak detection.
 		#define _CRTDBG_MAP_ALLOC 
@@ -72,7 +72,7 @@
 #define FileNotFound		0xFFFFFFFE
 
 #ifdef _DEBUG
-	#define DBG_Printf(fmt, ...)	printf("XUJY:"##fmt, ## __VA_ARGS__)
+	#define DBG_Printf(fmt, ...)	printf("XUJY : " fmt, ## __VA_ARGS__)
 #else
 	#define DBG_Printf(fmt, ...)	
 #endif //_DEBUG
