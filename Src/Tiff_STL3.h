@@ -161,6 +161,11 @@ Virtual IO
 #include <algorithm>
 #include <iostream>
 #include <memory>
+
+#ifdef FIXED_VECTOR
+	#include <SysInfo/FixedAllocator.h>
+#endif //FIXED_VECTOR
+
 using namespace std;
 
 /**
@@ -390,7 +395,12 @@ namespace AV_Tiff_STL3 {
 
 	//	typedef vector<TiffTagPtr> TagList;
 	//	typedef TagList::iterator TiffTag_iter;
+#ifdef FIXED_VECTOR
+	using  TagList = FixedVector<TiffTagPtr, MAXTAG>;
+#else
 	using  TagList = vector<TiffTagPtr>;
+#endif //FIXED_VECTOR
+
 	using  TiffTag_iter = TagList::iterator;
 
 #define TiffTag_Begin m_IFD.m_TagList.begin()

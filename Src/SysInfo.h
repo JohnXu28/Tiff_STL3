@@ -33,11 +33,11 @@
 	typedef WORD *				LPWORD;
 	typedef DWORD *				LPDWORD;
 	typedef int*				LPINT;
+	typedef char*				LPSTR;
 	typedef const char*			LPCSTR;
+	
 	//typedef int				size_t;
-
-	#define FALSE				0
-	#define TRUE				1	
+	#define MAX_PATH          260
 
 	#ifdef Mac
 		#define HiByteFirst
@@ -46,8 +46,6 @@
 	#include <windows.h>
 	#include <stdlib.h>
 	#ifdef _DEBUG
-		#define DBG_Printf(fmt, ...)	printf("XUJY : " fmt, ## __VA_ARGS__)
-
 		//For Memory leak detection.
 		#define _CRTDBG_MAP_ALLOC 
 		#ifndef DBG_NEW     
@@ -73,8 +71,12 @@
 
 #ifdef _DEBUG
 	#define DBG_Printf(fmt, ...)	printf("XUJY : " fmt, ## __VA_ARGS__)
+	#define DBG_Cout_Ext(Index, ...)	std::cerr << "XUJY " << Index << ":" << __VA_ARGS__ << std::endl;
+	#define DBG_Cout(...)				std::cerr << "XUJY : " << __VA_ARGS__ << std::endl;
 #else
 	#define DBG_Printf(fmt, ...)	
+	#define DBG_Cout_Ext(Index, ...)
+	#define DBG_Cout(...)
 #endif //_DEBUG
 
 //DWORD SwapDWORD(const DWORD x);
@@ -82,14 +84,10 @@
 
 #ifdef HiByteFirst 
 	inline DWORD SwapDWORD(const DWORD x)
-	{
-		return x;
-	}
+	{	return x;}
 
 	inline WORD SwapWORD(const WORD x)
-	{
-		return x;
-	}
+	{	return x;}
 #else		
 	#ifdef WIN32  //For VC (Little Endian)		
 			#define	SWAP
@@ -130,9 +128,9 @@ inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
 }
 
 //For C++ 11
-#define ENABLE_SHARED_POINTER
+#define ENABLE_SMART_POINTER
 
-#ifdef ENABLE_SHARED_POINTER
+#ifdef ENABLE_SMART_POINTER
 	#define SMART_POINTER 1
 	//#define SMART_PTR(CLASS, ptr) shared_ptr<CLASS>(ptr)
 	#define SMART_PTR(CLASS, ptr) unique_ptr<CLASS>(ptr)
@@ -141,6 +139,14 @@ inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
 	#define SMART_POINTER 0
 	#define SMART_PTR(CLASS, ptr) ptr
 	#define GetPtr(ptr) ptr
-#endif //SHARED_POINTER
+#endif //ENABLE_SMART_POINTER
+
+#define LIST	0
+#if LIST
+#define VECTOR	0
+#else
+#define VECTOR	1
+#define FIXED_VECTOR
+#endif //LIST
 
 #endif //_SYSINFO_H__
