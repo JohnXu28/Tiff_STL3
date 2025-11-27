@@ -128,7 +128,7 @@ inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
 }
 
 //For C++ 11
-#define ENABLE_SMART_POINTER
+//#define ENABLE_SMART_POINTER
 
 #ifdef ENABLE_SMART_POINTER
 	#define SMART_POINTER 1

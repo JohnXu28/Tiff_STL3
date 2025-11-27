@@ -163,7 +163,7 @@ Virtual IO
 #include <memory>
 
 #ifdef FIXED_VECTOR
-	#include <SysInfo/FixedAllocator.h>
+	#include "../../SysInfo/FixedVector.h"
 #endif //FIXED_VECTOR
 
 using namespace std;
