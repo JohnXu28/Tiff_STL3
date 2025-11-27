@@ -35,12 +35,12 @@
 	typedef int*				LPINT;
 	typedef char*				LPSTR;
 	typedef const char*			LPCSTR;
-	
-	//typedef int				size_t;
+
+	//typedef int					size_t;
 	#define MAX_PATH          260
 
 	#ifdef Mac
-		#define HiByteFirst
+	#define HiByteFirst
 	#endif 
 #else
 	#include <windows.h>
@@ -49,7 +49,7 @@
 		//For Memory leak detection.
 		#define _CRTDBG_MAP_ALLOC 
 		#ifndef DBG_NEW     
-		#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
+			#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
 		#endif//DBG_NEW
 
 		#define new DBG_NEW 
@@ -70,11 +70,11 @@
 #define FileNotFound		0xFFFFFFFE
 
 #ifdef _DEBUG
-	#define DBG_Printf(fmt, ...)	printf("XUJY : " fmt, ## __VA_ARGS__)
+	#define DBG_Printf(fmt, ...)		printf("XUJY : " fmt, ## __VA_ARGS__)
 	#define DBG_Cout_Ext(Index, ...)	std::cerr << "XUJY " << Index << ":" << __VA_ARGS__ << std::endl;
 	#define DBG_Cout(...)				std::cerr << "XUJY : " << __VA_ARGS__ << std::endl;
 #else
-	#define DBG_Printf(fmt, ...)	
+	#define DBG_Printf(fmt, ...)
 	#define DBG_Cout_Ext(Index, ...)
 	#define DBG_Cout(...)
 #endif //_DEBUG
@@ -89,10 +89,10 @@
 	inline WORD SwapWORD(const WORD x)
 	{	return x;}
 #else		
-	#ifdef WIN32  //For VC (Little Endian)		
-			#define	SWAP
-			#define SwapWORD _byteswap_ushort 
-			#define SwapDWORD _byteswap_ulong 
+	#ifdef WIN32  //For VC (Little Endian)
+		#define	SWAP
+		#define SwapWORD _byteswap_ushort 
+		#define SwapDWORD _byteswap_ulong 
 	#endif //WIN32
 
 	#ifdef LINUX
@@ -128,25 +128,23 @@ inline void SwapWORD_Buf(LPWORD lpBuf, int Size)
 }
 
 //For C++ 11
-//#define ENABLE_SMART_POINTER
-
-#ifdef ENABLE_SMART_POINTER
+#ifdef No_Smart_Pointer
+	#define SMART_POINTER 0
+	#define SMART_PTR(CLASS, ptr) ptr
+	#define GetPtr(ptr) ptr
+#else
 	#define SMART_POINTER 1
 	//#define SMART_PTR(CLASS, ptr) shared_ptr<CLASS>(ptr)
 	#define SMART_PTR(CLASS, ptr) unique_ptr<CLASS>(ptr)
 	#define GetPtr(ptr) ptr.get()
-#else
-	#define SMART_POINTER 0
-	#define SMART_PTR(CLASS, ptr) ptr
-	#define GetPtr(ptr) ptr
 #endif //ENABLE_SMART_POINTER
 
 #define LIST	0
-#if LIST
-#define VECTOR	0
+	#if LIST
+	#define VECTOR	0
 #else
-#define VECTOR	1
-#define FIXED_VECTOR
+	#define VECTOR	1
+	//#define FIXED_VECTOR
 #endif //LIST
 
 #endif //_SYSINFO_H__

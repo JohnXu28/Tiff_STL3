@@ -15,14 +15,14 @@ all: test
 
 #---------------------------------------------------------
 # Test build
-test: CXXFLAGS += 
+test: CXXFLAGS +=
 test: $(OBJS)
 	@echo "======= $(Module): TEST mode ======="
 	$(CP) *.o ../../Lib
 
 #---------------------------------------------------------
 # Release build
-release: CXXFLAGS += 
+release: CXXFLAGS +=
 release: clean $(OBJS)
 	@echo "======= $(Module): RELEASE mode ======="
 	$(CP) *.o ../../Lib	
