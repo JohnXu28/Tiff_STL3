@@ -59,7 +59,7 @@ void Tiff_SetNextIFD(FILE* Tif_Dst, int Offset_IFD, int Offset_TifDst)
 	//ret = ftell(Tif_Dst);
 }
 
-void CheckTag(TAG* tag, int Offset, FILE* Tif_Src)
+int CheckTag(TAG* tag, int Offset, FILE* Tif_Src)
 {
 	int size = DataType[tag->type] * tag->n;
 
@@ -68,6 +68,9 @@ void CheckTag(TAG* tag, int Offset, FILE* Tif_Src)
 		{//Reset StripOffset data
 			int i = 0, n = tag->n;
 			unsigned int* lpBuf = (unsigned int*)malloc(n * 4);
+			if (lpBuf == nullptr)
+				return -1;
+
 			memset(lpBuf, 0, n * 4);
 			unsigned int* lpIndex = lpBuf;
 
@@ -90,9 +93,11 @@ void CheckTag(TAG* tag, int Offset, FILE* Tif_Src)
 
 	if (size > 4)
 		tag->value += Offset;
+
+	return 0;
 }
 
-void Tiff_CopyIFD(FILE* Tif_Dst, FILE* Tif_Src, int Offset_TifDst)
+int Tiff_CopyIFD(FILE* Tif_Dst, FILE* Tif_Src, int Offset_TifDst)
 {
 	int index = 0, Count = 0, Offset = 0, IFD = 8;
 	int ret = fseek(Tif_Src, IFD, SEEK_SET);
@@ -104,31 +109,42 @@ void Tiff_CopyIFD(FILE* Tif_Dst, FILE* Tif_Src, int Offset_TifDst)
 	ret = fread(&Count, 2, 1, Tif_Src);
 	fwrite(&Count, 1, 2, Tif_Dst);
 	lpBuf = (TAG*)malloc(Count * 12);
+	if(lpBuf == nullptr)
+		return -1;
+
 	fread(lpBuf, 12, Count, Tif_Src);
 
 	lpTag = lpBuf;
 	for (index = 0; index < Count; index++)
-		CheckTag(lpTag++, Offset_TifDst - 8, Tif_Src);//Skip Tif_Src Header(IFD Offset) 8 bytes
+	{
+		int ret = CheckTag(lpTag++, Offset_TifDst - 8, Tif_Src);//Skip Tif_Src Header(IFD Offset) 8 bytes
+		if (ret != 0)
+			return -1;
+	}
 
 	fwrite(lpBuf, 12, Count, Tif_Dst);
 	free(lpBuf);
+	return 0;
 }
 
-void Tiff_CopyRaw(FILE* Tiff_Dst, FILE* Tif_Src)
+int Tiff_CopyRaw(FILE* Tiff_Dst, FILE* Tif_Src)
 {
 	int Size = 1024, ret = 0;
 	void* lpBuf = malloc(Size);
+	if (lpBuf == nullptr)
+		return -1;
 	do {
 		ret = fread(lpBuf, 1, Size, Tif_Src);
 		ret = fwrite(lpBuf, 1, ret, Tiff_Dst);
 	} while (ret != 0);
 
 	free(lpBuf);
+	return 0;
 }
-
 
 int Tiff_Append(char* Tar, char* Src)
 {
+	int ret = 0;
 	FILE* Tif_Dst = fopen(Tar, "r+b");
 	FILE* Tif_Src = fopen(Src, "r+b");
 	int Offset_IFD = Tiff_FindNextIFD(Tif_Dst);
@@ -139,8 +155,9 @@ int Tiff_Append(char* Tar, char* Src)
 
 	Tiff_SetNextIFD(Tif_Dst, Offset_IFD, Offset_TifDst);
 
-	Tiff_CopyIFD(Tif_Dst, Tif_Src, Offset_TifDst);
-	Tiff_CopyRaw(Tif_Dst, Tif_Src);
+	if(Tiff_CopyIFD(Tif_Dst, Tif_Src, Offset_TifDst) == 0)
+		if(Tiff_CopyRaw(Tif_Dst, Tif_Src) != 0)
+			ret = -1; //Buffer malloc failed
 
 	fclose(Tif_Src);
 	fclose(Tif_Dst);
