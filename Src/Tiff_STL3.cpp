@@ -820,13 +820,14 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		//fwrite(lpStripeBuf, 1, Bufsize, file);
 		//fclose(file);
 		
-		int ret = LZW_Decompress(lpStripeBuf, Bufsize, lpStripeBuf_Out, &BytesPerStrip);
-		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
-		lpImage += BytesPerStrip;
-//		if (predicator == 2)
-	//		TIFF_UndoPredictor_Generic(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel, bitsPerSample);
-
-		//if (Predictor == 2)
+		if (LZW_Decompress(lpStripeBuf, Bufsize, lpStripeBuf_Out, &BytesPerStrip))
+		{
+			memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
+			lpImage += BytesPerStrip;
+			//		if (predicator == 2)
+				//		TIFF_UndoPredictor_Generic(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel, bitsPerSample);
+		}
+	//if (Predictor == 2)
 	}
 
 	FILE* file = fopen("D:\\LZWDecode.raw", "wb+");
