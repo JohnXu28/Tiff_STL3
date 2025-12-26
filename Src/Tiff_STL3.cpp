@@ -21,6 +21,8 @@ using namespace AV_Tiff_STL3;
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+
+#include "LZWCodec.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -647,9 +649,10 @@ void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO)
 
 Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 {
-	if (GetTagValue(Compression) != 1)//No compress
-		throw CompressData;
+	//if (GetTagValue(Compression) != 1)//No compress
+	//	throw CompressData;
 
+	DWORD Compress = GetTagValue(Compression);
 	DWORD Width = GetTagValue(ImageWidth);
 	DWORD Length = GetTagValue(ImageLength);
 	DWORD rowsPerStrip = GetTagValue(RowsPerStrip);
@@ -725,8 +728,10 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 			}
 		}
 	}
-	else
-		ReadMultiStripOffset(IO);
+	else if (Compress == 1)//No compress		
+			ReadMultiStripOffset(IO);
+	else if (Compress == 5)
+			ReadMultiStripOffset_LZW(IO);
 
 	return Tiff_OK;
 }
@@ -755,6 +760,78 @@ Tiff_Err Tiff::ReadMultiStripOffset(IO_INTERFACE* IO)
 		IO_Read(lpImageBufTemp, 1, Bufsize);
 		lpImageBufTemp += Bufsize;
 	}
+
+	//Reset StripOffsets) and StripByteCounts)
+	delete[]TagStripOffsets->lpData;
+	TagStripOffsets->lpData = lpImageBuf;
+	TagStripOffsets->n = 1;
+	TagStripOffsets->type = Long;
+	//TagStripOffsets->value = lpImageBuf;//Don't care, It mean's nothing.
+
+	delete[]TagStripByteCounts->lpData;
+	TagStripByteCounts->lpData = nullptr;
+	TagStripByteCounts->type = Short;
+	TagStripByteCounts->n = 1;
+	TagStripByteCounts->value = stripByteCounts;
+
+	//Reset RowsPerStrip), it should be the same with Length;
+	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
+
+	return Tiff_OK;
+}
+
+Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
+{
+	int Width = GetTagValue(ImageWidth);
+	int Length = GetTagValue(ImageLength);
+	int bitsPerSample = GetTagValue(BitsPerSample);
+	int samplesPerPixel = GetTagValue(SamplesPerPixel);
+	int BytesPerLine = (bitsPerSample * samplesPerPixel + 7) / 8 * Width;
+	int rowsPerStrip = GetTagValue(RowsPerStrip);
+	int predicator = GetTagValue(Predicator);
+	int BytesPerStrip = BytesPerLine * rowsPerStrip * 2;//Double size
+	//The Maximum rowsPerStrip should be Length.
+	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip];
+	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];	
+
+	LPBYTE lpImageBuf = new BYTE[BytesPerLine * Length];
+	LPBYTE lpImage = lpImageBuf;
+
+	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
+	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+
+	DWORD stripByteCounts = 0;
+	DWORD strip = TagStripOffsets->n;
+	LPDWORD lpTemp = (LPDWORD)TagStripByteCounts->lpData;
+
+	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
+	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
+	int TotalSize = 0;
+	//LZWCodec lzw;
+	int DecodeSize = 0;
+	for (DWORD i = 0; i < strip; i++)
+	{
+		int offset = *(lpStripOffset++);
+		IO_Seek(offset, SEEK_SET);
+		int Bufsize = *(lpStripByteCounts++);		
+		IO_Read(lpStripeBuf, 1, Bufsize);
+
+		//FILE* file = fopen("lzw_encode.bin", "wb+");
+		//fwrite(lpStripeBuf, 1, Bufsize, file);
+		//fclose(file);
+		
+		int ret = LZW_Decompress(lpStripeBuf, Bufsize, lpStripeBuf_Out, &BytesPerStrip);
+		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
+		lpImage += BytesPerStrip;
+//		if (predicator == 2)
+	//		TIFF_UndoPredictor_Generic(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel, bitsPerSample);
+
+		//if (Predictor == 2)
+	}
+
+	FILE* file = fopen("D:\\LZWDecode.raw", "wb+");
+	fwrite(lpImageBuf, 1, Width * Length * 3, file);
+	fclose(file);
 
 	//Reset StripOffsets) and StripByteCounts)
 	delete[]TagStripOffsets->lpData;

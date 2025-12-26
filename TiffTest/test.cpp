@@ -138,6 +138,18 @@ void Gray2CMYK(_TCHAR* argv[])
 }
 #endif //GRAY2CMYK
 
+#if LZW_Test
+int LZW_Compress_Test(_TCHAR* argv[])
+{
+	//Read LZW Compressed Tiff
+	CTiff Tiff; 
+	Tiff.ReadFile(argv[1]);
+	//Tiff.SaveFile("LZW_Decompress_Out.tif");
+	Tiff.SaveFile("LZW_Decompress_Out.tif");
+	return 0;
+}
+#endif //LZW_Test
+
 void Test(int argc, _TCHAR* argv[])
 {
 #if	Tag_Test
@@ -172,5 +184,10 @@ void Test(int argc, _TCHAR* argv[])
 #if GRAY2CMYK
 	Gray2CMYK(argv);
 #endif //GRAY2CMYK
+
+#if	LZW_Test
+	LZW_Compress_Test(argv);
+#endif //LZW_Test
+
 	//cout << "test end" << endl;
 }

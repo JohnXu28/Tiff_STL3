@@ -22,6 +22,9 @@
     <ClCompile Include="Tiff_STL3_NE.cpp">
       <Filter>Source Files\Other Version</Filter>
     </ClCompile>
+    <ClCompile Include="LZWCodec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -43,6 +46,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Version_C\tiff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LZWCodec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
