@@ -156,7 +156,7 @@ Virtual IO
 #endif
 #endif //WIN32
 
-#define LZW		1 //LZW Compression
+#define LZW		0 //LZW Compression
 #define MAXTAG 40
 
 #include <vector>
@@ -470,7 +470,9 @@ namespace AV_Tiff_STL3 {
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
 		Tiff_Err	ReadImage(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
+#if LZW
 		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
+#endif //LZW
 
 		template<class T>
 		void		Pack(int Width, int Length);

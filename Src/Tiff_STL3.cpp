@@ -730,8 +730,10 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 	}
 	else if (Compress == 1)//No compress		
 			ReadMultiStripOffset(IO);
+#if LZW
 	else if (Compress == 5)
 			ReadMultiStripOffset_LZW(IO);
+#endif //LZW
 
 	return Tiff_OK;
 }
@@ -780,6 +782,7 @@ Tiff_Err Tiff::ReadMultiStripOffset(IO_INTERFACE* IO)
 	return Tiff_OK;
 }
 
+#if LZW
 Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 {
 	int Width = GetTagValue(ImageWidth);
@@ -851,6 +854,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	return Tiff_OK;
 }
+#endif //LZW
 
 template<class T>   //T:type, Ts:type size
 void Tiff::Pack(int Width, int Length)
