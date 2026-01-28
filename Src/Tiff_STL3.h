@@ -156,7 +156,7 @@ Virtual IO
 #endif
 #endif //WIN32
 
-#define LZW		0 //LZW Compression
+#define LZW		1 //LZW Compression
 #define MAXTAG 40
 
 #include <vector>
@@ -301,6 +301,7 @@ namespace AV_Tiff_STL3 {
 		eMemoryAllocFail = -5,
 		eDataTypeErr = -6,
 		eCompressData = -7,
+		eTagNorFound = -8,
 		eUnDefineErr = -9999,
 		eTiff_NEW_TAG = 1
 	};
@@ -458,11 +459,12 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err SaveMemory(LPBYTE Buffer, size_t BufSize, size_t& SaveSize);
 #endif //VIRTUAL_IO
 
-		//	Tag Operation
+		//	Tag Operation		
 		TiffTagPtr	GetTag(const TiffTagSignature Signature);
 		DWORD		GetTagValue(const TiffTagSignature Signature);
 		Tiff_Err	SetTag(TiffTagPtr NewTag);
 		Tiff_Err	SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tiff_Err	RemoveTag(const TiffTagSignature Signature);
 
 	protected:
 		//Read Image
@@ -677,6 +679,7 @@ using namespace AV_Tiff_STL3;
 #define MemoryAllocFail						Tiff_Err::eMemoryAllocFail
 #define DataTypeErr							Tiff_Err::eDataTypeErr
 #define CompressData						Tiff_Err::eCompressData
+#define TagNorFound							Tiff_Err::eTagNorFound
 #define UnDefineErr							Tiff_Err::eUnDefineErr
 //#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG
 

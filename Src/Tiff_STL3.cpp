@@ -22,7 +22,7 @@ using namespace AV_Tiff_STL3;
 #include <cstring>
 #include <cmath>
 
-#include "LZWCodec.h"
+#include "LZW.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -450,6 +450,19 @@ Tiff_Err Tiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
 	return SetTag(lpTag);
 }
 
+Tiff_Err Tiff::RemoveTag(const TiffTagSignature Signature)
+{
+	auto pos = find_if(TiffTag_Begin, TiffTag_End,
+		[&Signature](const TiffTagPtr& pos) {return pos->tag == Signature; });
+
+	if (pos != TiffTag_End)
+	{
+		m_IFD.m_TagList.erase(pos);
+		return Tiff_OK;
+	}
+	else
+		return TagNorFound;
+}
 //////////////////////////////////////////////////////////////////////
 // Tiff Read File Operaton
 //////////////////////////////////////////////////////////////////////
@@ -792,7 +805,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	int BytesPerLine = (bitsPerSample * samplesPerPixel + 7) / 8 * Width;
 	int rowsPerStrip = GetTagValue(RowsPerStrip);
 	int predicator = GetTagValue(Predicator);
-	int BytesPerStrip = BytesPerLine * rowsPerStrip * 2;//Double size
+	int BytesPerStrip = BytesPerLine * rowsPerStrip;
 	//The Maximum rowsPerStrip should be Length.
 	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip];
 	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];	
@@ -809,9 +822,9 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
-	int TotalSize = 0;
-	//LZWCodec lzw;
-	int DecodeSize = 0;
+
+	Lzw lzw;
+	int LinesRemain = Length;
 	for (DWORD i = 0; i < strip; i++)
 	{
 		int offset = *(lpStripOffset++);
@@ -819,22 +832,25 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		int Bufsize = *(lpStripByteCounts++);		
 		IO_Read(lpStripeBuf, 1, Bufsize);
 
-		//FILE* file = fopen("lzw_encode.bin", "wb+");
-		//fwrite(lpStripeBuf, 1, Bufsize, file);
-		//fclose(file);
-		
-		int ret = LZW_Decompress(lpStripeBuf, Bufsize, lpStripeBuf_Out, &BytesPerStrip);
+		if (LinesRemain > rowsPerStrip)
+		{
+			BytesPerStrip = BytesPerLine * rowsPerStrip;
+			LinesRemain -= rowsPerStrip;
+		}
+		else
+			BytesPerStrip = BytesPerLine * LinesRemain;
+
+		lzw.Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);		
+
 		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
 		lpImage += BytesPerStrip;
-//		if (predicator == 2)
-	//		TIFF_UndoPredictor_Generic(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel, bitsPerSample);
-
-		//if (Predictor == 2)
 	}
 
-	FILE* file = fopen("D:\\LZWDecode.raw", "wb+");
-	fwrite(lpImageBuf, 1, Width * Length * 3, file);
-	fclose(file);
+	delete[]lpStripeBuf;
+	delete[]lpStripeBuf_Out;
+
+	if (predicator == 2)
+		lzw.PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
 
 	//Reset StripOffsets) and StripByteCounts)
 	delete[]TagStripOffsets->lpData;
@@ -847,10 +863,12 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	TagStripByteCounts->lpData = nullptr;
 	TagStripByteCounts->type = Short;
 	TagStripByteCounts->n = 1;
-	TagStripByteCounts->value = stripByteCounts;
+	TagStripByteCounts->value = BytesPerLine * Length;
 
 	//Reset RowsPerStrip), it should be the same with Length;
 	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
+	SetTagValue(Compression, 1);
+	RemoveTag(Predicator); //Photoshop hang if tag is not removed.
 
 	return Tiff_OK;
 }
