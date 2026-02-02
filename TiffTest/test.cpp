@@ -143,9 +143,10 @@ int LZW_Compress_Test(_TCHAR* argv[])
 {
 	//Read LZW Compressed Tiff
 	CTiff Tiff; 
-	Tiff.ReadFile(argv[1]);
+	Tiff.ReadFile(argv[1]);	
 	//Tiff.SaveFile("LZW_Decompress_Out.tif");
-	Tiff.SaveFile("LZW_Decompress_Out.tif");
+	Tiff.SaveFile("LZW_Compress_Out.tif", 1);
+
 	return 0;
 }
 #endif //LZW_Test

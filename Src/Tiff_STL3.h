@@ -300,7 +300,7 @@ namespace AV_Tiff_STL3 {
 		eTagStripErr = -4,/*!< StripByteCount.n != StripOffset.n;*/
 		eMemoryAllocFail = -5,
 		eDataTypeErr = -6,
-		eCompressData = -7,
+		eUnSupportCompressData = -7,
 		eTagNorFound = -8,
 		eUnDefineErr = -9999,
 		eTiff_NEW_TAG = 1
@@ -450,9 +450,11 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err CheckFile(IO_INTERFACE* IO);
 		virtual		Tiff_Err ReadTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err SaveTiff(IO_INTERFACE* IO);
+		virtual		Tiff_Err SaveTiff_lzw(IO_INTERFACE* IO);
 		virtual		Tiff_Err ReadFile(LPCSTR FileName);
-		virtual		Tiff_Err SaveFile(LPCSTR FileName);
+		virtual		Tiff_Err SaveFile(LPCSTR FileName, int lzw = 0);
 		virtual		Tiff_Err SaveRaw(LPCSTR FileName);
+		//virtual		Tiff_Err SaveFile(LPCSTR FileName);
 
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
@@ -472,9 +474,10 @@ namespace AV_Tiff_STL3 {
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
 		Tiff_Err	ReadImage(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
-#if LZW
+
 		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
-#endif //LZW
+		Tiff_Err	LZW_Compress();
+
 
 		template<class T>
 		void		Pack(int Width, int Length);
@@ -678,7 +681,7 @@ using namespace AV_Tiff_STL3;
 #define TagStripErr							Tiff_Err::eTagStripErr
 #define MemoryAllocFail						Tiff_Err::eMemoryAllocFail
 #define DataTypeErr							Tiff_Err::eDataTypeErr
-#define CompressData						Tiff_Err::eCompressData
+#define UnSupportCompressData				Tiff_Err::eUnSupportCompressData
 #define TagNorFound							Tiff_Err::eTagNorFound
 #define UnDefineErr							Tiff_Err::eUnDefineErr
 //#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG

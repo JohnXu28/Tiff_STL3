@@ -541,7 +541,7 @@ Tiff_Err Tiff::ReadTiff(IO_INTERFACE* IO)
 	return ret;
 }
 
-Tiff_Err Tiff::SaveFile(LPCSTR FileName)
+Tiff_Err Tiff::SaveFile(LPCSTR FileName, int lzw)
 {
 	Tiff_Err ret = Tiff_OK;
 
@@ -555,7 +555,11 @@ Tiff_Err Tiff::SaveFile(LPCSTR FileName)
 			throw "*** Tiff::SaveFile() --> TiffTag EntryCounts is 0. ***";
 		}
 
-		ret = SaveTiff(IO);
+		if(lzw == 1)
+			ret = SaveTiff_lzw(IO);
+		else
+			ret = SaveTiff(IO);
+
 		IO_Close(IO);
 		return ret;
 	}
@@ -568,6 +572,36 @@ Tiff_Err Tiff::SaveFile(LPCSTR FileName)
 
 Tiff_Err Tiff::SaveTiff(IO_INTERFACE* IO)
 {
+	Tiff_Err ret = WriteHeader(IO);
+	ret = WriteIFD(IO);
+	ret = WriteTagData(IO);
+	ret = WriteImageData(IO);
+	ret = WriteData_Exif_IFD_Tag(IO);
+	return ret;
+}
+
+Tiff_Err Tiff::LZW_Compress()
+{
+	int Width = GetTagValue(ImageWidth);
+	int Length = GetTagValue(ImageLength);
+	int Samples = GetTagValue(SamplesPerPixel);
+	//Devide into 64 strips
+	int rows = (int)ceil(Width / 64);
+
+	LPBYTE lpStripBuf = new BYTE[rows * Length * Samples * 64];
+	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
+	LPBYTE lpImageBuf = TagStripOffsets->lpData;
+
+	//
+	//Lzw *encoder = new Lzw;
+	return Tiff_OK;
+}
+
+Tiff_Err Tiff::SaveTiff_lzw(IO_INTERFACE* IO)
+{
+	LZW_Compress();
+	//Lzw *encoder = new Lzw;
+
 	Tiff_Err ret = WriteHeader(IO);
 	ret = WriteIFD(IO);
 	ret = WriteTagData(IO);
@@ -662,6 +696,7 @@ void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO)
 
 Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 {
+	Tiff_Err ret = Tiff_OK;
 	//if (GetTagValue(Compression) != 1)//No compress
 	//	throw CompressData;
 
@@ -745,10 +780,10 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 			ReadMultiStripOffset(IO);
 #if LZW
 	else if (Compress == 5)
-			ReadMultiStripOffset_LZW(IO);
+		ret = ReadMultiStripOffset_LZW(IO);
 #endif //LZW
 
-	return Tiff_OK;
+	return ret;
 }
 
 Tiff_Err Tiff::ReadMultiStripOffset(IO_INTERFACE* IO)
@@ -795,9 +830,12 @@ Tiff_Err Tiff::ReadMultiStripOffset(IO_INTERFACE* IO)
 	return Tiff_OK;
 }
 
-#if LZW
 Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 {
+	TiffTagPtr Tag = GetTag(RowsPerStrip);
+	if (Tag->n != 1) //Only support single value
+		return UnSupportCompressData;
+
 	int Width = GetTagValue(ImageWidth);
 	int Length = GetTagValue(ImageLength);
 	int bitsPerSample = GetTagValue(BitsPerSample);
@@ -806,7 +844,8 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	int rowsPerStrip = GetTagValue(RowsPerStrip);
 	int predicator = GetTagValue(Predicator);
 	int BytesPerStrip = BytesPerLine * rowsPerStrip;
-	//The Maximum rowsPerStrip should be Length.
+
+	//The Maximum rowsPerStrip should be Length.		
 	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip];
 	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];	
 
@@ -822,8 +861,8 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
-
-	Lzw lzw;
+	
+	Lzw *Decode = new Lzw;
 	int LinesRemain = Length;
 	for (DWORD i = 0; i < strip; i++)
 	{
@@ -840,7 +879,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		else
 			BytesPerStrip = BytesPerLine * LinesRemain;
 
-		lzw.Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);		
+		Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);
 
 		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
 		lpImage += BytesPerStrip;
@@ -850,7 +889,10 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	delete[]lpStripeBuf_Out;
 
 	if (predicator == 2)
-		lzw.PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+	{
+		Decode->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+		RemoveTag(Predicator); //Photoshop hang if tag is not removed.
+	}
 
 	//Reset StripOffsets) and StripByteCounts)
 	delete[]TagStripOffsets->lpData;
@@ -867,12 +909,11 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	//Reset RowsPerStrip), it should be the same with Length;
 	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
-	SetTagValue(Compression, 1);
-	RemoveTag(Predicator); //Photoshop hang if tag is not removed.
-
+	SetTagValue(Compression, 1);	
+	delete Decode;
 	return Tiff_OK;
 }
-#endif //LZW
+
 
 template<class T>   //T:type, Ts:type size
 void Tiff::Pack(int Width, int Length)
