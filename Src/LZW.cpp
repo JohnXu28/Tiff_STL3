@@ -482,6 +482,21 @@ unsigned lzw_readbuf(void* stream, unsigned char* buf, unsigned size)
 //																												//
 //**************************************************************************************************************//
 #include "lzw.h"
+Lzw::Lzw() 
+{
+	m_lpEncodeBuf = nullptr;
+	m_EncodeSize = 0;
+}
+Lzw::~Lzw()
+{
+	if (m_lpEncodeBuf)
+	{
+		delete[] m_lpEncodeBuf;
+		m_lpEncodeBuf = nullptr;
+	}
+	m_EncodeSize = 0;
+}
+
 void Lzw::init()
 {
 	table_reset();
@@ -609,6 +624,13 @@ int Lzw::CheckEncodeListFull()
 		++encode_bit;
 	}
 
+	return 0;
+}
+
+int Lzw::EncodeSize(UINT32 inbuf_size)
+{
+	m_lpEncodeBuf = new UINT8[inbuf_size * 2];
+	m_EncodeSize = 0;
 	return 0;
 }
 

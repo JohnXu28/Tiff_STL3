@@ -39,9 +39,14 @@ private:
 	int CheckEncodeListFull();
 	int CheckDecodeListFull();
 public :
+	Lzw();
+	~Lzw();
+	int EncodeSize(UINT32 inbuf_size);
 	int Encode(UINT8 *inbuf, UINT8 *outbuf, UINT32 inbuf_size);
 	int Decode(UINT8 *inbuf, UINT8 *outbuf, UINT32 outbuf_size);
 	void PredicatorDecode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel);
 	void PredicatorEncode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel);
 
+	int m_EncodeSize;
+	LPBYTE m_lpEncodeBuf;
 };

@@ -332,7 +332,7 @@ namespace AV_Tiff_STL3 {
 		virtual DWORD GetValue() const;
 		virtual int SaveFile(IO_INTERFACE* IO);
 		virtual LPBYTE GetData() const { return lpData; }
-		int ValueIsOffset() const;
+		bool ValueIsOffset() const;
 
 		//! The Tag that identifies the field.
 		TiffTagSignature	tag;
@@ -360,6 +360,18 @@ namespace AV_Tiff_STL3 {
 	***************************************************************************/
 	//Special Tag
 	// Fix the method signature to match the base class method it is intended to override.
+	class StripOffsetsTag : public TiffTag
+	{
+	public:
+		StripOffsetsTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
+		~StripOffsetsTag();
+		void   SetLzwData(LPBYTE lpBuf);
+		LPBYTE GetLzwData();
+	
+	private:
+		LPBYTE m_ImgLzw; //For Lzw Compression
+	};
+
 	class BitsPerSampleTag : public TiffTag
 	{
 	public:
@@ -472,22 +484,26 @@ namespace AV_Tiff_STL3 {
 		//Read Image
 		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
+		int			CaculateOffset();
 		Tiff_Err	ReadImage(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
-
-		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
-		Tiff_Err	LZW_Compress();
-
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
 		//Write Image
-		virtual		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
+		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
 		Tiff_Err	WriteIFD(IO_INTERFACE* IO);
 		Tiff_Err	WriteTagData(IO_INTERFACE* IO);
 		Tiff_Err	WriteImageData(IO_INTERFACE* IO);
 		Tiff_Err	WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
+
+#if LZW
+		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
+		Tiff_Err	LZW_Compress();
+		Tiff_Err	WriteIFD_LZW(IO_INTERFACE* IO);		
+		Tiff_Err	WriteImageData_LZW(IO_INTERFACE* IO);
+#endif //LZW
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;

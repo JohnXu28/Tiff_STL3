@@ -224,6 +224,11 @@ TiffTag::TiffTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO)
 	{//memory address
 		if (IO != nullptr)
 		{
+			if (DataSize % 2 != 0)
+			{
+				DataSize += 1; //The Value is expected to begin on a word boundary; the corresponding Value Offset will thus be an even number.
+				this->n += 1;
+			}
 			lpData = new BYTE[DataSize];
 			IO_Seek(value, SEEK_SET);
 			IO_Read(lpData, DataType[(int)type], n);
@@ -255,18 +260,45 @@ int TiffTag::SaveFile(IO_INTERFACE* IO)
 	return ret;
 }
 
-int TiffTag::ValueIsOffset() const
+bool TiffTag::ValueIsOffset() const
 {
 	int DataSize = DataType[(int)type] * n;
-	int ret = 0;
+	
 	if (DataSize > 4)
-		ret = 1;
-	return ret;
+		return true;
+	else
+		return false;	
 }
 
 /*****************************************************************************************
 //Special Tags
 *****************************************************************************************/
+//StripOffsetTag)
+StripOffsetsTag::StripOffsetsTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO)
+	:TiffTag(SigType, n, value, IO)
+{
+	m_ImgLzw = nullptr;
+}
+
+StripOffsetsTag::~StripOffsetsTag()
+{
+	if (m_ImgLzw != nullptr)
+	{
+		delete[]m_ImgLzw;
+		m_ImgLzw = nullptr;
+	}
+}
+
+ void StripOffsetsTag::SetLzwData(LPBYTE lpBuf)
+{
+	m_ImgLzw = lpBuf;
+}
+
+LPBYTE StripOffsetsTag::GetLzwData()
+{
+	return m_ImgLzw;
+}
+
 //BitsPerSample)
 BitsPerSampleTag::BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO)
 	:TiffTag(SigType, n, value, IO)
@@ -582,30 +614,81 @@ Tiff_Err Tiff::SaveTiff(IO_INTERFACE* IO)
 
 Tiff_Err Tiff::LZW_Compress()
 {
+	//Add Predicator Tag, for caculate offset correctly.
+	TiffTagPtr PredicatorTag = (TiffTagPtr)(new TiffTag(Predicator, Short, 1, 2, nullptr));
+	m_IFD.m_TagList.push_back(PredicatorTag);
+
+	const int StripSize = 2; //64 strips
 	int Width = GetTagValue(ImageWidth);
 	int Length = GetTagValue(ImageLength);
 	int Samples = GetTagValue(SamplesPerPixel);
+	int bitsPerSample = GetTagValue(BitsPerSample);
+	int BytesPerLine = (Width * Samples * bitsPerSample + 7) / 8;
 	//Devide into 64 strips
-	int rows = (int)ceil(Width / 64);
+	//int rows = (int)ceil((double)Length / StripSize);
+	int rows = 0x12f;
 
-	LPBYTE lpStripBuf = new BYTE[rows * Length * Samples * 64];
+	SetTagValue(RowsPerStrip, rows);
+	
+	//StripOffsets
 	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
+	//Backup Original Image Data Pointer
 	LPBYTE lpImageBuf = TagStripOffsets->lpData;
+	LPBYTE lpLzwBuf = new BYTE[Length * BytesPerLine * 2]; //Assume the compress ratio is 50%
+	//Set LZW Data Pointer
+	StripOffsetsTag* pTagStripOffsets = dynamic_cast<StripOffsetsTag*>(GetPtr(TagStripOffsets));
+	pTagStripOffsets->SetLzwData(lpLzwBuf);
+	//Set new StripOffsets Data
+	TagStripOffsets->n = StripSize;
+	TagStripOffsets->lpData = new BYTE[StripSize * 4];
 
-	//
-	//Lzw *encoder = new Lzw;
+	//StripByteCounts
+	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+	TagStripByteCounts->n = StripSize;
+	TagStripByteCounts->lpData = new BYTE[StripSize * 4];
+
+	//Start point of Image Data(LZW)
+	//int Offset = CaculateOffset();
+	int Offset = 0;
+	Lzw *encoder = new Lzw;	
+
+	LPDWORD pOffset = (LPDWORD)(TagStripOffsets->lpData);
+	LPDWORD pByteCounts = (LPDWORD)(TagStripByteCounts->lpData);
+	int BytesPerStrip = 0;
+	LPBYTE lpImage = lpImageBuf;
+	for (int i = 0; i < StripSize; ++i)
+	{
+		if (i < StripSize - 1)
+			BytesPerStrip = rows * BytesPerLine;
+		else
+			BytesPerStrip = (Length - rows * i) * BytesPerLine;
+
+		//Compress Strip Data
+		DWORD CompressedSize = encoder->Encode(lpImage, lpLzwBuf + Offset, BytesPerStrip);
+		//Set Offset and ByteCounts
+		pOffset[i] = Offset;
+		pByteCounts[i] = CompressedSize;
+		Offset += CompressedSize;
+		lpImage += BytesPerStrip;
+	}
+	encoder->PredicatorEncode(lpLzwBuf, Width, Length, Samples);
+
+	//free the original image data buffer
+	delete[]lpImageBuf;
+	delete encoder;
+	SetTagValue(Compression, 5); //LZW
+	
 	return Tiff_OK;
 }
 
 Tiff_Err Tiff::SaveTiff_lzw(IO_INTERFACE* IO)
 {
 	LZW_Compress();
-	//Lzw *encoder = new Lzw;
-
 	Tiff_Err ret = WriteHeader(IO);
 	ret = WriteIFD(IO);
 	ret = WriteTagData(IO);
-	ret = WriteImageData(IO);
+	int offset = ftell(IO);//correct
+	ret = WriteImageData_LZW(IO);
 	ret = WriteData_Exif_IFD_Tag(IO);
 	return ret;
 }
@@ -647,6 +730,10 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO
 		switch ((TiffTagSignature)(0xFFFF & SigType))
 		{
 			//	Special Tag
+		case StripOffsets:
+			NewTag = new StripOffsetsTag(SigType, n, value, IO);
+			break;
+
 		case BitsPerSample:
 			NewTag = new BitsPerSampleTag(SigType, n, value, IO);
 			break;
@@ -981,14 +1068,9 @@ Tiff_Err Tiff::WriteHeader(IO_INTERFACE* IO)
 	return Tiff_OK;
 }
 
-Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
+int Tiff::CaculateOffset()
 {
-	const int IFD_Offset = 8;//Header Size;
-	int OffsetValue = IFD_Offset + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
-	WORD EntryCounts = (WORD)m_IFD.m_TagList.size();//EntryCounts;
-	IO_Seek(IFD_Offset, SEEK_SET);
-	IO_Write((LPBYTE)&EntryCounts, sizeof(WORD), 1);
-
+	int OffsetValue = 8 + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
 	//Recaculate Tag Offset.	
 	//for (auto pos = TiffTag_Begin; pos != TiffTag_End; ++pos)
 	for (const auto& pos : m_IFD.m_TagList)
@@ -1002,7 +1084,6 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
 		case (SLong):Offset = true;
 		default:break;
 		}
-
 		int DataSize;
 		if (Offset == true)
 		{//Now Just for Icc profile
@@ -1021,12 +1102,34 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
 		}
 	}
 
-	//Some Special Tag need to be reset...
-	//StripOffset
-	TiffTagPtr	TempTag = GetTag(StripOffsets);
-	TempTag->value = OffsetValue;
+	return OffsetValue;
+}
 
-	OffsetValue += GetTagValue(StripByteCounts);
+Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
+{
+	const int IFD_Offset = 8;//Header Size;
+	int OffsetValue = IFD_Offset + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
+	
+	WORD EntryCounts = (WORD)m_IFD.m_TagList.size();//EntryCounts;
+	IO_Seek(IFD_Offset, SEEK_SET);
+	IO_Write((LPBYTE)&EntryCounts, sizeof(WORD), 1);
+
+	OffsetValue = CaculateOffset();
+
+	//Some Special Tag need to be reset...
+	//StripOffset	
+	TiffTagPtr	TempTag = GetTag(StripOffsets);
+	if (TempTag->n != 1)
+	{
+		LPDWORD pOffset = (LPDWORD)(TempTag->lpData);
+		for (DWORD i = 0; i < TempTag->n; ++i)
+			pOffset[i] += OffsetValue;
+	}
+	else
+	{//Uncompress, Single Strip
+		TempTag->value = OffsetValue;
+		OffsetValue += GetTagValue(StripByteCounts);
+	}	
 
 	TempTag = GetTag(Exif_IFD);
 	if (TempTag != nullptr)
@@ -1076,6 +1179,86 @@ Tiff_Err Tiff::WriteImageData(IO_INTERFACE* IO)
 	IO_Write(TempTag->lpData, 1, stripByteCounts);
 	return Tiff_OK;
 }
+
+#if LZW
+Tiff_Err Tiff::WriteIFD_LZW(IO_INTERFACE* IO)
+{
+	const int IFD_Offset = 8;//Header Size;
+	int OffsetValue = IFD_Offset + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
+
+	WORD EntryCounts = (WORD)m_IFD.m_TagList.size();//EntryCounts;
+	IO_Seek(IFD_Offset, SEEK_SET);
+	IO_Write((LPBYTE)&EntryCounts, sizeof(WORD), 1);
+	
+	//Some Special Tag need to be reset...
+	//StripOffset
+	TiffTagPtr	TempTag = GetTag(StripOffsets);
+	TempTag->value = OffsetValue;
+	LPDWORD pOffset = (LPDWORD)(TempTag->lpData);
+	for (DWORD i = 0; i < TempTag->n; ++i)
+		pOffset[i] += OffsetValue;
+	
+	OffsetValue += TempTag->n * 4;
+
+	//StripByteCounts
+	TempTag = GetTag(StripByteCounts);
+	TempTag->value = OffsetValue;
+	LPDWORD pByteCounts = (LPDWORD)(TempTag->lpData);
+	int LZW_Size = 0;
+	for (DWORD i = 0; i < TempTag->n; ++i)
+		LZW_Size += pByteCounts[i];	
+
+	OffsetValue += TempTag->n * 4;
+
+	//Next Data should be lzw Image Data.
+	OffsetValue += LZW_Size;	
+	
+	//Exif_IFD
+	TempTag = GetTag(Exif_IFD);
+	if (TempTag != nullptr)
+		TempTag->value = OffsetValue;
+
+	//Write IFD
+	DWORD* lpOutData = new DWORD[EntryCounts * 3 + 12];
+	memset(lpOutData, 0, EntryCounts * 3 + 12);
+	DWORD* lpTemp = lpOutData;
+
+	//for_each(TiffTag_Begin, TiffTag_End,
+	//	[&lpTemp](const TiffTagPtr& pos)
+	for (const auto& pos : m_IFD.m_TagList)
+	{
+		*lpTemp++ = (int)(pos->tag) | ((int)(pos->type) << 16);
+		*lpTemp++ = pos->n;
+		*lpTemp++ = pos->value;
+	};
+
+	IO_Write((LPBYTE)lpOutData, sizeof(DWORD), EntryCounts * 3);
+	delete[]lpOutData;
+
+	//Write Next IFD
+	DWORD NextIFD = 0;
+	IO_Write((LPBYTE)&NextIFD, sizeof(DWORD), 1);
+
+	return Tiff_OK;
+}
+
+Tiff_Err Tiff::WriteImageData_LZW(IO_INTERFACE* IO)
+{
+	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+	int Strip = TagStripByteCounts->n;
+	LPINT StripSize = (LPINT)TagStripByteCounts->lpData;
+	int StripTotalSize = 0;
+	for (int i = 0; i < Strip; i++)
+		StripTotalSize += StripSize[i];
+
+	TiffTagPtr tagStripOffsets = GetTag(StripOffsets);
+	StripOffsetsTag *offset = (StripOffsetsTag*)GetPtr(tagStripOffsets);
+	 
+	
+	IO_Write((LPBYTE)offset->GetLzwData(), 1, StripTotalSize);
+	return Tiff_OK;
+}
+#endif //LZW
 
 Tiff_Err Tiff::WriteData_Exif_IFD_Tag(IO_INTERFACE* IO)
 {
