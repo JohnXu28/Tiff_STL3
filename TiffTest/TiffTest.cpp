@@ -402,12 +402,21 @@ int FullTest4()
 void SingleTest()
 {
 	STiff* lpTiff = Tiff_Create();
-	if (Tiff_ReadFile(lpTiff, "1LineArt.tif") == Tiff_OK)
-	{
-		lpTiff->SetTag(PhotometricInterpretation, Short, 1, 1, 0);
-		Tiff_SaveFile(lpTiff, "1LineArtOut3.tif");
+	//Test for 1Bit Line Art Image, and set PhotometricInterpretation to 1, and save it.
+	//if (Tiff_ReadFile(lpTiff, "1LineArt.tif") == Tiff_OK)
+	//{
+	//	lpTiff->SetTag(PhotometricInterpretation, Short, 1, 1, 0);
+	//	Tiff_SaveFile(lpTiff, "1LineArtOut3.tif");
+	//	Tiff_Close(lpTiff);
+	//}
+
+	//Test Exif_IFD, and save it.
+	if (Tiff_ReadFile(lpTiff, "exif.tif") == Tiff_OK)	{
+		
+		Tiff_SaveFile(lpTiff, "exif_Out.tif");
 		Tiff_Close(lpTiff);
 	}
+
 }
 #endif //Single_Test
 

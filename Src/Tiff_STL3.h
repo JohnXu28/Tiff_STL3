@@ -500,8 +500,7 @@ namespace AV_Tiff_STL3 {
 
 #if LZW
 		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
-		Tiff_Err	LZW_Compress();
-		Tiff_Err	WriteIFD_LZW(IO_INTERFACE* IO);		
+		Tiff_Err	LZW_Compress();		
 		Tiff_Err	WriteImageData_LZW(IO_INTERFACE* IO);
 #endif //LZW
 
