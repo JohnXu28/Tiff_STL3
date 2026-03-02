@@ -23,6 +23,7 @@ using namespace AV_Tiff_STL3;
 #include <cmath>
 
 #include "LZW.h"
+#include "LZW_Perplexity.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -969,8 +970,11 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
 	
-	Lzw *Decode = new Lzw;
+	//Lzw *Lzw = new Lzw;
+	Lzw_Perplexity* Lzw = new Lzw_Perplexity;
+
 	int LinesRemain = Length;
+	int OutSize = 0;
 	for (DWORD i = 0; i < strip; i++)
 	{
 		int offset = *(lpStripOffset++);
@@ -986,10 +990,16 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		else
 			BytesPerStrip = BytesPerLine * LinesRemain;
 
-		Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);
-
-		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
-		lpImage += BytesPerStrip;
+		//Avision LZW Decode is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, It is up to you to choose which one to use.	
+		//Lzw->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);
+		//memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
+		
+		Lzw->Decode(lpStripeBuf, BytesPerStrip, lpStripeBuf_Out, BytesPerStrip, &OutSize);
+		if (predicator == 3)
+			Lzw->PredicatorDecode(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel);
+		
+		memcpy(lpImage, lpStripeBuf_Out, OutSize);
+		lpImage += OutSize;
 	}
 
 	delete[]lpStripeBuf;
@@ -997,7 +1007,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	if (predicator == 2)
 	{
-		Decode->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+		//Lzw->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
 		RemoveTag(Predicator); //Photoshop hang if tag is not removed.
 	}
 
@@ -1017,7 +1027,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	//Reset RowsPerStrip), it should be the same with Length;
 	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
 	SetTagValue(Compression, 1);	
-	delete Decode;
+	delete Lzw;
 	return Tiff_OK;
 }
 #endif //LZW
