@@ -144,9 +144,7 @@ bool Lzw_Perplexity::Decode(
 {
     if (!in || !out || inSize <= 0) return false;
 
-	// TIFF LZW Dictionary Entry
-    
-    //Entry dict[LZW_MAX_DICT];
+    Entry dict[LZW_MAX_DICT];
 
     auto ResetDict = [&](int& nextCode, int& codeBits) {
         for (int i = 0; i < 256; i++) {
@@ -164,8 +162,8 @@ bool Lzw_Perplexity::Decode(
     int inPos = 0;
     int outPos = 0;
 
-    // Lambda: Read the specified bit (TIFF default: MSB-first bit filling but LSB-first bits)
-    //  Note: Most TIFF implementations use LSB-first.
+    // 輔助 Lambda: 讀取指定位元 (TIFF 預設是 MSB-first bit filling but LSB-first bits)
+    // 註：多數 TIFF 實作為 LSB-first
     auto GetCode = [&]() -> int {
         while (bitCount < codeBits) {
             if (inPos >= inSize) return -1;
@@ -191,34 +189,34 @@ bool Lzw_Perplexity::Decode(
         int cur = code;
         int sp = 0;
 
-        //  Handling Codes Not Present in the Dictionary (K-W-K Scenario)
+        // 處理字典中不存在的 Code (K-W-K 情況)
         if (cur >= nextCode) {
-            if (oldCode == -1 || cur > nextCode) return false; // damage
+            if (oldCode == -1 || cur > nextCode) return false; // 損壞
             stack[sp++] = (uint8_t)FirstChar((Entry*)dict, oldCode);
             cur = oldCode;
         }
 
-        //  Expand Code
+        // 展開 Code
         while (cur != 0xFFFF && cur < LZW_MAX_DICT) {
             stack[sp++] = dict[cur].suffix;
             cur = dict[cur].prefix;
             if (sp >= LZW_MAX_DICT) return false;
         }
 
-		// Write to output
+        // 寫入輸出
         if (outPos + sp > outCapacity) return false;
         for (int i = sp - 1; i >= 0; i--) {
             out[outPos++] = stack[i];
         }
 
-        // Update Dictionary
+        // 更新字典
         if (oldCode != -1 && nextCode < LZW_MAX_DICT) {
             dict[nextCode].prefix = (uint16_t)oldCode;
             dict[nextCode].suffix = (uint8_t)FirstChar(dict, oldCode);
             nextCode++;
 
-            // TIFF Specification: Increases bits when nextCode is 511, 1023, 2047
-            // Note: This is TIFF's “Early Change” logic
+            // TIFF 規格：當 nextCode 為 511, 1023, 2047 時增加位元
+            // 注意：這是 TIFF 的 "Early Change" 邏輯
             if (nextCode == 511) codeBits = 10;
             else if (nextCode == 1023) codeBits = 11;
             else if (nextCode == 2047) codeBits = 12;
@@ -227,7 +225,8 @@ bool Lzw_Perplexity::Decode(
     }
 
     *outSize = outPos;
-    return true;}
+    return true;
+}
 
 //Read Tiff with Predictor=2, call this function to restore original pixel data.
 void Lzw_Perplexity::PredicatorDecode(

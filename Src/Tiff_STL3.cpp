@@ -995,7 +995,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		//memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
 		
 		Lzw->Decode(lpStripeBuf, BytesPerStrip, lpStripeBuf_Out, BytesPerStrip, &OutSize);
-		if (predicator == 3)
+		if (predicator == 2)
 			Lzw->PredicatorDecode(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel);
 		
 		memcpy(lpImage, lpStripeBuf_Out, OutSize);
