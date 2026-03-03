@@ -189,14 +189,13 @@ bool Lzw_Perplexity::Decode(
         int cur = code;
         int sp = 0;
 
-        // 處理字典中不存在的 Code (K-W-K 情況)
+        // 處理字典中尚未出現的 Code (K-W-K 特例)
         if (cur >= nextCode) {
             if (oldCode == -1 || cur > nextCode) return false; // 損壞
-            stack[sp++] = (uint8_t)FirstChar((Entry*)dict, oldCode);
+            stack[sp++] = FirstChar(dict, oldCode); // 先推入 K
             cur = oldCode;
         }
 
-        // 展開 Code
         while (cur != 0xFFFF && cur < LZW_MAX_DICT) {
             stack[sp++] = dict[cur].suffix;
             cur = dict[cur].prefix;
@@ -205,19 +204,19 @@ bool Lzw_Perplexity::Decode(
 
         // 寫入輸出
         if (outPos + sp > outCapacity) return false;
-        for (int i = sp - 1; i >= 0; i--) {
+        for (int i = sp - 1; i >= 0; i--)
             out[outPos++] = stack[i];
-        }
 
-        // 更新字典
+        // 此時 stack[sp-1] 就是「當前字串的第一個字元」
+        uint8_t firstCharOfCurrent = stack[sp - 1];
+
+        // 更新字典： oldCode + firstCharOfCurrent
         if (oldCode != -1 && nextCode < LZW_MAX_DICT) {
             dict[nextCode].prefix = (uint16_t)oldCode;
-            dict[nextCode].suffix = (uint8_t)FirstChar(dict, oldCode);
+            dict[nextCode].suffix = firstCharOfCurrent;
             nextCode++;
 
-            // TIFF 規格：當 nextCode 為 511, 1023, 2047 時增加位元
-            // 注意：這是 TIFF 的 "Early Change" 邏輯
-            if (nextCode == 511) codeBits = 10;
+            if (nextCode == 511)      codeBits = 10;
             else if (nextCode == 1023) codeBits = 11;
             else if (nextCode == 2047) codeBits = 12;
         }

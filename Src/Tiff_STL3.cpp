@@ -995,8 +995,8 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		//memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
 		
 		Lzw->Decode(lpStripeBuf, BytesPerStrip, lpStripeBuf_Out, BytesPerStrip, &OutSize);
-		if (predicator == 2)
-			Lzw->PredicatorDecode(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel);
+		//if (predicator == 2)
+		//	Lzw->PredicatorDecode(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel);
 		
 		memcpy(lpImage, lpStripeBuf_Out, OutSize);
 		lpImage += OutSize;
@@ -1007,7 +1007,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	if (predicator == 2)
 	{
-		//Lzw->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+		Lzw->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
 		RemoveTag(Predicator); //Photoshop hang if tag is not removed.
 	}
 
