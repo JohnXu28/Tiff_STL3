@@ -953,8 +953,9 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	int predicator = GetTagValue(Predicator);
 	int BytesPerStrip = BytesPerLine * rowsPerStrip;
 
-	//The Maximum rowsPerStrip should be Length.		
-	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip];
+	//The Maximum rowsPerStrip should be Length.
+	//The Lzw data may larger than the original data, so we need to prepare a buffer for LZW decode.
+	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip * 2];
 	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];	
 
 	LPBYTE lpImageBuf = new BYTE[BytesPerLine * Length];
@@ -970,8 +971,12 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
 	
-	//Lzw *Lzw = new Lzw;
-	Lzw_Perplexity* Lzw = new Lzw_Perplexity;
+#define AVISION_LZW 1
+#if AVISION_LZW
+	Lzw *Lzw_Decode = new Lzw;
+#else
+	Lzw_Perplexity* Lzw_Decode = new Lzw_Perplexity;
+#endif //AVISION_LZW
 
 	int LinesRemain = Length;
 	int OutSize = 0;
@@ -990,16 +995,16 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		else
 			BytesPerStrip = BytesPerLine * LinesRemain;
 
+#if AVISION_LZW
 		//Avision LZW Decode is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, It is up to you to choose which one to use.	
-		//Lzw->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);
-		//memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
-		
-		Lzw->Decode(lpStripeBuf, BytesPerStrip, lpStripeBuf_Out, BytesPerStrip, &OutSize);
-		//if (predicator == 2)
-		//	Lzw->PredicatorDecode(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel);
-		
+		Lzw_Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);		    
+		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
+		lpImage += BytesPerStrip;
+#else		
+		Lzw_Decode->Decode(lpStripeBuf, BytesPerStrip, lpStripeBuf_Out, BytesPerStrip, &OutSize);
 		memcpy(lpImage, lpStripeBuf_Out, OutSize);
 		lpImage += OutSize;
+#endif //AVISION_LZW
 	}
 
 	delete[]lpStripeBuf;
@@ -1007,7 +1012,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	if (predicator == 2)
 	{
-		Lzw->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+		Lzw_Decode->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
 		RemoveTag(Predicator); //Photoshop hang if tag is not removed.
 	}
 
@@ -1027,7 +1032,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	//Reset RowsPerStrip), it should be the same with Length;
 	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
 	SetTagValue(Compression, 1);	
-	delete Lzw;
+	delete Lzw_Decode;
 	return Tiff_OK;
 }
 #endif //LZW
