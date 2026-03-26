@@ -11,6 +11,7 @@ class Lzw_Perplexity
 {
 private:
     uint8_t FirstChar(struct Entry* dict, int code);
+	void ResetDict(Entry* dict, int& nextCode, int& codeBits);
 
 public:
     Lzw_Perplexity() {};

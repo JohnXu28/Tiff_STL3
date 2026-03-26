@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "Lzw_Perplexity.h"
 #include <string.h>
+#include <iostream>
 
 #define TIFF_LZW_MAX_BITS  12
 #define TIFF_LZW_MAX_DICT  4096
@@ -33,6 +34,8 @@ struct BitReader {
     int bytePos;
     int bitPos;
 };
+
+Entry dict[LZW_MAX_DICT];
 
 static inline void BR_Reset(BitReader* br)
 {
@@ -74,7 +77,9 @@ static bool ReadBitsMSB(BitReader* br, int bits, uint16_t* code)
     uint32_t v = 0;
 
     for (int i = 0; i < bits; ++i) {
-        if (br->bytePos >= br->size) return false;
+        if (br->bytePos >= br->size) 
+			//std::cout << "ReadBitsMSB: bytePos " << br->bytePos << " exceeds size " << br->size << std::endl;
+            return false;
 
         uint8_t cur = br->buf[br->bytePos];
         int bit = (cur >> (7 - br->bitPos)) & 1;
@@ -119,69 +124,64 @@ static bool DetectBitOrder(const uint8_t* in, int inSize, LZWBitOrder* order)
     return false;
 }
 
-static void LZW_Reset(LZWDict* d)
-{
-    d->size = TIFF_FIRST_CODE;
-    d->codeBits = 9;
-    d->nextLimit = 1 << d->codeBits;
-
-    for (int i = 0; i < 256; ++i) {
-        d->entry[i].prefix = 0xFFFF;
-        d->entry[i].suffix = (uint8_t)i;
-    }
-}
-
 uint8_t Lzw_Perplexity::FirstChar(struct Entry* dict, int code) 
 {
-    while (dict[code].prefix != 0xFFFF) code = dict[code].prefix;
+    while (code >= 0 && code < LZW_MAX_DICT && dict[code].prefix != 0xFFFF) {
+        code = dict[code].prefix;
+    }
+    if (code < 0 || code >= LZW_MAX_DICT) return 0; // or assert
     return dict[code].suffix;
 }
+
+void Lzw_Perplexity::ResetDict(Entry *dict, int& nextCode, int& codeBits)
+{
+    for (int i = 0; i < LZW_MAX_DICT; ++i) {
+        dict[i].prefix = 0xFFFF;
+        dict[i].suffix = 0;
+    }
+
+    for (int i = 0; i < 256; ++i) {
+        dict[i].prefix = 0xFFFF;
+        dict[i].suffix = (uint8_t)i;
+    }
+    nextCode = LZW_FIRST;
+    codeBits = 9;
+};
+
+
 // Core TIFF LZW decode, automatic bit-order detection
 bool Lzw_Perplexity::Decode(
     const uint8_t* in, int inSize,
     uint8_t* out, int outCapacity,
     int* outSize)
 {
-    if (!in || !out || inSize <= 0) return false;
+    if (!in || !out || !outSize || inSize <= 0 || outCapacity <= 0)
+        return false;
+    
+    LZWBitOrder order;
+    if (!DetectBitOrder(in, inSize, &order))
+        return false;
 
-    Entry dict[LZW_MAX_DICT];
-
-    auto ResetDict = [&](int& nextCode, int& codeBits) {
-        for (int i = 0; i < 256; i++) {
-            dict[i] = { 0xFFFF, (uint8_t)i };
-        }
-        nextCode = LZW_FIRST;
-        codeBits = 9;
-        };
+    BitReader br = { in, inSize, 0, 0 };  // 使用 ReadBitsMSB
+    bool (*ReadBits)(BitReader*, int, uint16_t*) =
+        (order == LZW_LSB_FIRST) ? ReadBitsLSB : ReadBitsMSB;
 
     int nextCode, codeBits;
-    ResetDict(nextCode, codeBits);
+    ResetDict(dict, nextCode, codeBits);
 
-    uint32_t bitBuf = 0;
-    int bitCount = 0;
-    int inPos = 0;
-    int outPos = 0;
-
-    // 輔助 Lambda: 讀取指定位元 (TIFF 預設是 MSB-first bit filling but LSB-first bits)
-    // 註：多數 TIFF 實作為 LSB-first
-    auto GetCode = [&]() -> int {
-        while (bitCount < codeBits) {
-            if (inPos >= inSize) return -1;
-            bitBuf |= (uint32_t)in[inPos++] << (32 - 8 - bitCount);
-            bitCount += 8;
-        }
-        uint32_t code = bitBuf >> (32 - codeBits);
-        bitBuf <<= codeBits;
-        bitCount -= codeBits;
-        return (int)code;
-        };
-
+    uint16_t codeVal;
     int code, oldCode = -1;
     uint8_t stack[LZW_MAX_DICT];
+    int outPos = 0;
 
-    while ((code = GetCode()) != -1 && code != LZW_EOI) {
+    while (ReadBits(&br, codeBits, &codeVal)) {
+        code = (int)codeVal;
+
+        if (code == LZW_EOI) 
+            break;
+
         if (code == LZW_CLEAR) {
-            ResetDict(nextCode, codeBits);
+            ResetDict(dict, nextCode, codeBits);
             oldCode = -1;
             continue;
         }
@@ -189,41 +189,54 @@ bool Lzw_Perplexity::Decode(
         int cur = code;
         int sp = 0;
 
-        // 處理字典中尚未出現的 Code (K-W-K 特例)
         if (cur >= nextCode) {
-            if (oldCode == -1 || cur > nextCode) return false; // 損壞
-            stack[sp++] = FirstChar(dict, oldCode); // 先推入 K
+            if (oldCode == -1 || cur > nextCode) 
+                return false;
+
+            stack[sp++] = FirstChar(dict, oldCode);
             cur = oldCode;
         }
 
         while (cur != 0xFFFF && cur < LZW_MAX_DICT) {
+            if (sp >= LZW_MAX_DICT) 
+                return false;
+
             stack[sp++] = dict[cur].suffix;
             cur = dict[cur].prefix;
-            if (sp >= LZW_MAX_DICT) return false;
+            if (sp >= LZW_MAX_DICT) 
+                return false;
         }
 
-        // 寫入輸出
-        if (outPos + sp > outCapacity) return false;
-        for (int i = sp - 1; i >= 0; i--)
+        if (outPos + sp > outCapacity) 
+            return false;
+
+        if(sp == 0) 
+			return false;
+
+        for (int i = sp - 1; i >= 0; i--) 
             out[outPos++] = stack[i];
 
-        // 此時 stack[sp-1] 就是「當前字串的第一個字元」
         uint8_t firstCharOfCurrent = stack[sp - 1];
 
-        // 更新字典： oldCode + firstCharOfCurrent
         if (oldCode != -1 && nextCode < LZW_MAX_DICT) {
             dict[nextCode].prefix = (uint16_t)oldCode;
             dict[nextCode].suffix = firstCharOfCurrent;
             nextCode++;
 
-            if (nextCode == 511)      codeBits = 10;
-            else if (nextCode == 1023) codeBits = 11;
-            else if (nextCode == 2047) codeBits = 12;
+            if (nextCode == 511)
+                codeBits = 10;
+            else if (nextCode == 1023) 
+                codeBits = 11;
+            else if (nextCode == 2047) 
+                codeBits = 12;
         }
+
         oldCode = code;
     }
 
     *outSize = outPos;
+	if (*outSize != outCapacity)
+        return false;
     return true;
 }
 

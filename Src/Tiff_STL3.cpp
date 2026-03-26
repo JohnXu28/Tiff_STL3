@@ -955,10 +955,14 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	//The Maximum rowsPerStrip should be Length.
 	//The Lzw data may larger than the original data, so we need to prepare a buffer for LZW decode.
-	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip * 2];
+	int MaxStripBufSize = BytesPerStrip;
+	LPBYTE lpStripeBuf = new BYTE[MaxStripBufSize];
+//	memset(lpStripeBuf, 0, BytesPerStrip * 2);
 	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];	
+//	memset(lpStripeBuf_Out, 0, BytesPerStrip);
 
 	LPBYTE lpImageBuf = new BYTE[BytesPerLine * Length];
+	memset(lpImageBuf, 0, BytesPerLine * Length);
 	LPBYTE lpImage = lpImageBuf;
 
 	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
@@ -971,7 +975,7 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
 	
-#define AVISION_LZW 1
+#define AVISION_LZW 0
 #if AVISION_LZW
 	Lzw *Lzw_Decode = new Lzw;
 #else
@@ -984,7 +988,14 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	{
 		int offset = *(lpStripOffset++);
 		IO_Seek(offset, SEEK_SET);
-		int Bufsize = *(lpStripByteCounts++);		
+		int Bufsize = *(lpStripByteCounts++);
+		if (Bufsize > MaxStripBufSize)
+		{
+			MaxStripBufSize = (int)(Bufsize * 1.5);
+			delete[]lpStripeBuf;
+			lpStripeBuf = new BYTE[MaxStripBufSize];
+		}
+
 		IO_Read(lpStripeBuf, 1, Bufsize);
 
 		if (LinesRemain > rowsPerStrip)
@@ -1001,14 +1012,26 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
 		lpImage += BytesPerStrip;
 #else		
-		Lzw_Decode->Decode(lpStripeBuf, BytesPerStrip, lpStripeBuf_Out, BytesPerStrip, &OutSize);
+		Lzw_Decode->Decode(lpStripeBuf, Bufsize, lpStripeBuf_Out, BytesPerStrip, &OutSize);
 		memcpy(lpImage, lpStripeBuf_Out, OutSize);
-		lpImage += OutSize;
+
+		if (OutSize != BytesPerStrip)
+		{
+			cout << " *** Warning: " << BytesPerStrip - OutSize << endl;
+			memset(lpImage + OutSize, 255, BytesPerStrip - OutSize);
+		}
+
+		
+		lpImage += BytesPerStrip;
 #endif //AVISION_LZW
 	}
 
 	delete[]lpStripeBuf;
 	delete[]lpStripeBuf_Out;
+
+	FILE* Fp = fopen("LzwData.raw", "wb");
+	fwrite(lpImageBuf, 1, BytesPerLine * Length, Fp);
+	fclose(Fp);
 
 	if (predicator == 2)
 	{
