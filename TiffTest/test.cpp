@@ -151,6 +151,30 @@ int LZW_Compress_Test(_TCHAR* argv[])
 }
 #endif //LZW_Test
 
+
+#if HALFTONE_TEST
+const int HalftoneSize = 9216; //96*96
+BYTE Halftone[HalftoneSize] = {0};
+int imgproc_halftone_1bit(const uint8_t* src, uint8_t* dst,
+	int width, int height,
+	const uint8_t* table, int table_rows, int table_cols);
+
+void Halftone_Test()
+{
+	SPTIFF lpIn = make_shared<CTiff>("Gray.tif");
+	
+	int Width = lpIn->GetTagValue(ImageWidth);
+	int Length = lpIn->GetTagValue(ImageLength);
+	FILE *file = fopen("Halftone_96x96.raw", "rb");
+	fread(Halftone, 1, HalftoneSize, file);
+	fclose(file);
+
+	SPTIFF lpOut = make_shared<CTiff>(Width, Length, 600, 1, 1);
+	imgproc_halftone_1bit((LPBYTE)lpIn->GetImageBuf(), (LPBYTE)lpOut->GetImageBuf(), Width, Length, Halftone, 96, 96);
+	lpOut->SaveFile("Halftone_Out.tif");
+}
+#endif //HALFTONE_TEST
+
 void Test(int argc, _TCHAR* argv[])
 {
 #if	Tag_Test
@@ -190,5 +214,8 @@ void Test(int argc, _TCHAR* argv[])
 	LZW_Compress_Test(argv);
 #endif //LZW_Test
 
+#if	HALFTONE_TEST
+	Halftone_Test();
+#endif //HALFTONE_TEST
 	//cout << "test end" << endl;
 }
