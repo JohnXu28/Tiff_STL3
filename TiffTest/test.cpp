@@ -159,9 +159,18 @@ int imgproc_halftone_1bit(const uint8_t* src, uint8_t* dst,
 	int width, int height,
 	const uint8_t* table, int table_rows, int table_cols);
 
+void convert_gray8_to_halftone1bit_dynamic(
+	const uint8_t* in_gray,
+	uint8_t* out_1bit,
+	int width,
+	int height,
+	const uint8_t* dither_table,
+	int table_w,
+	int table_h);
+
 void Halftone_Test()
 {
-	SPTIFF lpIn = make_shared<CTiff>("Gray.tif");
+	SPTIFF lpIn = make_shared<CTiff>("Halftone_In.tif");
 	
 	int Width = lpIn->GetTagValue(ImageWidth);
 	int Length = lpIn->GetTagValue(ImageLength);
@@ -170,7 +179,8 @@ void Halftone_Test()
 	fclose(file);
 
 	SPTIFF lpOut = make_shared<CTiff>(Width, Length, 600, 1, 1);
-	imgproc_halftone_1bit((LPBYTE)lpIn->GetImageBuf(), (LPBYTE)lpOut->GetImageBuf(), Width, Length, Halftone, 96, 96);
+//	imgproc_halftone_1bit((LPBYTE)lpIn->GetImageBuf(), (LPBYTE)lpOut->GetImageBuf(), Width, Length, Halftone, 96, 96);
+	convert_gray8_to_halftone1bit_dynamic((LPBYTE)lpIn->GetImageBuf(), (LPBYTE)lpOut->GetImageBuf(), Width, Length, Halftone, 96, 96);
 	lpOut->SaveFile("Halftone_Out.tif");
 }
 #endif //HALFTONE_TEST
