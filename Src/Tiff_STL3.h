@@ -499,6 +499,7 @@ namespace AV_Tiff_STL3 {
 		Tiff_Err	WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
 
 #if LZW
+		Tiff_Err	ReadSingleStripOffset_LZW(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
 		Tiff_Err	LZW_Compress();		
 		Tiff_Err	WriteImageData_LZW(IO_INTERFACE* IO);

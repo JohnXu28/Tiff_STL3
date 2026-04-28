@@ -21,7 +21,8 @@
 #define KYM_Tiff 0
 #define LZW_Test 0
 #define SMART_COLOR_RENDERING 0
-#define HALFTONE_TEST 1
+#define HALFTONE_TEST 0
+#define TIFF_SAVE_LZW 0
 
 
 void Utility(int argc, char* argv[]);

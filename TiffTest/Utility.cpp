@@ -117,11 +117,21 @@ void Tiff2Raw(int argc, _TCHAR* argv[])
 
 	char FileName[32] = { 0 };
 	sprintf(FileName, "%dX%d_%d_%d.raw", Width, Length, samplesPerPixel, bitsPerSample);
+	//lpTiff->SaveFile("out.tif");
 	LPBYTE lpIndex = lpTiff->GetImageBuf();
 
 	FILE* file = fopen(FileName, "wb+");
-	fwrite(lpIndex, 1, Size, file);
-	fclose(file);
+	if (file != nullptr)
+	{
+		int ret = fwrite(lpIndex, 1, Size, file);
+		cout << "Size" << ret << endl;
+		fclose(file);		
+	}
+	else
+	{
+		cout << "Open File Fail." << endl;
+		return;
+	}
 
 	cout << "Output File : " << FileName << endl;
 }
@@ -630,6 +640,20 @@ void Smart_Color_Rendering(int argc, _TCHAR* argv[])
 }
 #endif //SMART_COLOR_RENDERING 0
 
+#if TIFF_SAVE_LZW
+void Tiff_SaveLzw(int argc, _TCHAR* argv[])
+{
+	if (argc != 3)
+	{
+		cout << "TiffSaveLzw In.tif out.tif" << endl;
+		return;
+	}
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+	if(lpTiff->GetImageBuf() != nullptr)
+		lpTiff->SaveFile(argv[2], 1);
+}
+#endif //TIFF_SAVE_LZW
+
 void Utility(int argc, _TCHAR* argv[])
 {
 #if RAW2TIFF
@@ -681,4 +705,7 @@ void Utility(int argc, _TCHAR* argv[])
 	Smart_Color_Rendering(argc, argv);
 #endif //#define SMART_COLOR_RENDERING 0
 
+#if TIFF_SAVE_LZW
+	Tiff_SaveLzw(argc, argv);
+#endif //TIFF_SAVE_LZW	
 }

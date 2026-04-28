@@ -16,7 +16,7 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	0
+#define Tiff_Test	1
 #define Single_Test	0
 #define RGBA		0 //Alpha
 
@@ -345,9 +345,13 @@ string FileName[] = {
 "5Lab8", "6gray16", "7RGB16", "8CMYK16", "9Lab16",
 "10RGB82", "11RGB162", "12CMYK82", "13CMYK162", "14Lab82",
 "15Lab162","16MultiStrip", "17Ycc8", "18CLR68", "19CLR616",
-"20IccLab8", "21IccLab16", "22Alpha8", "23Alpha16" };
+"20IccLab8", "21IccLab16", "22Alpha8", "23Alpha16", "24Lzw8",
+"25Lzw16", "26Lzw_Gray8", "27Lzw_Gray16", "28Lzw_SWOP8", "29Lzw_SWOP16"
+};
 
-const int TestNum = 24;
+//29Lzw_SWOP16.tif is a special test image for LZW compression, the size is larger than the original image.
+
+const int TestNum = 30;
 
 int FullTest1()
 {
@@ -532,6 +536,10 @@ int main(int argc, _TCHAR* argv[])
 
 	Utility(argc, argv);
 	Test(argc, argv);
-	return 0;
+
+#if Tiff_Test
+	system("pause");
+#endif //	
+ 	return 0;
 }
 
