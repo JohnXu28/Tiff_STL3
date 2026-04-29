@@ -90,7 +90,20 @@ Test Images:
 - 15 Lab162",Lab color image, 16 bits, noninterlace
 - 16 MultiStrip : Multiple Strip Image. 
 - 17 Ycc8 : Special file format for image processing simulation 
-- 18 Special : Special Tiff format, Old version can't parser this tiff.
+- 18 CLR68 : 6 channels 8 bits, embedded icc profile
+- 19 CLR616 : 6 channels 16 bits, embedded icc profile
+- 20 IccLab8 : Lab 8 bits, embedded icc.
+- 21 IccLab16 : Lab 16 bits, embedded icc.
+- 22 22Alpha8 : Alpha channel 8bits
+- 23 23Alpha16 : Alpha channel 16bits
+- 24 24Lzw8 : RGB 8 bits, lzw compression.
+- 25 25Lzw16 : RGB 16 bits, lzw compression.
+- 26 26Lzw_Gray8 : Gray 8 bits, lzw compression.
+- 27 27Lzw_Gray16 : Gray 16 bits, lzw compression.
+- 28 28Lzw_SWOP8  : SWOP 8 bits, lzw compression.
+- 29 29Lzw_SWOP16 : SWOP 16 bits, lzw compression.*** compression size is large than orignal size ***
+- 30 30Lzw_Lab8 : Lab 8 bits, , lzw compression.
+- 31 31Lzw_Lab16 : Lab 16 bits, , lzw compression.
 
 /////////////////////////////////////////////////////////////////////////////
 Example:
