@@ -340,18 +340,18 @@ int ImageTest4(string FileName)
 	return ret;
 }
 
-string FileName[] = {
+const int TestNum = 32;
+string FileName[TestNum] = {
 "0NULL", "1LineArt", "2gray8", "3RGB8", "4CMYK8",
 "5Lab8", "6gray16", "7RGB16", "8CMYK16", "9Lab16",
 "10RGB82", "11RGB162", "12CMYK82", "13CMYK162", "14Lab82",
 "15Lab162","16MultiStrip", "17Ycc8", "18CLR68", "19CLR616",
 "20IccLab8", "21IccLab16", "22Alpha8", "23Alpha16", "24Lzw8",
-"25Lzw16", "26Lzw_Gray8", "27Lzw_Gray16", "28Lzw_SWOP8", "29Lzw_SWOP16"
+"25Lzw16", "26Lzw_Gray8", "27Lzw_Gray16", "28Lzw_SWOP8", "29Lzw_SWOP16",
+"30Lzw_Lab8", "31Lzw_Lab16"
 };
 
 //29Lzw_SWOP16.tif is a special test image for LZW compression, the size is larger than the original image.
-
-const int TestNum = 30;
 
 int FullTest1()
 {

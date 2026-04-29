@@ -995,27 +995,12 @@ Tiff_Err Tiff::ReadSingleStripOffset_LZW(IO_INTERFACE* IO)
 	int offset = GetTagValue(StripOffsets);
 		IO_Seek(offset, SEEK_SET);
 
-<<<<<<< HEAD
-		//FILE* file = fopen("lzw_encode.bin", "wb+");
-		//fwrite(lpStripeBuf, 1, Bufsize, file);
-		//fclose(file);
-		
-		if (LZW_Decompress(lpStripeBuf, Bufsize, lpStripeBuf_Out, &BytesPerStrip))
-		{
-			memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
-			lpImage += BytesPerStrip;
-			//		if (predicator == 2)
-				//		TIFF_UndoPredictor_Generic(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel, bitsPerSample);
-		}
-	//if (Predictor == 2)
-=======
 	int Bufsize = GetTagValue(StripByteCounts);
 	if (Bufsize > MaxStripBufSize)
 	{
 		delete[]lpStripeBuf;
 		MaxStripBufSize = Bufsize;
 		lpStripeBuf = new BYTE[MaxStripBufSize];
->>>>>>> 05eadb818f7eac207b3136ce5ff313ac806da306
 	}
 
 	IO_Read(lpStripeBuf, 1, Bufsize);
