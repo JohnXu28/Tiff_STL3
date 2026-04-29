@@ -117,11 +117,21 @@ void Tiff2Raw(int argc, _TCHAR* argv[])
 
 	char FileName[32] = { 0 };
 	sprintf(FileName, "%dX%d_%d_%d.raw", Width, Length, samplesPerPixel, bitsPerSample);
+	//lpTiff->SaveFile("out.tif");
 	LPBYTE lpIndex = lpTiff->GetImageBuf();
 
 	FILE* file = fopen(FileName, "wb+");
-	fwrite(lpIndex, 1, Size, file);
-	fclose(file);
+	if (file != nullptr)
+	{
+		int ret = fwrite(lpIndex, 1, Size, file);
+		cout << "Size" << ret << endl;
+		fclose(file);		
+	}
+	else
+	{
+		cout << "Open File Fail." << endl;
+		return;
+	}
 
 	cout << "Output File : " << FileName << endl;
 }
@@ -583,6 +593,67 @@ void KYMC1_CMYK8(int argc, _TCHAR* argv[])
 
 #endif //KYMC1_CMYK8
 
+#if SMART_COLOR_RENDERING
+void Smart_Color_Rendering(int argc, _TCHAR* argv[])
+{
+	if (argc != 3)
+	{
+		cout << "Smart Color Rendering for PCL." << endl;
+		cout << "SCR In.tif out.tif" << endl;
+		cout << "Input CMYK 8bit Tiff, Output CMYK 8 bits." << endl;
+		return;
+	}
+
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+	int width = lpTiff->GetTagValue(ImageWidth);
+	int length = lpTiff->GetTagValue(ImageLength);
+
+	if (lpTiff->GetTagValue(SamplesPerPixel) != 4)
+	{
+		cout << "Only Support CMYK 8 bits Tiff." << endl;
+		return;
+	}
+
+	LPBYTE lpIn = lpTiff->GetImageBuf();
+	LPBYTE lpOut = lpTiff->GetImageBuf();
+	int Size = width * length;
+	for (int i = 0; i < Size; i++)
+	{
+		BYTE C = *(lpIn++);
+		BYTE M = *(lpIn++);
+		BYTE Y = *(lpIn++);
+		BYTE K = *(lpIn++);
+		//Smart Color Rendering Algorithm
+		if ((C == 255) && (M == 255) && (Y == 255))
+		{
+			*(lpOut++) = 0;
+			*(lpOut++) = 0;
+			*(lpOut++) = 0;
+			*(lpOut++) = 255;
+		}
+		else
+		{
+			lpOut+=4;
+		}
+	}
+	lpTiff->SaveFile(argv[2]);
+}
+#endif //SMART_COLOR_RENDERING 0
+
+#if TIFF_SAVE_LZW
+void Tiff_SaveLzw(int argc, _TCHAR* argv[])
+{
+	if (argc != 3)
+	{
+		cout << "TiffSaveLzw In.tif out.tif" << endl;
+		return;
+	}
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>(argv[1]);
+	if(lpTiff->GetImageBuf() != nullptr)
+		lpTiff->SaveFile(argv[2], 1);
+}
+#endif //TIFF_SAVE_LZW
+
 void Utility(int argc, _TCHAR* argv[])
 {
 #if RAW2TIFF
@@ -630,4 +701,11 @@ void Utility(int argc, _TCHAR* argv[])
 	KYMC1_CMYK8(argc, argv);
 #endif //GRAY2K
 
+#if SMART_COLOR_RENDERING
+	Smart_Color_Rendering(argc, argv);
+#endif //#define SMART_COLOR_RENDERING 0
+
+#if TIFF_SAVE_LZW
+	Tiff_SaveLzw(argc, argv);
+#endif //TIFF_SAVE_LZW	
 }

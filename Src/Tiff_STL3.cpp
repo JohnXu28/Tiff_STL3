@@ -22,7 +22,8 @@ using namespace AV_Tiff_STL3;
 #include <cstring>
 #include <cmath>
 
-#include "LZWCodec.h"
+#include "LZW.h"
+#include "LZW_Perplexity.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -224,7 +225,13 @@ TiffTag::TiffTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO)
 	{//memory address
 		if (IO != nullptr)
 		{
+			if (DataSize % 2 != 0)
+			{
+				DataSize += 1; //The Value is expected to begin on a word boundary; the corresponding Value Offset will thus be an even number.
+				this->n += 1;
+			}
 			lpData = new BYTE[DataSize];
+			memset(lpData, 0, DataSize);//Just for safety, Photoshop will issue a warning.
 			IO_Seek(value, SEEK_SET);
 			IO_Read(lpData, DataType[(int)type], n);
 		}
@@ -250,23 +257,50 @@ int TiffTag::SaveFile(IO_INTERFACE* IO)
 {
 	int DataSize = DataType[(int)type] * n;
 	int ret = 0;
-	if (DataSize > 4)
+	if ((DataSize > 4) || (n > 1))
 		ret = (int)IO_Write(lpData, DataType[(int)type], n);
 	return ret;
 }
 
-int TiffTag::ValueIsOffset() const
+bool TiffTag::ValueIsOffset() const
 {
 	int DataSize = DataType[(int)type] * n;
-	int ret = 0;
+	
 	if (DataSize > 4)
-		ret = 1;
-	return ret;
+		return true;
+	else
+		return false;	
 }
 
 /*****************************************************************************************
 //Special Tags
 *****************************************************************************************/
+//StripOffsetTag)
+StripOffsetsTag::StripOffsetsTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO)
+	:TiffTag(SigType, n, value, IO)
+{
+	m_ImgLzw = nullptr;
+}
+
+StripOffsetsTag::~StripOffsetsTag()
+{
+	if (m_ImgLzw != nullptr)
+	{
+		delete[]m_ImgLzw;
+		m_ImgLzw = nullptr;
+	}
+}
+
+ void StripOffsetsTag::SetLzwData(LPBYTE lpBuf)
+{
+	m_ImgLzw = lpBuf;
+}
+
+LPBYTE StripOffsetsTag::GetLzwData()
+{
+	return m_ImgLzw;
+}
+
 //BitsPerSample)
 BitsPerSampleTag::BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO)
 	:TiffTag(SigType, n, value, IO)
@@ -450,6 +484,19 @@ Tiff_Err Tiff::SetTagValue(const TiffTagSignature Signature, DWORD Value)
 	return SetTag(lpTag);
 }
 
+Tiff_Err Tiff::RemoveTag(const TiffTagSignature Signature)
+{
+	auto pos = find_if(TiffTag_Begin, TiffTag_End,
+		[&Signature](const TiffTagPtr& pos) {return pos->tag == Signature; });
+
+	if (pos != TiffTag_End)
+	{
+		m_IFD.m_TagList.erase(pos);
+		return Tiff_OK;
+	}
+	else
+		return TagNorFound;
+}
 //////////////////////////////////////////////////////////////////////
 // Tiff Read File Operaton
 //////////////////////////////////////////////////////////////////////
@@ -528,7 +575,7 @@ Tiff_Err Tiff::ReadTiff(IO_INTERFACE* IO)
 	return ret;
 }
 
-Tiff_Err Tiff::SaveFile(LPCSTR FileName)
+Tiff_Err Tiff::SaveFile(LPCSTR FileName, int lzw)
 {
 	Tiff_Err ret = Tiff_OK;
 
@@ -542,7 +589,11 @@ Tiff_Err Tiff::SaveFile(LPCSTR FileName)
 			throw "*** Tiff::SaveFile() --> TiffTag EntryCounts is 0. ***";
 		}
 
-		ret = SaveTiff(IO);
+		if(lzw == 1)
+			ret = SaveTiff_lzw(IO);
+		else
+			ret = SaveTiff(IO);
+
 		IO_Close(IO);
 		return ret;
 	}
@@ -600,6 +651,10 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO
 		switch ((TiffTagSignature)(0xFFFF & SigType))
 		{
 			//	Special Tag
+		case StripOffsets:
+			NewTag = new StripOffsetsTag(SigType, n, value, IO);
+			break;
+
 		case BitsPerSample:
 			NewTag = new BitsPerSampleTag(SigType, n, value, IO);
 			break;
@@ -621,6 +676,15 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO
 			*/
 			NewTag = new Exif_IFD_Tag(SigType, n, value, IO);
 			break;
+
+		//Skip Tag for the time being, Just for test.
+		//case XML_Data:
+		//case IPTC:
+		//case Photoshop:
+		//case IccProfile:
+		//	NewTag = new TiffTag(SigType, n, value, IO);
+		//	NewTag = nullptr;//
+		//	break;
 
 		default:
 			NewTag = new TiffTag(SigType, n, value, IO);
@@ -649,6 +713,7 @@ void Tiff::AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO)
 
 Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 {
+	Tiff_Err ret = Tiff_OK;
 	//if (GetTagValue(Compression) != 1)//No compress
 	//	throw CompressData;
 
@@ -694,13 +759,20 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 				SetTagValue(StripByteCounts, stripByteCounts);
 			}
 #endif //Check StripByteCounts). 
-
-			lpImageBuf = new BYTE[stripByteCounts];
-			IO_Seek(stripOffsets, SEEK_SET);
-			IO_Read(lpImageBuf, 1, stripByteCounts);
-			//Set ImageBuf address to StripOffset Tag
-			TiffTagPtr TempTag = GetTag(StripOffsets);
-			TempTag->lpData = lpImageBuf;
+			if (Compress == 1)
+			{
+				stripByteCounts = Width * Length * samplesPerPixel * bitsPerSample / 8;
+				lpImageBuf = new BYTE[stripByteCounts];
+				IO_Seek(stripOffsets, SEEK_SET);
+				IO_Read(lpImageBuf, 1, stripByteCounts);
+				//Set ImageBuf address to StripOffset Tag
+				TiffTagPtr TempTag = GetTag(StripOffsets);
+				TempTag->lpData = lpImageBuf;
+			}
+			else if (Compress == 5)
+			{
+				ReadSingleStripOffset_LZW(IO);
+			}
 		}
 		else
 		{//PlanarConfiguration) == 2, 
@@ -730,10 +802,12 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 	}
 	else if (Compress == 1)//No compress		
 			ReadMultiStripOffset(IO);
+#if LZW
 	else if (Compress == 5)
-			ReadMultiStripOffset_LZW(IO);
+		ret = ReadMultiStripOffset_LZW(IO);
+#endif //LZW
 
-	return Tiff_OK;
+	return ret;
 }
 
 Tiff_Err Tiff::ReadMultiStripOffset(IO_INTERFACE* IO)
@@ -780,8 +854,103 @@ Tiff_Err Tiff::ReadMultiStripOffset(IO_INTERFACE* IO)
 	return Tiff_OK;
 }
 
-Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
+#if LZW
+Tiff_Err Tiff::LZW_Compress()
 {
+	//Add Predicator Tag, for caculate offset correctly.
+	const int StripSize = 16; //strips
+	int Width = GetTagValue(ImageWidth);
+	int Length = GetTagValue(ImageLength);
+	int Samples = GetTagValue(SamplesPerPixel);
+	int bitsPerSample = GetTagValue(BitsPerSample);
+	int BytesPerLine = (Width * Samples * bitsPerSample + 7) / 8;
+	//Devide into 64 strips
+	int rows = (int)ceil((double)Length / StripSize);
+
+	SetTagValue(RowsPerStrip, rows);
+
+	//StripOffsets
+	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
+	//Backup Original Image Data Pointer
+	LPBYTE lpImageBuf = TagStripOffsets->lpData;
+	LPBYTE lpLzwBuf = new BYTE[Length * BytesPerLine * 2]; //Assume the compress ratio is 50%
+	LPBYTE lpLzwBufTemp = lpLzwBuf;
+	//Set LZW Data Pointer
+	StripOffsetsTag* pTagStripOffsets = dynamic_cast<StripOffsetsTag*>(GetPtr(TagStripOffsets));
+	pTagStripOffsets->SetLzwData(lpLzwBuf);
+	//Set new StripOffsets Data
+	TagStripOffsets->n = StripSize;
+	TagStripOffsets->lpData = new BYTE[StripSize * 4];
+
+	//StripByteCounts
+	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+	TagStripByteCounts->n = StripSize;
+	TagStripByteCounts->type = Long;
+	TagStripByteCounts->lpData = new BYTE[StripSize * 4];
+
+	//Start point of Image Data(LZW)
+	//int Offset = CaculateOffset();
+	int Offset = 0;
+	Lzw* encoder = new Lzw;
+
+	LPDWORD pOffset = (LPDWORD)(TagStripOffsets->lpData);
+	LPDWORD pByteCounts = (LPDWORD)(TagStripByteCounts->lpData);
+	int BytesPerStrip = 0;
+	LPBYTE lpImage = lpImageBuf;
+		
+	if (bitsPerSample == 8)//Don't do predicator for 16 bits, It is not effective.	
+	{
+		encoder->PredicatorEncode(lpImage, Width, Length, Samples);
+		TiffTagPtr PredicatorTag = (TiffTagPtr)(new TiffTag(Predicator, Short, 1, 2, nullptr));
+		m_IFD.m_TagList.push_back(PredicatorTag);
+	}
+	else
+		SetTagValue(Predicator, 1); //May not exist, Just for safety.
+
+	for (int i = 0; i < StripSize; ++i)
+	{
+		if (i == (StripSize - 1))
+			rows = Length - rows * i;//Lest strip
+
+		BytesPerStrip = rows * BytesPerLine;	
+
+		//Set Offset
+		pOffset[i] = Offset;
+
+		//Compress Strip Data
+		DWORD CompressedSize = encoder->Encode(lpImage, lpLzwBufTemp + Offset, BytesPerStrip);
+
+		//Set ByteCounts		
+		pByteCounts[i] = CompressedSize;
+		Offset += CompressedSize;		
+		lpImage += BytesPerStrip;
+	}
+
+	//free the original image data buffer
+	delete[]lpImageBuf;
+	delete encoder;
+	SetTagValue(Compression, 5); //LZW
+
+	return Tiff_OK;
+}
+
+Tiff_Err Tiff::SaveTiff_lzw(IO_INTERFACE* IO)
+{
+	LZW_Compress();
+	Tiff_Err ret = WriteHeader(IO);
+	ret = WriteIFD(IO);
+	ret = WriteTagData(IO);
+	ret = WriteImageData_LZW(IO);
+	ret = WriteData_Exif_IFD_Tag(IO);
+	return ret;
+}
+
+Tiff_Err Tiff::ReadSingleStripOffset_LZW(IO_INTERFACE* IO)
+{
+	TiffTagPtr Tag = GetTag(RowsPerStrip);
+	if (Tag->n != 1) //Only support single value
+		return UnSupportCompressData;
+
 	int Width = GetTagValue(ImageWidth);
 	int Length = GetTagValue(ImageLength);
 	int bitsPerSample = GetTagValue(BitsPerSample);
@@ -789,12 +958,18 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	int BytesPerLine = (bitsPerSample * samplesPerPixel + 7) / 8 * Width;
 	int rowsPerStrip = GetTagValue(RowsPerStrip);
 	int predicator = GetTagValue(Predicator);
-	int BytesPerStrip = BytesPerLine * rowsPerStrip * 2;//Double size
+	int BytesPerStrip = BytesPerLine * rowsPerStrip;
+
 	//The Maximum rowsPerStrip should be Length.
-	LPBYTE lpStripeBuf = new BYTE[BytesPerStrip];
+	//The Lzw data may larger than the original data, so we need to prepare a buffer for LZW decode.
+	int MaxStripBufSize = BytesPerStrip;
+	LPBYTE lpStripeBuf = new BYTE[MaxStripBufSize];
+//	memset(lpStripeBuf, 0, BytesPerStrip * 2);
 	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];	
+//	memset(lpStripeBuf_Out, 0, BytesPerStrip);
 
 	LPBYTE lpImageBuf = new BYTE[BytesPerLine * Length];
+	memset(lpImageBuf, 0, BytesPerLine * Length);
 	LPBYTE lpImage = lpImageBuf;
 
 	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
@@ -806,16 +981,21 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
-	int TotalSize = 0;
-	//LZWCodec lzw;
-	int DecodeSize = 0;
-	for (DWORD i = 0; i < strip; i++)
-	{
-		int offset = *(lpStripOffset++);
-		IO_Seek(offset, SEEK_SET);
-		int Bufsize = *(lpStripByteCounts++);		
-		IO_Read(lpStripeBuf, 1, Bufsize);
+	
+#define AVISION_LZW 0
+#if AVISION_LZW
+	Lzw *Lzw_Decode = new Lzw;
+#else
+	Lzw_Perplexity* Lzw_Decode = new Lzw_Perplexity;
+#endif //AVISION_LZW
 
+	int LinesRemain = Length;
+	int OutSize = 0;
+
+	int offset = GetTagValue(StripOffsets);
+		IO_Seek(offset, SEEK_SET);
+
+<<<<<<< HEAD
 		//FILE* file = fopen("lzw_encode.bin", "wb+");
 		//fwrite(lpStripeBuf, 1, Bufsize, file);
 		//fclose(file);
@@ -828,11 +1008,47 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 				//		TIFF_UndoPredictor_Generic(lpStripeBuf_Out, Width, rowsPerStrip, samplesPerPixel, bitsPerSample);
 		}
 	//if (Predictor == 2)
+=======
+	int Bufsize = GetTagValue(StripByteCounts);
+	if (Bufsize > MaxStripBufSize)
+	{
+		delete[]lpStripeBuf;
+		MaxStripBufSize = Bufsize;
+		lpStripeBuf = new BYTE[MaxStripBufSize];
+>>>>>>> 05eadb818f7eac207b3136ce5ff313ac806da306
 	}
 
-	FILE* file = fopen("D:\\LZWDecode.raw", "wb+");
-	fwrite(lpImageBuf, 1, Width * Length * 3, file);
-	fclose(file);
+	IO_Read(lpStripeBuf, 1, Bufsize);
+
+#if AVISION_LZW
+		//Avision LZW Decode is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, It is up to you to choose which one to use.	
+		Lzw_Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);		    
+		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
+		lpImage += BytesPerStrip;
+#else		
+	Lzw_Decode->Decode(lpStripeBuf, Bufsize, lpStripeBuf_Out, BytesPerStrip, &OutSize);
+	memcpy(lpImage, lpStripeBuf_Out, OutSize);
+
+	if (OutSize != BytesPerStrip)
+	{
+		cout << " *** Warning: " << BytesPerStrip - OutSize << endl;
+		memset(lpImage + OutSize, 255, BytesPerStrip - OutSize);
+	}		
+	
+#endif //AVISION_LZW	
+
+	delete[]lpStripeBuf;
+	delete[]lpStripeBuf_Out;
+
+	if (predicator == 2)
+	{
+		Lzw_Decode->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+		RemoveTag(Predicator); //Photoshop hang if tag is not removed.
+	}
+
+	//FILE* Fp = fopen("LzwData.raw", "wb");
+	//fwrite(lpImageBuf, 1, BytesPerLine * Length, Fp);
+	//fclose(Fp);
 
 	//Reset StripOffsets) and StripByteCounts)
 	delete[]TagStripOffsets->lpData;
@@ -845,13 +1061,136 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	TagStripByteCounts->lpData = nullptr;
 	TagStripByteCounts->type = Short;
 	TagStripByteCounts->n = 1;
-	TagStripByteCounts->value = stripByteCounts;
+	TagStripByteCounts->value = BytesPerLine * Length;
 
 	//Reset RowsPerStrip), it should be the same with Length;
 	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
-
+	SetTagValue(Compression, 1);	
+	delete Lzw_Decode;
 	return Tiff_OK;
 }
+
+Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
+{
+	TiffTagPtr Tag = GetTag(RowsPerStrip);
+	if (Tag->n != 1) //Only support single value
+		return UnSupportCompressData;
+
+	int Width = GetTagValue(ImageWidth);
+	int Length = GetTagValue(ImageLength);
+	int bitsPerSample = GetTagValue(BitsPerSample);
+	int samplesPerPixel = GetTagValue(SamplesPerPixel);
+	int BytesPerLine = (bitsPerSample * samplesPerPixel + 7) / 8 * Width;
+	int rowsPerStrip = GetTagValue(RowsPerStrip);
+	int predicator = GetTagValue(Predicator);
+	int BytesPerStrip = BytesPerLine * rowsPerStrip;
+
+	//The Maximum rowsPerStrip should be Length.
+	//The Lzw data may larger than the original data, so we need to prepare a buffer for LZW decode.
+	int MaxStripBufSize = BytesPerStrip;
+	LPBYTE lpStripeBuf = new BYTE[MaxStripBufSize];
+	//	memset(lpStripeBuf, 0, BytesPerStrip * 2);
+	LPBYTE lpStripeBuf_Out = new BYTE[BytesPerStrip];
+	//	memset(lpStripeBuf_Out, 0, BytesPerStrip);
+
+	LPBYTE lpImageBuf = new BYTE[BytesPerLine * Length];
+	memset(lpImageBuf, 0, BytesPerLine * Length);
+	LPBYTE lpImage = lpImageBuf;
+
+	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
+	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+
+	DWORD stripByteCounts = 0;
+	DWORD strip = TagStripOffsets->n;
+	LPDWORD lpTemp = (LPDWORD)TagStripByteCounts->lpData;
+
+	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
+	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
+
+#define AVISION_LZW 0
+#if AVISION_LZW
+	Lzw* Lzw_Decode = new Lzw;
+#else
+	Lzw_Perplexity* Lzw_Decode = new Lzw_Perplexity;
+#endif //AVISION_LZW
+
+	int LinesRemain = Length;
+	int OutSize = 0;
+	for (DWORD i = 0; i < strip; i++)
+	{
+		int offset = *(lpStripOffset++);
+		IO_Seek(offset, SEEK_SET);
+		int Bufsize = *(lpStripByteCounts++);
+		if (Bufsize > MaxStripBufSize)
+		{
+			MaxStripBufSize = (int)(Bufsize * 1.5);
+			delete[]lpStripeBuf;
+			lpStripeBuf = new BYTE[MaxStripBufSize];
+		}
+
+		IO_Read(lpStripeBuf, 1, Bufsize);
+
+		if (LinesRemain > rowsPerStrip)
+		{
+			BytesPerStrip = BytesPerLine * rowsPerStrip;
+			LinesRemain -= rowsPerStrip;
+		}
+		else
+			BytesPerStrip = BytesPerLine * LinesRemain;
+
+#if AVISION_LZW
+		//Avision LZW Decode is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, It is up to you to choose which one to use.	
+		Lzw_Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);
+		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
+		lpImage += BytesPerStrip;
+#else		
+		Lzw_Decode->Decode(lpStripeBuf, Bufsize, lpStripeBuf_Out, BytesPerStrip, &OutSize);
+		memcpy(lpImage, lpStripeBuf_Out, OutSize);
+
+		if (OutSize != BytesPerStrip)
+		{
+			cout << " *** Warning: " << BytesPerStrip - OutSize << endl;
+			memset(lpImage + OutSize, 255, BytesPerStrip - OutSize);
+		}
+
+
+		lpImage += BytesPerStrip;
+#endif //AVISION_LZW
+	}
+
+	delete[]lpStripeBuf;
+	delete[]lpStripeBuf_Out;
+
+	if (predicator == 2)
+	{
+		Lzw_Decode->PredicatorDecode(lpImageBuf, Width, Length, samplesPerPixel);
+		RemoveTag(Predicator); //Photoshop hang if tag is not removed.
+	}
+
+	//FILE* Fp = fopen("LzwData.raw", "wb");
+	//fwrite(lpImageBuf, 1, BytesPerLine * Length, Fp);
+	//fclose(Fp);
+
+	//Reset StripOffsets) and StripByteCounts)
+	delete[]TagStripOffsets->lpData;
+	TagStripOffsets->lpData = lpImageBuf;
+	TagStripOffsets->n = 1;
+	TagStripOffsets->type = Long;
+	//TagStripOffsets->value = lpImageBuf;//Don't care, It mean's nothing.
+
+	delete[]TagStripByteCounts->lpData;
+	TagStripByteCounts->lpData = nullptr;
+	TagStripByteCounts->type = Short;
+	TagStripByteCounts->n = 1;
+	TagStripByteCounts->value = BytesPerLine * Length;
+
+	//Reset RowsPerStrip), it should be the same with Length;
+	SetTagValue(RowsPerStrip, GetTagValue(ImageLength));
+	SetTagValue(Compression, 1);
+	delete Lzw_Decode;
+	return Tiff_OK;
+}
+#endif //LZW
 
 template<class T>   //T:type, Ts:type size
 void Tiff::Pack(int Width, int Length)
@@ -919,14 +1258,9 @@ Tiff_Err Tiff::WriteHeader(IO_INTERFACE* IO)
 	return Tiff_OK;
 }
 
-Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
+int Tiff::CaculateOffset()
 {
-	const int IFD_Offset = 8;//Header Size;
-	int OffsetValue = IFD_Offset + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
-	WORD EntryCounts = (WORD)m_IFD.m_TagList.size();//EntryCounts;
-	IO_Seek(IFD_Offset, SEEK_SET);
-	IO_Write((LPBYTE)&EntryCounts, sizeof(WORD), 1);
-
+	int OffsetValue = 8 + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
 	//Recaculate Tag Offset.	
 	//for (auto pos = TiffTag_Begin; pos != TiffTag_End; ++pos)
 	for (const auto& pos : m_IFD.m_TagList)
@@ -940,6 +1274,9 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
 		case (SLong):Offset = true;
 		default:break;
 		}
+
+		if(pos->n > 1)
+			Offset = true;
 
 		int DataSize;
 		if (Offset == true)
@@ -959,12 +1296,39 @@ Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
 		}
 	}
 
-	//Some Special Tag need to be reset...
-	//StripOffset
-	TiffTagPtr	TempTag = GetTag(StripOffsets);
-	TempTag->value = OffsetValue;
+	return OffsetValue;
+}
 
-	OffsetValue += GetTagValue(StripByteCounts);
+Tiff_Err Tiff::WriteIFD(IO_INTERFACE* IO)
+{
+	const int IFD_Offset = 8;//Header Size;
+	int OffsetValue = IFD_Offset + 2 + (int)m_IFD.m_TagList.size() * 12 + 4;//	OffsetValue = header + sizeof(taglist) + nextIFD;
+	
+	WORD EntryCounts = (WORD)m_IFD.m_TagList.size();//EntryCounts;
+	IO_Seek(IFD_Offset, SEEK_SET);
+	IO_Write((LPBYTE)&EntryCounts, sizeof(WORD), 1);
+
+	OffsetValue = CaculateOffset();
+
+	//Some Special Tag need to be reset...
+	//StripOffset	
+	TiffTagPtr	TempTag = GetTag(StripOffsets);
+
+	if (TempTag->n != 1)
+	{
+		LPDWORD pOffset = (LPDWORD)(TempTag->lpData);
+		for (DWORD i = 0; i < TempTag->n; ++i)
+			pOffset[i] += OffsetValue;
+
+		TiffTagPtr	TempTag2 = GetTag(StripByteCounts);
+		LPDWORD lpStripByteCounts = (LPDWORD)TempTag2->lpData;
+		OffsetValue = pOffset[TempTag->n - 1] + lpStripByteCounts[TempTag2->n - 1];
+	}
+	else
+	{//Uncompress, Single Strip
+		TempTag->value = OffsetValue;
+		OffsetValue += GetTagValue(StripByteCounts);
+	}	
 
 	TempTag = GetTag(Exif_IFD);
 	if (TempTag != nullptr)
@@ -1014,6 +1378,26 @@ Tiff_Err Tiff::WriteImageData(IO_INTERFACE* IO)
 	IO_Write(TempTag->lpData, 1, stripByteCounts);
 	return Tiff_OK;
 }
+
+#if LZW
+
+Tiff_Err Tiff::WriteImageData_LZW(IO_INTERFACE* IO)
+{
+	TiffTagPtr TagStripByteCounts = GetTag(StripByteCounts);
+	int Strip = TagStripByteCounts->n;
+	LPINT StripSize = (LPINT)TagStripByteCounts->lpData;
+	int StripTotalSize = 0;
+	for (int i = 0; i < Strip; i++)
+		StripTotalSize += StripSize[i];
+
+	TiffTagPtr tagStripOffsets = GetTag(StripOffsets);
+	StripOffsetsTag *offset = (StripOffsetsTag*)GetPtr(tagStripOffsets);
+	 
+	
+	IO_Write((LPBYTE)offset->GetLzwData(), 1, StripTotalSize);
+	return Tiff_OK;
+}
+#endif //LZW
 
 Tiff_Err Tiff::WriteData_Exif_IFD_Tag(IO_INTERFACE* IO)
 {

@@ -300,7 +300,8 @@ namespace AV_Tiff_STL3 {
 		eTagStripErr = -4,/*!< StripByteCount.n != StripOffset.n;*/
 		eMemoryAllocFail = -5,
 		eDataTypeErr = -6,
-		eCompressData = -7,
+		eUnSupportCompressData = -7,
+		eTagNorFound = -8,
 		eUnDefineErr = -9999,
 		eTiff_NEW_TAG = 1
 	};
@@ -331,7 +332,7 @@ namespace AV_Tiff_STL3 {
 		virtual DWORD GetValue() const;
 		virtual int SaveFile(IO_INTERFACE* IO);
 		virtual LPBYTE GetData() const { return lpData; }
-		int ValueIsOffset() const;
+		bool ValueIsOffset() const;
 
 		//! The Tag that identifies the field.
 		TiffTagSignature	tag;
@@ -359,6 +360,18 @@ namespace AV_Tiff_STL3 {
 	***************************************************************************/
 	//Special Tag
 	// Fix the method signature to match the base class method it is intended to override.
+	class StripOffsetsTag : public TiffTag
+	{
+	public:
+		StripOffsetsTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO);
+		~StripOffsetsTag();
+		void   SetLzwData(LPBYTE lpBuf);
+		LPBYTE GetLzwData();
+	
+	private:
+		LPBYTE m_ImgLzw; //For Lzw Compression
+	};
+
 	class BitsPerSampleTag : public TiffTag
 	{
 	public:
@@ -449,38 +462,48 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err CheckFile(IO_INTERFACE* IO);
 		virtual		Tiff_Err ReadTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err SaveTiff(IO_INTERFACE* IO);
+		virtual		Tiff_Err SaveTiff_lzw(IO_INTERFACE* IO);
 		virtual		Tiff_Err ReadFile(LPCSTR FileName);
-		virtual		Tiff_Err SaveFile(LPCSTR FileName);
+		virtual		Tiff_Err SaveFile(LPCSTR FileName, int lzw = 0);
 		virtual		Tiff_Err SaveRaw(LPCSTR FileName);
+		//virtual		Tiff_Err SaveFile(LPCSTR FileName);
 
 #if defined (VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
 		virtual		Tiff_Err SaveMemory(LPBYTE Buffer, size_t BufSize, size_t& SaveSize);
 #endif //VIRTUAL_IO
 
-		//	Tag Operation
+		//	Tag Operation		
 		TiffTagPtr	GetTag(const TiffTagSignature Signature);
 		DWORD		GetTagValue(const TiffTagSignature Signature);
 		Tiff_Err	SetTag(TiffTagPtr NewTag);
 		Tiff_Err	SetTagValue(const TiffTagSignature Signature, DWORD Value);
+		Tiff_Err	RemoveTag(const TiffTagSignature Signature);
 
 	protected:
 		//Read Image
 		virtual		TiffTagPtr	CreateTag(DWORD SignatureType, DWORD n, DWORD value, IO_INTERFACE* IO);
 		void		AddTags(DWORD TypeSignature, DWORD n, DWORD value, IO_INTERFACE* IO);
+		int			CaculateOffset();
 		Tiff_Err	ReadImage(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
-		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
 		//Write Image
-		virtual		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
+		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
 		Tiff_Err	WriteIFD(IO_INTERFACE* IO);
 		Tiff_Err	WriteTagData(IO_INTERFACE* IO);
 		Tiff_Err	WriteImageData(IO_INTERFACE* IO);
 		Tiff_Err	WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
+
+#if LZW
+		Tiff_Err	ReadSingleStripOffset_LZW(IO_INTERFACE* IO);
+		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
+		Tiff_Err	LZW_Compress();		
+		Tiff_Err	WriteImageData_LZW(IO_INTERFACE* IO);
+#endif //LZW
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;
@@ -674,7 +697,8 @@ using namespace AV_Tiff_STL3;
 #define TagStripErr							Tiff_Err::eTagStripErr
 #define MemoryAllocFail						Tiff_Err::eMemoryAllocFail
 #define DataTypeErr							Tiff_Err::eDataTypeErr
-#define CompressData						Tiff_Err::eCompressData
+#define UnSupportCompressData				Tiff_Err::eUnSupportCompressData
+#define TagNorFound							Tiff_Err::eTagNorFound
 #define UnDefineErr							Tiff_Err::eUnDefineErr
 //#define Tiff_NEW_TAG						Tiff_Err::eTiff_NEW_TAG
 

@@ -19,7 +19,10 @@
 #define KYMC1RAW_CMYK8 0
 #define KYMC1_2_CMYK8 0
 #define KYM_Tiff 0
-#define LZW_Test 1
+#define LZW_Test 0
+#define SMART_COLOR_RENDERING 0
+#define HALFTONE_TEST 0
+#define TIFF_SAVE_LZW 0
 
 
 void Utility(int argc, char* argv[]);
