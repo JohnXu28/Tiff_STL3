@@ -107,39 +107,38 @@ Test Images:
 
 /////////////////////////////////////////////////////////////////////////////
 Example:
-		
-		#include "stdafx.h"
-		#include <string>
-		#include <iostream>
-		using namespace std;
-		#include "Tiff_STL3.h" //Has claimed the namespace...
-		//using namespace AV_Tiff_STL3; Don't need anymore...
-		main(int argc, _TCHAR* argv[]))
+
+	#include "stdafx.h"
+	#include <string>
+	#include <iostream>
+	using namespace std;
+	#include "Tiff_STL3.h" //Has claimed the namespace...
+	//using namespace AV_Tiff_STL3; Don't need anymore...
+	main(int argc, _TCHAR* argv[]))
+	{
+		SPTIFF lpIn = make_shared<CTiff>("Input.tif");
+	
+		int Width = lpIn->GetTagValue(ImageWidth);
+		int Length = lpIn->GetTagValue(ImageLength);
+		int resolution = lpIn->GetTagValue(XResolution);
+		int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel);
+		int bitspersample = lpIn->GetTagValue(BitsPerSample);
+	
+		SPTIFF lpOut = make_shared<CTiff>(Width, Length, resolution, samplesPerPixel, bitspersample);
+	
+		int BytesPerLine = Width * samplesPerPixel * bitspersample / 8;
+	
+		LPBYTE lpBuf = new BYTE[BytesPerLine];
+	
+		for(int i = 0; i < Length; i++)
 		{
-			CTiff In, Out;
-			In.ReadFile("Input.tif");
-		
-			int Width = In.GetTagValue(ImageWidth);
-			int Length = In.GetTagValue(ImageLength);
-			int resolution = In.GetTagValue(XResolution);
-			int samplesPerPixel = In.GetTagValue(SamplesPerPixel);
-			int bitspersample = In.GetTagValue(BitsPerSample);
-		
-			Out.CreateNew(Width, Length, resolution, samplesPerPixel, bitspersample);
-		
-			int BytesPerLine = Width * samplesPerPixel * bitspersample / 8;
-		
-			LPBYTE lpBuf = new BYTE[BytesPerLine];
-		
-			for(int i = 0; i < Length; i++)
-			{
-				In.GetRow(lpBuf, i);
-				LPBYTE lpTemp = lpBuf;
-				for(int j = 0; j < Width; j++)
+			lpIn->GetRow(lpBuf, i);
+			LPBYTE lpTemp = lpBuf;
+			for(int j = 0; j < Width; j++)
 				Process(lpBuf, Width); //Add your process here.
-				In.PutRow(lpBuf, i);
-			}
-			delete []lpBuf;
-		
-			Out.SaveFile("Output.tif");
+			lpOut->PutRow(lpBuf, i);
 		}
+		delete []lpBuf;
+	
+		lpOut->SaveFile("Output.tif");
+	}
