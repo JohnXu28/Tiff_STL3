@@ -3,7 +3,8 @@
 #include <iostream>
 #include <memory>
 #include "Utility.h"
-#include <Tiff_STL3\Src\Tiff_STL3.h>
+#include "..\Src\Tiff_STL3.h"
+#include "BMP.h"
 using namespace std;
 
 #if DOTCOUNT
@@ -654,6 +655,41 @@ void Tiff_SaveLzw(int argc, _TCHAR* argv[])
 }
 #endif //TIFF_SAVE_LZW
 
+#if TIFF2BMP
+int Tiff2Bmp(int argc, _TCHAR* argv[])
+{
+	if (argc != 3)
+	{
+		cout << "Tiff2BMP In.tif out.bmp" << endl;
+		return 0;
+	}
+
+	shared_ptr<BMP> lpBmp = make_shared<BMP>();
+	lpBmp->ReadTiff(argv[1]);
+	lpBmp->SaveFile(argv[2]);
+
+	return 0;
+}
+#endif //TIFF2BMP
+
+#if BMP2TIFF
+int Bmp2Tiff(int argc, _TCHAR* argv[])
+{
+	if (argc != 3)
+	{
+		cout << "Bmp2Tiff In.tif out.bmp" << endl;
+		return 0;
+	}
+
+	shared_ptr<BMP> lpBmp = make_shared<BMP>();
+	lpBmp->ReadFile(argv[1]);
+	lpBmp->SaveTiff(argv[2]);
+
+	return 0;
+}
+
+#endif //BMP2TIFF
+
 void Utility(int argc, _TCHAR* argv[])
 {
 #if RAW2TIFF
@@ -707,5 +743,13 @@ void Utility(int argc, _TCHAR* argv[])
 
 #if TIFF_SAVE_LZW
 	Tiff_SaveLzw(argc, argv);
-#endif //TIFF_SAVE_LZW	
+#endif //TIFF_SAVE_LZW
+
+#if TIFF2BMP
+	Tiff2Bmp(argc, argv);
+#endif //TIFF2BMP
+
+#if BMP2TIFF
+	Bmp2Tiff(argc, argv);
+#endif //BMP2TIFF
 }

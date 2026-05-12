@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include <Windows.h>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -16,12 +17,12 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	1
+#define Tiff_Test	0
 #define Single_Test	0
 #define RGBA		0 //Alpha
 
 #if Tiff_STL3
-#include <Tiff_STL3\Src\Tiff_STL3.h>
+#include "..\Src\Tiff_STL3.h"
 
 #define STiff CTiff
 #define Tiff_Create() new CTiff
