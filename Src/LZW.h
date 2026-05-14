@@ -1,4 +1,6 @@
+#ifdef _WINDOWS
 #include <windows.h>
+#endif //_WINDOWS
 
 #define LZW_MAX_BIT		12
 #define LZW_MIN_BIT		9
