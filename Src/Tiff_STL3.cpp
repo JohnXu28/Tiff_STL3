@@ -1092,7 +1092,6 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 	LPDWORD lpStripOffset = (LPDWORD)TagStripOffsets->lpData;
 	LPDWORD lpStripByteCounts = (LPDWORD)TagStripByteCounts->lpData;
 
-#define AVISION_LZW 0
 #if AVISION_LZW
 	Lzw* Lzw_Decode = new Lzw;
 #else

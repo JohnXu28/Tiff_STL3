@@ -157,6 +157,8 @@ Virtual IO
 #endif //WIN32
 
 #define LZW		1 //LZW Compression
+//Avision LZW is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, 
+#define AVISION_LZW 0 
 #define MAXTAG 40
 
 #include <vector>

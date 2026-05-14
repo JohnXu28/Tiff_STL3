@@ -2,6 +2,12 @@
 #include <windows.h>
 #endif //_WINDOWS
 
+#if defined(SYS_INFO)
+#include "../../SysInfo/SysInfo.h"
+#else
+#include "SysInfo.h"
+#endif //SYS_INFO
+
 #define LZW_MAX_BIT		12
 #define LZW_MIN_BIT		9
 #define CLEAR_CODE		256
