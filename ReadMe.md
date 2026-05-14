@@ -57,7 +57,7 @@ Turn on the `Tiff_Test` define to test all TIFF files in the "TestImg" folder.
 
 ### Limitations and Design
 
-- **Compression:** This class does not support compressed TIFF files.
+- **Compression:** This class support LZW compression.
 - **Purpose:** This TIFF class is designed for image processing and ICC color management testing.
 - **Use Cases:** Descreen, color conversion (RGB, Lab, YCC [8 or 16-bit] → RGB, Lab, CMYK [8 or 16-bit]), dithering, conversion to PS/PDF, etc.
 - **Output:** Most of the time, the final output is sent to print, so compression is not desired.
