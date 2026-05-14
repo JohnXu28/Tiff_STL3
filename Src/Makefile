@@ -3,6 +3,7 @@ include ../../Makefile.inc
 Module = Tiff_STL3
 CPPS = \
 Tiff_STL3.cpp \
+LZW_Perplexity.cpp \
 
 #OBJS : replace *.cpp to *.o
 #OBJS = $(patsubst %.cpp,%.o,$(SRCS))
@@ -18,14 +19,14 @@ all: test
 test: CXXFLAGS +=
 test: $(OBJS)
 	@echo "======= $(Module): TEST mode ======="
-	$(CP) *.o ../../Lib
+	$(CP) *.o $(LIB_DIR)
 
 #---------------------------------------------------------
 # Release build
 release: CXXFLAGS +=
 release: clean $(OBJS)
 	@echo "======= $(Module): RELEASE mode ======="
-	$(CP) *.o ../../Lib	
+	$(CP) *.o $(LIB_DIR)
 
 #---------------------------------------------------------
 # Common compile rule
