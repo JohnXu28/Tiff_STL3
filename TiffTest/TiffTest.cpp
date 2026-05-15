@@ -1,8 +1,10 @@
 // TiffTest.cpp : Defines the entry point for the console application.
 //
+#ifdef _WINDOWS
+	#include "stdafx.h"
+	#include <Windows.h>
+#endif //
 
-#include "stdafx.h"
-#include <Windows.h>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -22,7 +24,7 @@ using namespace std;
 #define RGBA		0 //Alpha
 
 #if Tiff_STL3
-#include "..\Src\Tiff_STL3.h"
+#include "../Src/Tiff_STL3.h"
 
 #define STiff CTiff
 #define Tiff_Create() new CTiff
@@ -453,12 +455,13 @@ void Tiff_RGBA_Test()
 }
 #endif //RGBA
 
+#ifdef _WINDOWS
 void DumpMemory(void)
 {
 	//delete gl;
 	DETECT_MEMORY_LEAKS;
 }
-
+#endif //
 
 #if 0
 void ProcessTemplate()
@@ -498,8 +501,11 @@ void ProcessTemplate()
 /*********************************************************************************************************/
 //		Main ( )
 /*********************************************************************************************************/
+#ifdef _WINDOWS
 int main(int argc, _TCHAR* argv[])
-//int main1(int argc, char* argv[])
+#else
+int main1(int argc, char* argv[])
+#endif //_WINDOWS
 {
 #ifdef _DEBUG
 	//_CrtSetBreakAlloc(192);
@@ -507,9 +513,11 @@ int main(int argc, _TCHAR* argv[])
 	atexit(DumpMemory);
 #endif //_DEBUG
 
+#ifdef _WINDOWS
 	char Dir[128];
 	int size = GetCurrentDirectory(128, Dir);
 	cout << "Dir : " << Dir << endl;
+#endif //_WINDOWS
 
 #if Tiff_Test
 	FullTest1();

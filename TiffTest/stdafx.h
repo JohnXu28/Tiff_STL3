@@ -4,12 +4,10 @@
 //
 
 #pragma once
-
+#ifdef _WINDOWS
 #include "targetver.h"
+#include <tchar.h>
+#endif //_WINDOWS
 
 #include <stdio.h>
-#include <tchar.h>
-
-
-
 // TODO: reference additional headers your program requires here
