@@ -19,7 +19,7 @@ using namespace std;
 #define Tiff_C		0
 #define Tiff_STL3	1
 
-#define Tiff_Test	0
+#define Tiff_Test	1
 #define Single_Test	0
 #define RGBA		0 //Alpha
 
@@ -504,7 +504,7 @@ void ProcessTemplate()
 #ifdef _WINDOWS
 int main(int argc, _TCHAR* argv[])
 #else
-int main1(int argc, char* argv[])
+int main(int argc, char* argv[])
 #endif //_WINDOWS
 {
 #ifdef _DEBUG

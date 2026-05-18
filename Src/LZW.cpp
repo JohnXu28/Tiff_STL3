@@ -8,7 +8,10 @@
 **
 **
 ******************************************************************************/
-#include<Windows.h>
+#ifdef _WINDOWS
+	#include <Windows.h>
+#endif //_WINDOWS
+
 #include "stdafx.h"
 #include <stdlib.h>
 #include <stdio.h>

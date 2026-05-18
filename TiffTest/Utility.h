@@ -23,7 +23,7 @@
 #define SMART_COLOR_RENDERING 0
 #define HALFTONE_TEST 0
 #define TIFF_SAVE_LZW 0
-#define TIFF2BMP 1
+#define TIFF2BMP 0
 #define BMP2TIFF 0
 
 void Utility(int argc, char* argv[]);

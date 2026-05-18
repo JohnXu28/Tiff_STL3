@@ -2,8 +2,11 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#ifdef _WINDOWS
 #include <Windows.h>
-#include "..\Src\Tiff_STL3.h"
+#endif // _WINDOWS
+
+#include "../Src/Tiff_STL3.h"
 //#include <Lch/cam02.h>
 #include "Utility.h"
 using namespace std;
@@ -185,7 +188,11 @@ void Halftone_Test()
 }
 #endif //HALFTONE_TEST
 
+#ifdef _WINDOWS
 void Test(int argc, _TCHAR* argv[])
+#else
+void Test(int argc, char* argv[])
+#endif // _WINDOWS
 {
 #if	Tag_Test
 	Tag_Test_Construct();
@@ -227,5 +234,5 @@ void Test(int argc, _TCHAR* argv[])
 #if	HALFTONE_TEST
 	Halftone_Test();
 #endif //HALFTONE_TEST
-	//cout << "test end" << endl;
+	//cout << "test end" << endl;	
 }

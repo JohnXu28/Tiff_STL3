@@ -3,8 +3,12 @@
 #include <iostream>
 #include <memory>
 #include "Utility.h"
-#include "..\Src\Tiff_STL3.h"
+#include "../Src/Tiff_STL3.h"
+
+#if (TIFF2BMP | BMP2TIFF)
 #include "BMP.h"
+#endif //TIFF2BMP BMP2TIFF
+
 using namespace std;
 
 #if DOTCOUNT
@@ -690,7 +694,11 @@ int Bmp2Tiff(int argc, _TCHAR* argv[])
 
 #endif //BMP2TIFF
 
+#ifdef _WINDOWS
 void Utility(int argc, _TCHAR* argv[])
+#else
+void Utility(int argc, char* argv[])
+#endif
 {
 #if RAW2TIFF
 	CreateTiff(argc, argv);
