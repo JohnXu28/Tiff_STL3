@@ -1,0 +1,48 @@
+include ../Makefile.inc
+
+Module = Tiff_STL3
+LIB = lib$(Module).a
+CPPS = \
+LZW_Perplexity.cpp \
+LZW.cpp \
+Tiff_STL3.cpp \
+
+OBJS = $(CPPS:.cpp=.o)
+DEPS = $(CPPS:.cpp=.d)
+
+#---------------------------------------------------------
+# Default target
+all: test
+
+#---------------------------------------------------------
+# Test build
+test: CXXFLAGS +=
+test: $(LIB)
+	@echo "======= $(Module): 3TEST2 mode ======="
+	$(CP) $(LIB) $(LIB_DIR)
+
+#---------------------------------------------------------
+# Static library
+$(LIB): $(OBJS)
+	@echo "======= $(Module): 3Archiving $(LIB) ======="
+	$(AR) $@ $^
+
+#---------------------------------------------------------
+# Release build
+release: CXXFLAGS +=
+release: clean $(LIB)
+	@echo "======= $(Module): 3RELEASE mode ======="
+	$(CP) $(LIB) $(LIB_DIR)
+
+#---------------------------------------------------------
+# Common compile rule
+%.o : %.cpp	
+	$(CXX) $(CXXFLAGS) -MMD -MP -c -o $@ $< 
+
+#---------------------------------------------------------
+-include $(DEPS)
+
+#---------------------------------------------------------
+clean:
+	@echo "Cleaning object files..." $(Module)
+	$(RM) *.o *.d $(LIB)
