@@ -23,9 +23,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 
-# ===== Modules =====
-add_subdirectory(src)
+add_library(Lib_Tiff_STL3 STATIC
+    src/Tiff_STL3.cpp
+    src/LZW.cpp
+    src/LZW_Perplexity.cpp
+)
 
-
-# ===== Apps =====
-add_subdirectory(TiffTest)
+add_library(Lib_Tiff_STL3::Lib_Tiff_STL3 ALIAS Lib_Tiff_STL3)
