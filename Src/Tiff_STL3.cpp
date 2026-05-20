@@ -5,9 +5,10 @@
 //********************************************************************
 //	You can get the sample code in "Tiff_STL3.h"
 //********************************************************************
-#include "stdafx.h"
 #include <iostream>
-#include "Tiff_STL3.h"
+#include "stdafx.h"
+#include "../Include/Tiff_STL3.h"
+
 using namespace AV_Tiff_STL3;
 
 #include <algorithm>
@@ -22,8 +23,8 @@ using namespace AV_Tiff_STL3;
 #include <cstring>
 #include <cmath>
 
-#include "LZW.h"
-#include "LZW_Perplexity.h"
+#include "../Include/LZW.h"
+#include "../Include/LZW_Perplexity.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////

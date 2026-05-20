@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\Src\SysInfo.h"
+#include "..\Include\SysInfo.h"
 #include "Virtual_IO_C.h"
 
 /***************************************************************************************

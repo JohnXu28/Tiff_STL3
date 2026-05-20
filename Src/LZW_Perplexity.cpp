@@ -1,6 +1,6 @@
 // LZWCodec.cpp
 #include "stdafx.h"
-#include "Lzw_Perplexity.h"
+#include "../Include/Lzw_Perplexity.h"
 #include <string.h>
 #include <iostream>
 

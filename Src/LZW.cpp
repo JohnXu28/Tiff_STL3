@@ -485,7 +485,7 @@ unsigned lzw_readbuf(void* stream, unsigned char* buf, unsigned size)
 //												Lzw class														//
 //																												//
 //**************************************************************************************************************//
-#include "lzw.h"
+#include "../Include/lzw.h"
 Lzw::Lzw() 
 {
 	m_lpEncodeBuf = nullptr;
