@@ -133,6 +133,8 @@ typedef enum Tiff_Err {
 	MemoryAllocFail = -5,
 	DataTypeErr = -6,
 	CompressData = -7,
+	UnSupportCompressData = -7,
+	TagNorFound = -8,
 	UnDefineErr = -9999,
 	Tiff_NEW_TAG = 1
 }Tiff_Err;

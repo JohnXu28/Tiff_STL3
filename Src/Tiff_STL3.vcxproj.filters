@@ -39,9 +39,6 @@
     <ClInclude Include="..\Version_C\Tiff_STL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tiff_STL3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Version_C\Virtual_IO_C.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -51,10 +48,16 @@
     <ClInclude Include="..\Version_C\tiff.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LZW.h">
+    <ClInclude Include="..\Include\LZW.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LZW_Perplexity.h">
+    <ClInclude Include="..\Include\LZW_Perplexity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\SysInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\Tiff_STL3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

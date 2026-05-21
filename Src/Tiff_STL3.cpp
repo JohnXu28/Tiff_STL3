@@ -309,7 +309,7 @@ BitsPerSampleTag::BitsPerSampleTag(DWORD SigType, DWORD n, DWORD value, IO_INTER
 	if (IO == nullptr)
 	{//For CreateNew File, SetTag(BitsPerSampleTag)
 		if (lpData != nullptr)
-			delete lpData;
+			delete []lpData;
 
 		if (n != 1)
 		{
@@ -529,7 +529,11 @@ Tiff_Err Tiff::ReadFile(LPCSTR FileName)
 
 	IO_INTERFACE* IO = IO_In(FileName);
 	if (CheckFile(IO) != Tiff_OK)
+	{
+		if (IO != nullptr) // Tiff is not PC version, but the file is opened successfully.
+			IO_Close(IO);
 		throw FileName;
+	}
 
 	Tiff_Err ret = ReadTiff(IO);
 	if (IO != NULL)
@@ -560,6 +564,12 @@ Tiff_Err Tiff::ReadTiff(IO_INTERFACE* IO)
 	if (TagCount >= MAXTAG)
 	{//Too many m_Tags
 		ret = TooManyTags;
+		IO_Close(IO);
+		return ret;
+	}
+	else if (TagCount == 0)
+	{
+		ret = TagNorFound;
 		IO_Close(IO);
 		return ret;
 	}
@@ -762,7 +772,10 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 #endif //Check StripByteCounts). 
 			if (Compress == 1)
 			{
-				stripByteCounts = Width * Length * samplesPerPixel * bitsPerSample / 8;
+				UINT64 size = Width * Length * samplesPerPixel * bitsPerSample / 8;
+				if (size > 0xFFFFFFFF)
+					throw " *** Image Size is too big, size > 0xFFFFFFFF *** ";
+				stripByteCounts = (DWORD)size;
 				lpImageBuf = new BYTE[stripByteCounts];
 				IO_Seek(stripOffsets, SEEK_SET);
 				IO_Read(lpImageBuf, 1, stripByteCounts);
@@ -1125,11 +1138,20 @@ Tiff_Err Tiff::ReadMultiStripOffset_LZW(IO_INTERFACE* IO)
 
 #if AVISION_LZW
 		//Avision LZW Decode is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, It is up to you to choose which one to use.	
-		Lzw_Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip);
+		if(Lzw_Decode->Decode(lpStripeBuf, lpStripeBuf_Out, BytesPerStrip) == false)
+		{
+			cout << " *** Warning: LZW Decode Error. *** " << endl;
+			break;
+		}
+
 		memcpy(lpImage, lpStripeBuf_Out, BytesPerStrip);
 		lpImage += BytesPerStrip;
 #else		
-		Lzw_Decode->Decode(lpStripeBuf, Bufsize, lpStripeBuf_Out, BytesPerStrip, &OutSize);
+		if(Lzw_Decode->Decode(lpStripeBuf, Bufsize, lpStripeBuf_Out, BytesPerStrip, &OutSize) == false)
+		{
+			cout << " *** Warning: LZW Decode Error. *** " << endl;
+			break;
+		}
 		memcpy(lpImage, lpStripeBuf_Out, OutSize);
 
 		if (OutSize != BytesPerStrip)
@@ -1741,6 +1763,20 @@ int CTiff::GetRowColumn(T* lpBuf, int x, int y, int RecX, int RecY)
 	if ((m_BitsPerSample != 8) && (m_BitsPerSample != 16))
 		return -1;
 
+	if (x < 0)
+		x = 0;
+	if (x > (m_Width - 1))
+		x = m_Width - 1;
+	if (x + RecX > m_Width)
+		RecX = m_Width - x;
+
+	if (y < 0)
+		y = 0;
+	if (y > (m_Length - 1))
+		y = m_Length - 1;
+	if (y + RecY > m_Length)
+		RecY = m_Length - y;
+
 	//T* lpPosition = (T*)m_lpImageBuf;
 	T* lpWidthBuf = new T[m_Width * m_SamplesPerPixel];
 	LPBYTE lpCurrent = (LPBYTE)lpBuf;
@@ -1827,9 +1863,9 @@ LPBYTE CTiff::GetXY_M(int X, int Y)
 	if (X > (m_Width - 1))
 		X = m_Width - 1;
 
-	if (Y < 0)
+	if (Y < 0)//Math coordination, Y=0 is the bottom line of the image.
 		Y = m_Length - 1;
-	if (Y > (m_Length - 1))
+	if (Y > (m_Length - 1))//Math coordination, Y=Length-1 is the top line of the image.
 		Y = 0;
 
 	return  m_lpImageBuf + \

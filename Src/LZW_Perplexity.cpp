@@ -35,7 +35,7 @@ struct BitReader {
     int bitPos;
 };
 
-Entry dict[LZW_MAX_DICT];
+//Entry dict[LZW_MAX_DICT];
 
 static inline void BR_Reset(BitReader* br)
 {

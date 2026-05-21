@@ -501,6 +501,7 @@ ErrCode Tiff::SaveRaw(LPCSTR FileName)
 	{
 		IO_Close(IO);
 		//throw "*** Tiff::SaveFile() --> TiffTag EntryCounts is 0. ***";
+		return TagNorFound;
 	}
 
 	int Width = GetTagValue(ImageWidth);
