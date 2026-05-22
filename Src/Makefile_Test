@@ -18,20 +18,20 @@ all: test
 # Test build
 test: CXXFLAGS +=
 test: $(LIB)
-	@echo "======= $(Module): 3TEST2 mode ======="
+	@echo "======= $(Module): TEST mode ======="
 	$(CP) $(LIB) $(LIB_DIR)
 
 #---------------------------------------------------------
 # Static library
 $(LIB): $(OBJS)
-	@echo "======= $(Module): 3Archiving $(LIB) ======="
+	@echo "======= $(Module): Archiving $(LIB) ======="
 	$(AR) $@ $^
 
 #---------------------------------------------------------
 # Release build
 release: CXXFLAGS +=
 release: clean $(LIB)
-	@echo "======= $(Module): 3RELEASE mode ======="
+	@echo "======= $(Module): RELEASE mode ======="
 	$(CP) $(LIB) $(LIB_DIR)
 
 #---------------------------------------------------------

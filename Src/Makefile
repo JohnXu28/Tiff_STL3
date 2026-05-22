@@ -1,4 +1,5 @@
 include ../../Makefile.inc
+LIB_DIR  := $(CURDIR)/../../Lib
 
 Module = Tiff_STL3
 CPPS = \
@@ -16,14 +17,14 @@ all: test
 
 #---------------------------------------------------------
 # Test build
-test: CXXFLAGS +=
+test: CXXFLAGS += -I../..
 test: $(OBJS)
 	@echo "======= $(Module): TEST mode ======="
 	$(CP) *.o $(LIB_DIR)
 
 #---------------------------------------------------------
 # Release build
-release: CXXFLAGS +=
+release: CXXFLAGS += -I../..
 release: clean $(OBJS)
 	@echo "======= $(Module): RELEASE mode ======="
 	$(CP) *.o $(LIB_DIR)

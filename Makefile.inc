@@ -11,7 +11,7 @@ VPATH = $(shell pwd)
 
 # default C++ flag
 CXXFLAGS = -fPIC -Wall -finline-functions -Wno-reorder -Wno-unused-result -Wno-comment -Wno-unused-variable -Wno-unused-but-set-variable
-CXXFLAGS += -DSYS_INFO 
+#CXXFLAGS += -DSYS_INFO 
 #No STL Vector
 CXXFLAGS += -DFIXED_VECTOR
 #For Arm project
