@@ -107,7 +107,7 @@ Virtual IO
 #pragma warning(disable : 4996)//for Net
 
 #if defined(__IO_Interface_H__)//Slowest, it should be the same with fopen, but not the true.
-#include <SysInfo\Virtual_IO.h>		
+#include <SysInfo/Virtual_IO.h>		
 #define IO_In(FileName)					new IO_File(FileName, "rb")
 #define IO_Out(FileName)				new IO_File(FileName, "wb")
 #define IO_Close(IO)					delete IO
@@ -119,7 +119,7 @@ Virtual IO
 
 #elif defined(VIRTUAL_IO_STL)//Fastest
 #include <fstream>
-#include <SysInfo\Virtual_IO.h>
+#include <SysInfo/Virtual_IO.h>
 
 #define IO_In(FileName)					new IO_fstream(FileName, ios::in)
 #define IO_Out(FileName)				new IO_fstream(FileName, ios::out)
