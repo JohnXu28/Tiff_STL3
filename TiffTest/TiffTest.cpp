@@ -24,7 +24,7 @@ using namespace std;
 #define RGBA		0 //Alpha
 
 #if Tiff_STL3
-#include "../Src/Tiff_STL3.h"
+#include "Tiff_STL3.h"
 
 #define STiff CTiff
 #define Tiff_Create() new CTiff

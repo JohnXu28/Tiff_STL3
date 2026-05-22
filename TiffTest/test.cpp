@@ -6,7 +6,7 @@
 #include <Windows.h>
 #endif // _WINDOWS
 
-#include "../Src/Tiff_STL3.h"
+#include "Tiff_STL3.h"
 //#include <Lch/cam02.h>
 #include "Utility.h"
 using namespace std;

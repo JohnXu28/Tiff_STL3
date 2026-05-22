@@ -3,7 +3,7 @@
 #include <iostream>
 #include <memory>
 #include "Utility.h"
-#include "../Src/Tiff_STL3.h"
+#include "Tiff_STL3.h"
 
 #if (TIFF2BMP | BMP2TIFF)
 #include "BMP.h"

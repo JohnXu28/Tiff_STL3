@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Src/Tiff_STL3.h"
+#include "Tiff_STL3.h"
 #ifdef _WINDOWS
 	#include <WinGDI.h>
 #else
