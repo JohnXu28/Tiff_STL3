@@ -126,24 +126,18 @@ TiffTag::TiffTag() :lpData(nullptr), n(0), value(0)
 
 TiffTag::~TiffTag()
 {
-	tag = NullTag;
-	type = UnknownType;
-	n = 0;
-	value = 0;
-
 	if (lpData != nullptr)
 		delete[]lpData;
-	lpData = nullptr;
-
 }
 
 //Copy Construct
-TiffTag::TiffTag(const TiffTag& Tag) :tag(Tag.tag), type(Tag.type), n(Tag.n), value(0)
+TiffTag::TiffTag(const TiffTag& Tag) :tag(Tag.tag), type(Tag.type), n(Tag.n), value(Tag.value)
 {
 	lpData = nullptr;
 	int DataSize = DataType[(int)type] * this->n;
 	if (DataSize > 4)
 	{
+		Tag.value = 0;//Just for safety, Photoshop will issue a warning if the value is not 0, even if the value is not used.
 		lpData = new BYTE[DataSize];
 		memcpy(lpData, Tag.lpData, DataSize);
 	}
@@ -419,7 +413,6 @@ void Tiff::Reset()
 	//for_each(TiffTag_Begin, TiffTag_End, [](TiffTag* pos) {delete pos; });
 	for (const auto& pos : m_IFD.m_TagList)
 		delete pos;
-
 #endif //SMART_POINTER
 
 	m_IFD.m_TagList.clear();
@@ -493,6 +486,11 @@ Tiff_Err Tiff::RemoveTag(const TiffTagSignature Signature)
 	if (pos != TiffTag_End)
 	{
 		m_IFD.m_TagList.erase(pos);
+
+#if (!SMART_POINTER)
+		delete *pos;
+#endif //SMART_POINTER
+
 		return Tiff_OK;
 	}
 	else
@@ -1278,7 +1276,7 @@ int Tiff::CaculateOffset()
 		case (SBYTE):
 		case (UndefineType):
 		case (SShort):
-		case (SLong):Offset = true;
+		case (SLong):Offset = true; break;
 		default:break;
 		}
 
