@@ -137,7 +137,7 @@ TiffTag::TiffTag(const TiffTag& Tag) :tag(Tag.tag), type(Tag.type), n(Tag.n), va
 	int DataSize = DataType[(int)type] * this->n;
 	if (DataSize > 4)
 	{
-		Tag.value = 0;//Just for safety, Photoshop will issue a warning if the value is not 0, even if the value is not used.
+		value = 0;//Just for safety, Photoshop will issue a warning if the value is not 0, even if the value is not used.
 		lpData = new BYTE[DataSize];
 		memcpy(lpData, Tag.lpData, DataSize);
 	}
