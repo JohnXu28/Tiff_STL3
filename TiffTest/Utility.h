@@ -25,6 +25,7 @@
 #define TIFF_SAVE_LZW 0
 #define TIFF2BMP 0
 #define BMP2TIFF 0
+#define RGBCMYK 1
 
 void Utility(int argc, char* argv[]);
 void Test(int argc, char* argv[]);

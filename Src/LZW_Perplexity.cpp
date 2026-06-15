@@ -162,7 +162,7 @@ bool Lzw_Perplexity::Decode(
     if (!DetectBitOrder(in, inSize, &order))
         return false;
 
-    BitReader br = { in, inSize, 0, 0 };  // ‰ΩøÁî® ReadBitsMSB
+    BitReader br = { in, inSize, 0, 0 };  // ®œ•Œ ReadBitsMSB
     bool (*ReadBits)(BitReader*, int, uint16_t*) =
         (order == LZW_LSB_FIRST) ? ReadBitsLSB : ReadBitsMSB;
 
@@ -260,7 +260,7 @@ void Lzw_Perplexity::PredicatorDecode(
         uint8_t* row = buf + y * rowBytes;
 
         if (bitsPerSample == 8) {
-            // Your original implementation, but with the step size adjusted: measured in ‚Äúone pixel‚Äù units
+            // Your original implementation, but with the step size adjusted: measured in °ßone pixel°® units
             for (int x = bytesPerPixel; x < rowBytes; ++x) {
                 row[x] = (uint8_t)(row[x] + row[x - bytesPerPixel]);
             }
@@ -429,7 +429,7 @@ static void LZWEnc_Insert(
         h++;
         if (h == LZW_HASH_SIZE) h = 0;
         if (h == start) {
-			// hash fullÔºåjust clear it and start over (should not happen if hash size is reasonably larger than dict size)
+			// hash full°Ajust clear it and start over (should not happen if hash size is reasonably larger than dict size)
             return;
         }
     }

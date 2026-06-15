@@ -5,7 +5,7 @@
 #if defined(SYS_INFO)
 #include <SysInfo/SysInfo.h>
 #else
-#include "SysInfo.h"
+#include "../../SysInfo/SysInfo.h"
 #endif //SYS_INFO
 
 #define LZW_MAX_BIT		12

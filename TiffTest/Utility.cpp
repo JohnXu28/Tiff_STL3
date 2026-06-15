@@ -691,8 +691,116 @@ int Bmp2Tiff(int argc, _TCHAR* argv[])
 
 	return 0;
 }
-
 #endif //BMP2TIFF
+
+#if RGBCMYK
+void Create_RGBCMYK()
+{
+	shared_ptr<CTiff> lpTiff = make_shared<CTiff>();
+	int Width = 300 * 10;
+	int Length = 300 * 7;
+	int Block = 300*300;
+	lpTiff->CreateNew(Width, Length, 600, 3, 8);
+	LPBYTE lpBlock= new BYTE[Block * 3];
+	LPBYTE lpTemp;
+	BYTE Step[10] = { 230, 204, 179, 153, 128, 102, 77, 51, 26, 0 };
+		
+	//R
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = 255;
+			*(lpTemp++) = Step[i];
+			*(lpTemp++) = Step[i];
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 0, 300, 300);
+	}
+	
+	//G
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = Step[i]; 
+			*(lpTemp++) = 255;
+			*(lpTemp++) = Step[i];
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 300, 300, 300);
+	}
+
+	//B
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = Step[i];
+			*(lpTemp++) = Step[i]; 
+			*(lpTemp++) = 255;
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 600, 300, 300);
+	}
+
+	//C
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = Step[i];
+			*(lpTemp++) = 255;
+			*(lpTemp++) = 255;
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 900, 300, 300);
+	}
+	
+	//M
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = 255;
+			*(lpTemp++) = Step[i]; 
+			*(lpTemp++) = 255;
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 1200, 300, 300);
+	}
+
+	//Y
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = 255;
+			*(lpTemp++) = 255;
+			*(lpTemp++) = Step[i]; 
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 1500, 300, 300);
+	}
+
+	//M
+	for (int i = 0; i < 10; i++)
+	{
+		lpTemp = lpBlock;
+		for (int j = 0; j < Block; j++)
+		{
+			*(lpTemp++) = Step[i];
+			*(lpTemp++) = Step[i];
+			*(lpTemp++) = Step[i];
+		}
+		lpTiff->SetRowColumn(lpBlock, i * 300, 1800, 300, 300);
+	}
+	lpTiff->SaveFile("RGBCMYK.tif");
+
+
+}
+#endif //RGBCMYK
+
 
 #ifdef _WINDOWS
 void Utility(int argc, _TCHAR* argv[])
@@ -760,4 +868,8 @@ void Utility(int argc, char* argv[])
 #if BMP2TIFF
 	Bmp2Tiff(argc, argv);
 #endif //BMP2TIFF
+
+#if RGBCMYK
+	Create_RGBCMYK();
+#endif //
 }
