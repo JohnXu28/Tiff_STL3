@@ -49,11 +49,12 @@
 	#ifdef _DEBUG
 		//For Memory leak detection.
 		#define _CRTDBG_MAP_ALLOC 
-		#ifndef DBG_NEW     
+		#ifndef DBG_NEW
+			#define _NORMAL_BLOCK    1
 			#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
 		#endif//DBG_NEW
 
-		#define new DBG_NEW 
+		//#define new DBG_NEW 
 		#define DETECT_MEMORY_LEAKS _CrtDumpMemoryLeaks()
 		//You can using these command to find who alloc the momory.
 		//VC will pause when alloc memory 100 times.
