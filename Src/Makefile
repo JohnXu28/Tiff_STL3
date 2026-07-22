@@ -5,6 +5,7 @@ Module = Tiff_STL3
 CPPS = \
 Tiff_STL3.cpp \
 LZW_Perplexity.cpp \
+LZW.cpp
 
 #OBJS : replace *.cpp to *.o
 #OBJS = $(patsubst %.cpp,%.o,$(SRCS))
