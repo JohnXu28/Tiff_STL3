@@ -18,7 +18,7 @@
 #include <memory.h>
 
 #define DICT_SIZE       (1 << 20)
-#define NODE_NULL       (-1)
+#define NODE_NULL       ((code_t)-1)
 
 typedef unsigned int code_t;
 
@@ -289,7 +289,7 @@ static code_t lzw_add_str(lzw_t* ctx, code_t code, char c)
 static void lzw_write(lzw_t* ctx, code_t code)
 {
 	// increase the code size (number of bits) if needed
-	if (ctx->max == (1 << ctx->codesize))
+	if (ctx->max == (1U << ctx->codesize))
 		ctx->codesize++;
 
 	lzw_writebits(ctx, code, ctx->codesize);
@@ -310,7 +310,7 @@ static void lzw_write(lzw_t* ctx, code_t code)
 static code_t lzw_read(lzw_t* ctx)
 {
 	// increase the code size (number of bits) if needed
-	if (ctx->max + 1 == (1 << ctx->codesize))
+	if (ctx->max + 1 == (1U << ctx->codesize))
 		ctx->codesize++;
 
 	return lzw_readbits(ctx, ctx->codesize);
@@ -476,7 +476,7 @@ void lzw_writebuf(void* stream, unsigned char* buf, unsigned size)
 
 unsigned lzw_readbuf(void* stream, unsigned char* buf, unsigned size)
 {
-	return fread(buf, 1, size, (FILE*)stream);
+	return (unsigned)fread(buf, 1, size, (FILE*)stream);
 }
 
 
@@ -813,7 +813,9 @@ int Lzw::Decode(UINT8* inbuf, UINT8* outbuf, UINT32 outbuf_size)
 void Lzw::PredicatorDecode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel)
 {
 	UINT8* pixel;
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
 	for (UINT32 i = 0; i < length; ++i)
 	{
 		pixel = inbuf + i * width * channel;
@@ -831,7 +833,9 @@ void Lzw::PredicatorDecode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 cha
 void Lzw::PredicatorEncode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel)
 {
 	UINT8* pixel;
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
 	for (UINT32 i = 0; i < length; ++i)
 	{
 		pixel = inbuf + i * width * channel + (width - 2) * channel;
