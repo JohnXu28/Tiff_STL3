@@ -812,13 +812,12 @@ int Lzw::Decode(UINT8* inbuf, UINT8* outbuf, UINT32 outbuf_size)
 
 void Lzw::PredicatorDecode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel)
 {
-	UINT8* pixel;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
 	for (UINT32 i = 0; i < length; ++i)
 	{
-		pixel = inbuf + i * width * channel;
+		UINT8* pixel = inbuf + i * width * channel;
 		for (UINT32 j = 1; j < width; ++j)
 		{
 			for (UINT32 k = 0; k < channel; ++k)
@@ -832,13 +831,12 @@ void Lzw::PredicatorDecode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 cha
 
 void Lzw::PredicatorEncode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel)
 {
-	UINT8* pixel;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
 	for (UINT32 i = 0; i < length; ++i)
 	{
-		pixel = inbuf + i * width * channel + (width - 2) * channel;
+		UINT8* pixel = inbuf + i * width * channel + (width - 2) * channel;
 		for (UINT32 j = width - 1; j > 0; --j)
 		{
 			for (UINT32 k = 0; k < channel; ++k)

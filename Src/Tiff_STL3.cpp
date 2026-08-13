@@ -252,7 +252,7 @@ int TiffTag::SaveFile(IO_INTERFACE* IO)
 {
 	int DataSize = DataType[(int)type] * n;
 	int ret = 0;
-	if ((DataSize > 4) || (n > 1))
+	if ((DataSize > 4) && (lpData != nullptr))
 		ret = (int)IO_Write(lpData, DataType[(int)type], n);
 	return ret;
 }
@@ -687,6 +687,8 @@ TiffTagPtr Tiff::CreateTag(DWORD SigType, DWORD n, DWORD value, IO_INTERFACE* IO
 			break;
 
 		//Skip Tag for the time being, Just for test.
+		//case PageName:
+		//	break;
 		//case XML_Data:
 		//case IPTC:
 		//case Photoshop:
@@ -1270,34 +1272,11 @@ int Tiff::CaculateOffset()
 	//for (auto pos = TiffTag_Begin; pos != TiffTag_End; ++pos)
 	for (const auto& pos : m_IFD.m_TagList)
 	{
-		bool Offset = false;
-		switch (pos->type)
+		int DataSize = DataType[(int)pos->type] * pos->n;
+		if (DataSize > 4)
 		{
-		case (SBYTE):
-		case (UndefineType):
-		case (SShort):
-		case (SLong):Offset = true; break;
-		default:break;
-		}
-
-		if(pos->n > 1)
-			Offset = true;
-
-		int DataSize;
-		if (Offset == true)
-		{//Now Just for Icc profile
-			DataSize = DataType[(int)pos->type] * pos->n;
 			pos->value = OffsetValue;
 			OffsetValue += DataSize;
-		}
-		else
-		{
-			DataSize = DataType[(int)pos->type] * pos->n;
-			if (DataSize > 4)
-			{
-				pos->value = OffsetValue;
-				OffsetValue += DataSize;
-			}
 		}
 	}
 
