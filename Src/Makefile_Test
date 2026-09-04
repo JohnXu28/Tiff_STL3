@@ -3,8 +3,7 @@ include ../Makefile.inc
 Module = Tiff_STL3
 LIB = lib$(Module).a
 CPPS = \
-LZW_Perplexity.cpp \
-LZW.cpp \
+LZW_Integrated.cpp \
 Tiff_STL3.cpp \
 
 OBJS = $(CPPS:.cpp=.o)
