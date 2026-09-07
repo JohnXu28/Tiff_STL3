@@ -2,6 +2,7 @@
 #include <stdlib.h>   // For _MAX_PATH definition
 #include <stdio.h>
 #include <malloc.h>
+#include <cstring>
 
 struct TAG
 {
@@ -64,6 +65,7 @@ int CheckTag(TAG* tag, int Offset, FILE* Tif_Src)
 	int size = DataType[tag->type] * tag->n;
 
 	if ((tag->tag == 273) || (tag->tag == 279))//special case StripOffsets, StripByteCounts
+	{
 		if (size > 4)
 		{//Reset StripOffset data
 			int i = 0, n = tag->n;
@@ -90,6 +92,7 @@ int CheckTag(TAG* tag, int Offset, FILE* Tif_Src)
 		else
 			if (tag->tag == 273)
 				tag->value += Offset;
+	}
 
 	if (size > 4)
 		tag->value += Offset;

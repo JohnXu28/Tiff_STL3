@@ -1,13 +1,11 @@
-include ../../Makefile.inc
-LIB_DIR  := $(CURDIR)/../../Lib
+include ../Makefile.inc
 
 Module = Tiff_STL3
+LIB = lib$(Module).a
 CPPS = \
+LZW_Integrated.cpp \
 Tiff_STL3.cpp \
-LZW_Integrated.cpp
 
-#OBJS : replace *.cpp to *.o
-#OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 OBJS = $(CPPS:.cpp=.o)
 DEPS = $(CPPS:.cpp=.d)
 
@@ -17,17 +15,23 @@ all: test
 
 #---------------------------------------------------------
 # Test build
-test: CXXFLAGS += -I../..
-test: $(OBJS)
+test: CXXFLAGS +=
+test: $(LIB)
 	@echo "======= $(Module): TEST mode ======="
-	$(CP) *.o $(LIB_DIR)
+	$(CP) $(LIB) $(LIB_DIR)
+
+#---------------------------------------------------------
+# Static library
+$(LIB): $(OBJS)
+	@echo "======= $(Module): Archiving $(LIB) ======="
+	$(AR) $@ $^
 
 #---------------------------------------------------------
 # Release build
-release: CXXFLAGS += -I../..
-release: clean $(OBJS)
+release: CXXFLAGS +=
+release: clean $(LIB)
 	@echo "======= $(Module): RELEASE mode ======="
-	$(CP) *.o $(LIB_DIR)
+	$(CP) $(LIB) $(LIB_DIR)
 
 #---------------------------------------------------------
 # Common compile rule
@@ -40,4 +44,4 @@ release: clean $(OBJS)
 #---------------------------------------------------------
 clean:
 	@echo "Cleaning object files..." $(Module)
-	$(RM) *.o *.d
+	$(RM) *.o *.d $(LIB)

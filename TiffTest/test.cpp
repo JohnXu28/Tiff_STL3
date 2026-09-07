@@ -2,8 +2,11 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#ifdef _WINDOWS
 #include <Windows.h>
-#include "..\Src\Tiff_STL3.h"
+#endif // _WINDOWS
+
+#include "Tiff_STL3.h"
 //#include <Lch/cam02.h>
 #include "Utility.h"
 using namespace std;
@@ -145,7 +148,7 @@ int LZW_Compress_Test(_TCHAR* argv[])
 	CTiff Tiff; 
 	Tiff.ReadFile(argv[1]);	
 	//Tiff.SaveFile("LZW_Decompress_Out.tif");
-	Tiff.SaveFile("LZW_Compress_Out.tif", 1);
+	Tiff.SaveFile("LZW_Compress_Out.tif", 0);
 
 	return 0;
 }
@@ -185,7 +188,11 @@ void Halftone_Test()
 }
 #endif //HALFTONE_TEST
 
+#ifdef _WINDOWS
 void Test(int argc, _TCHAR* argv[])
+#else
+void Test(int argc, char* argv[])
+#endif // _WINDOWS
 {
 #if	Tag_Test
 	Tag_Test_Construct();
@@ -227,5 +234,5 @@ void Test(int argc, _TCHAR* argv[])
 #if	HALFTONE_TEST
 	Halftone_Test();
 #endif //HALFTONE_TEST
-	//cout << "test end" << endl;
+	//cout << "test end" << endl;	
 }

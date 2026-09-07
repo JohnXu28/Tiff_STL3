@@ -1,4 +1,5 @@
-/*___________________________________  Tiff_STL3.h   ___________________________________*/
+#pragma once
+/*___________________________________  Tiff_STL4.h   ___________________________________*/
 
 /*       1         2         3         4         5         6         7         8        */
 /*34567890123456789012345678901234567890123456789012345678901234567890123456789012345678*/
@@ -52,8 +53,8 @@ Sender<-Receiver [label="Ack()", URL="\ref Ack()", ID="1"];
 #include <string>
 #include <iostream>
 using namespace std;
-#include "Tiff_STL3.h" //Has claimed the namespace...
-//using namespace AV_Tiff_STL3; Don't need anymore...
+#include "Tiff_STL4.h" //Has claimed the namespace...
+//using namespace AV_Tiff_STL4; Don't need anymore...
 main(int argc, _TCHAR* argv[]))
 {
 	SPTIFF lpIn = make_shared<CTiff>("Input.tif");
@@ -90,10 +91,13 @@ main(int argc, _TCHAR* argv[]))
 #define _TIFF_STL3_
 
 #if defined(SYS_INFO)
+//#include <SysInfo/SysInfo.h>
 #include "../../SysInfo/SysInfo.h"
 #else
 #include "SysInfo.h"
 #endif //SYS_INFO
+
+typedef const char* LPCSTR;
 
 /***************************************************************************
 Virtual IO
@@ -157,6 +161,7 @@ Virtual IO
 #endif //WIN32
 
 #define LZW		1 //LZW Compression
+//Avision LZW is faster than LZW_Perplexity, But LZW_Perplexity has better compress ratio, 
 #define MAXTAG 40
 
 #include <vector>
@@ -173,15 +178,15 @@ using namespace std;
 
 /**
 * @ingroup Tiff_Module
-* @namespace	AV_Tiff_STL3
+* @namespace	AV_Tiff_STL4
 * @brief		Service of CTiff image operation.
 *
 * @Detailed
 * When you using this library, just include the header file.\n
-* Header file has already declaire the namespace AV_Tiff_STL3.\n
+* Header file has already declaire the namespace AV_Tiff_STL4.\n
 * Interface for the CTiff_STL class.\n
 */
-namespace AV_Tiff_STL3 {
+namespace AV_Tiff_STL4 {
 
 	/***************************************************************************
 	***************************************************************************/
@@ -394,33 +399,23 @@ namespace AV_Tiff_STL3 {
 		static int ExifBufSize;//Because the bufsize is out of control, type is long, n is always 1.
 	};
 
-	class TAG//funtor, For find_if
-	{
-	public:
-		TAG(TiffTagSignature signature) { Signature = signature; };
-		bool operator()(const TiffTag* Tag) const { return Tag->tag == Signature; }
-		TiffTagSignature Signature;
-	};
-
 #if SMART_POINTER
 	//typedef shared_ptr<TiffTag> TiffTagPtr;
 	using TiffTagPtr = shared_ptr<TiffTag>;
+	using TagListItem = TiffTagPtr;
 #else
-	typedef TiffTag* TiffTagPtr;
+	typedef TiffTag* TiffTagPtr;					//External handle, observer only.
+	using TagListItem = std::unique_ptr<TiffTag>;	//The tag list owns the tags.
 #endif //SMART_POINTER
 
-	//	typedef vector<TiffTagPtr> TagList;
-	//	typedef TagList::iterator TiffTag_iter;
 #ifdef FIXED_VECTOR
-	using  TagList = FixedVector<TiffTagPtr, MAXTAG>;
+	using  TagList = FixedVector<TagListItem, MAXTAG>;
 #else
-	using  TagList = vector<TiffTagPtr>;
+	using  TagList = vector<TagListItem>;
 #endif //FIXED_VECTOR
 
 	using  TiffTag_iter = TagList::iterator;
 
-#define TiffTag_Begin m_IFD.m_TagList.begin()
-#define TiffTag_End m_IFD.m_TagList.end()	
 
 	/**
 	* @class Tag_equal
@@ -487,23 +482,26 @@ namespace AV_Tiff_STL3 {
 		int			CaculateOffset();
 		Tiff_Err	ReadImage(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset(IO_INTERFACE* IO);
+		Tiff_Err	ResetStripTags(LPBYTE lpImageBuf, DWORD TotalBytes, bool SetCompression = false);
 
 		template<class T>
 		void		Pack(int Width, int Length);
 
-		//Write Image
-		Tiff_Err	WriteHeader(IO_INTERFACE* IO);
-		Tiff_Err	WriteIFD(IO_INTERFACE* IO);
-		Tiff_Err	WriteTagData(IO_INTERFACE* IO);
-		Tiff_Err	WriteImageData(IO_INTERFACE* IO);
-		Tiff_Err	WriteData_Exif_IFD_Tag(IO_INTERFACE* IO);
+		//Write Image: build the file image in memory, then write it once.
+		Tiff_Err	BuildFileImage(vector<BYTE>& img, int ImageMode);
 
 #if LZW
 		Tiff_Err	ReadSingleStripOffset_LZW(IO_INTERFACE* IO);
 		Tiff_Err	ReadMultiStripOffset_LZW(IO_INTERFACE* IO);
-		Tiff_Err	LZW_Compress();		
-		Tiff_Err	WriteImageData_LZW(IO_INTERFACE* IO);
+		Tiff_Err	ReadLzwStrips(IO_INTERFACE* IO, bool SingleStrip);
+		Tiff_Err	LZW_Compress();
 #endif //LZW
+
+		//CCITT G3 (T.4) / G4 (T.6), 1 bit per pixel. Compression tag 3 / 4.
+		Tiff_Err	ReadG3G4Strips(IO_INTERFACE* IO, bool SingleStrip, int Compression);
+		Tiff_Err	G3G4_Compress(int Compression);
+		Tiff_Err	SaveTiff_G3G4(IO_INTERFACE* IO, int Compression);
+		Tiff_Err	WriteImageData_G3G4(IO_INTERFACE* IO);
 
 		DWORD			m_IFD_Offset;
 		IFD_STRUCTURE	m_IFD;
@@ -512,6 +510,15 @@ namespace AV_Tiff_STL3 {
 
 	/***************************************************************************
 	***************************************************************************/
+	/*
+	 * CTiff vs Tiff:
+	 *   Tiff  : low level reader/writer, throws exceptions on error paths.
+	 *   CTiff : convenience layer, never throws (returns Tiff_Err codes),
+	 *           allocates the image buffer in CreateNew and caches
+	 *           m_Width/m_Length/m_lpImageBuf for direct row access.
+	 * SaveFile's second parameter is the compression id: 0 none, 1 LZW,
+	 * 3 G3, 4 G4.
+	 */
 	class CTiff :public Tiff
 	{
 	public:
@@ -523,6 +530,7 @@ namespace AV_Tiff_STL3 {
 		virtual		Tiff_Err	ReadTiff(IO_INTERFACE* IO);
 		virtual		Tiff_Err	ReadFile(LPCSTR FileName);
 		virtual		Tiff_Err	ReadFile(string FileName);
+		virtual		Tiff_Err	SaveFile(LPCSTR FileName, int lzw = 0);
 
 #if defined(VIRTUAL_IO) | defined(VIRTUAL_IO_STL)
 		virtual		Tiff_Err ReadMemory(LPBYTE Buffer, size_t BufSize);
@@ -536,6 +544,8 @@ namespace AV_Tiff_STL3 {
 		Tiff_Err	SetTagValue(const TiffTagSignature Signature, DWORD Value);
 
 		//operation
+		//Row access comes as a template plus BYTE/WORD overloads because the
+		//project is pinned to C++11 (no if constexpr to collapse them).
 		template<class T>
 		int	GetRow(T* lpBuf, int Line, int pixel);
 		int	GetRow(LPBYTE lpBuf, int Line, int pixel = 0);
@@ -587,9 +597,70 @@ namespace AV_Tiff_STL3 {
 		int m_Width, m_Length, m_SamplesPerPixel, m_BitsPerSample, m_BytesPerLine, m_Resolution;
 		LPBYTE m_lpImageBuf;
 	};
-}//namespace AV_Tiff_STL3 or AV_Tiff
+	//************************************************************
+	// Byte swap and Lab encode/decode helpers.
+	//*************************************************************
+#ifndef SWAP
+	inline DWORD SwapDWORD(const DWORD x)
+	{
+		return (((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | (x << 24));
+	}
 
-using namespace AV_Tiff_STL3;
+	inline WORD SwapWORD(const WORD x)
+	{
+		return (((x & 0xFF) << 8) | (x >> 8));
+	}
+#endif //SWAP
+
+	inline WORD Tiff_encode_L(double data)
+	{//range 0 ~ 100
+		int intPart, rationPart;
+
+		if (data < 0)
+			return 0x0;
+		else
+		{
+			intPart = (int)data;
+			rationPart = (int)((data - intPart) * 256 + 0.5);
+			return (0xFF00 & (int)(intPart * 255 / 100 + 0.5) << 8) | (0xFF & rationPart);
+		}
+	}
+
+	inline WORD Tiff_encode_ab(double data)
+	{
+		return (short)(data * 256);
+	}
+
+	inline double Tiff_decode_L(WORD data)
+	{
+		return (double)data * 100 / 65535.0;
+	}
+
+	//bug???
+	inline double Tiff_decode_ab(WORD data)
+	{
+		if (data < 0x8000)
+			return (short)data / 256.0;
+		else
+			return (data - 0xFFFF) / 256.0;
+	}
+
+	inline double Tiff_decode_L_8(BYTE data)
+	{
+		return (double)data * 100 / 255.0;
+	}
+
+	inline double Tiff_decode_ab_8(BYTE data)
+	{
+		if (data < 128)
+			return (double)data;
+		else
+			return data - 255;
+	}
+
+}//namespace AV_Tiff_STL4 or AV_Tiff
+
+using namespace AV_Tiff_STL4;
 
 //For fix C26812, for VS2019
 #define NullTag								TiffTagSignature::eNullTag

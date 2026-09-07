@@ -1,9 +1,6 @@
 #include "stdafx.h"
-#include <Sysinfo\SysInfo.h>
-#include <Sysinfo\Config.h>
-#include <Sysinfo\CTime.h>
 #include "BMP.h"
-#include <Tiff_STL3\Src\Tiff_STL3.h>
+
 #include <fstream>
 #include <stdio.h>
 #include <iostream>

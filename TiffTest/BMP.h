@@ -1,8 +1,35 @@
 #pragma once
-#include <Tiff_STL3\Src\Tiff_STL3.h>
-//#include <straw\Process\Process.h>
 
-#include <WinGDI.h>
+#include <Tiff_STL3/Include/Tiff_STL3.h>
+#ifdef _WINDOWS
+	#include <WinGDI.h>
+#else
+typedef long LONG;
+typedef uint16_t    WORD;
+typedef uint32_t    DWORD;
+
+typedef	struct tagBITMAPFILEHEADER {
+		WORD    bfType;
+		DWORD   bfSize;
+		WORD    bfReserved1;
+		WORD    bfReserved2;
+		DWORD   bfOffBits;
+	} BITMAPFILEHEADER, *PBITMAPFILEHEADER;
+
+typedef struct tagBITMAPINFOHEADER {
+	DWORD      biSize;
+	LONG       biWidth;
+	LONG       biHeight;
+	WORD       biPlanes;
+	WORD       biBitCount;
+	DWORD      biCompression;
+	DWORD      biSizeImage;
+	LONG       biXPelsPerMeter;
+	LONG       biYPelsPerMeter;
+	DWORD      biClrUsed;
+	DWORD      biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+#endif //_ WINDOWS
 class BMP 
 {
 public:
@@ -19,7 +46,7 @@ public:
 private:
 	void BGR2RGB(LPBYTE lpIn, LPBYTE lpOut, int Size);
 	void RGB2BGR(LPBYTE lpIn, LPBYTE lpOut, int Size);
-	string m_FileName;
+	string m_FileName;	
 	BITMAPFILEHEADER m_Header;
 	BITMAPINFOHEADER m_Info;
 };

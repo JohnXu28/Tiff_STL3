@@ -1,0 +1,38 @@
+include ../Makefile.inc
+
+BIN = TiffTest
+CPPS = TiffTest.cpp \
+       BMP.cpp \
+       test.cpp \
+       Tiff_Append.cpp \
+       Utility.cpp
+
+OBJS = $(CPPS:.cpp=.o)
+
+SYS_INCLUDE = -I../Src -I../Include -I../..
+
+CXXFLAGS += $(SYS_INCLUDE)
+
+#LDLIBS += -lAVCMS -L.
+LDLIBS += -ldl -L. -lTiff_STL3
+
+.PHONY: all release clean
+
+all: $(BIN)
+
+#================================================================
+$(BIN): $(OBJS) | libTiff_STL3.a
+	@echo "*****************************TiffTest:link************************"
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+#================================================================
+release: $(BIN)
+	@echo "*****************************TiffTest:Release************************"
+
+#================================================================
+clean:
+	@echo "*****************************TiffTest:clean************************"
+	$(RM) $(OBJS) $(BIN)

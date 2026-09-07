@@ -1,8 +1,389 @@
-// LZWCodec.cpp
+/******************************************************************************
+**  LZW_Integrated.cpp
+**  --------------------------------------------------------------------------
+**  Integrated LZW codecs for Tiff_STL3, consolidated from:
+**    - LZW.cpp             : Lzw class (TIFF LZW encode, Avision style)
+**    - LZW_Perplexity.cpp  : Lzw_Perplexity class (TIFF LZW decode with
+**                            LSB/MSB bit-order auto detection, hash encode)
+**
+**  The legacy file based lzw_encode/lzw_decode (V.Antonenko) implementation
+**  and its unused global buffers were removed (dead code, nothing
+**  referenced them).
+******************************************************************************/
 #include "stdafx.h"
-#include "Lzw_Perplexity.h"
+#include "../Include/LZW.h"
+#include "../Include/LZW_Perplexity.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <memory.h>
 #include <string.h>
-#include <iostream>
+
+//**************************************************************************************************************//
+//																												//
+//												Lzw class														//
+//																												//
+//**************************************************************************************************************//
+Lzw::Lzw() 
+{
+	m_lpEncodeBuf = nullptr;
+	m_EncodeSize = 0;
+}
+Lzw::~Lzw()
+{
+	if (m_lpEncodeBuf)
+	{
+		delete[] m_lpEncodeBuf;
+		m_lpEncodeBuf = nullptr;
+	}
+	m_EncodeSize = 0;
+}
+
+void Lzw::init()
+{
+	table_reset();
+
+	pre_index = 0;
+	pre_size = 0;
+}
+
+void Lzw::table_reset()
+{
+	for (int i = 0; i < 258; ++i)
+	{
+		code_list[i].pre = NULL_CODE;
+		code_list[i].head = NULL_CODE;
+		code_list[i].next = NULL_CODE;
+		code_list[i].str = i;
+		code_list[i].str_size = 1;
+	}
+
+	code_size = 258;
+
+	encode_bit = LZW_MIN_BIT;
+}
+
+void Lzw::deinit()
+{
+}
+
+int Lzw::AddCode(int pre_code, int code)
+{
+	code_list[code_size].pre = pre_code;
+	code_list[code_size].next = code_list[pre_code].head;
+	code_list[code_size].head = NULL_CODE;
+	code_list[code_size].str = code;
+	code_list[code_size].str_size = code_list[pre_code].str_size + 1;
+
+	code_list[pre_code].head = code_size;
+	++code_size;
+
+	return code_size - 1;
+}
+
+int Lzw::FindStr(int pre_code, int code)
+{
+	if (pre_code == NULL_CODE)
+	{
+		return code;
+	}
+
+	int temp;
+	for (temp = code_list[pre_code].head; temp != NULL_CODE; temp = code_list[temp].next)
+	{
+		if (code_list[temp].str == code)
+		{
+			return temp;
+		}
+	}
+
+	return NULL_CODE;
+}
+
+int Lzw::WriteCode(UINT8** outbuf, UINT16 index)
+{
+	UINT32 write_size = 0;
+	UINT8 code;
+	UINT8* buf = *outbuf;
+
+	UINT16 current_index = index;
+	UINT16 current_size = encode_bit;
+
+	while ((pre_size + current_size) > 7)
+	{
+		if (pre_size > 7)
+		{
+			code = (pre_index >> (pre_size - 8)) & 0xFFFF;
+			buf[write_size++] = code;
+
+			pre_size -= 8;
+		}
+		else
+		{
+			code = ((pre_index << (8 - pre_size)) & 0xFFFF) + ((current_index >> (current_size - (8 - pre_size))) & 0xFFFF);
+			buf[write_size++] = code;
+
+			current_size -= 8 - pre_size;
+			pre_size = 0;
+		}
+	}
+
+	*outbuf += write_size;
+
+	pre_index = current_index;
+	pre_size = current_size;
+
+	return write_size;
+}
+
+int Lzw::WriteCodeFlush(UINT8** outbuf)
+{
+	UINT32 write_size = 0;
+
+	if (pre_size > 0)
+	{
+		UINT8 code;
+		UINT8* buf = *outbuf;
+
+		code = ((pre_index << (8 - pre_size)) & 0xFFFF);
+		buf[write_size++] = code;
+
+		*outbuf += write_size;
+	}
+
+	return write_size;
+}
+
+int Lzw::CheckEncodeListFull()
+{
+	if (code_size == MAX_DIC_SIZE)
+	{
+		return 1;
+	}
+
+	if (code_size == (1 << encode_bit))
+	{
+		++encode_bit;
+	}
+
+	return 0;
+}
+
+int Lzw::EncodeSize(UINT32 inbuf_size)
+{
+	m_lpEncodeBuf = new UINT8[inbuf_size * 2];
+	m_EncodeSize = 0;
+	return 0;
+}
+
+int Lzw::Encode(UINT8* inbuf, UINT8* outbuf, UINT32 inbuf_size)
+{
+	init();
+
+	UINT8* pixel = inbuf;
+	UINT8* end_pixel = inbuf + inbuf_size;
+	UINT8* encode_buf = outbuf;
+
+	int code;
+	int pre_code = NULL_CODE;
+
+	UINT32 encode_size = 0;
+
+	encode_size += WriteCode(&encode_buf, CLEAR_CODE);
+
+	while (pixel < end_pixel)
+	{
+		code = FindStr(pre_code, *pixel);
+
+		if (code != NULL_CODE)
+		{
+			pre_code = code;
+		}
+		else
+		{
+			AddCode(pre_code, *pixel);
+
+			encode_size += WriteCode(&encode_buf, pre_code);
+
+			if (CheckEncodeListFull())
+			{
+				encode_size += WriteCode(&encode_buf, CLEAR_CODE);
+
+				table_reset();
+				pre_code = NULL_CODE;
+
+				continue;
+			}
+
+			pre_code = *pixel;
+		}
+
+		++pixel;
+	}
+
+	encode_size += WriteCode(&encode_buf, pre_code);
+	encode_size += WriteCode(&encode_buf, END_CODE);
+	encode_size += WriteCodeFlush(&encode_buf);
+
+	deinit();
+
+	return encode_size;
+}
+
+int Lzw::ReadCode(UINT8** inbuf)
+{
+	int index;
+	UINT8 current_index;
+	UINT32 current_size;
+
+	while (1)
+	{
+		current_index = *(*inbuf)++;
+		current_size = 8;
+
+		if ((pre_size + current_size) >= encode_bit)
+		{
+			if (pre_size < 8)
+			{
+				pre_index = ((pre_index << (8 - pre_size)) & 0xFF) >> (8 - pre_size);
+			}
+
+			index = (pre_index << (encode_bit - pre_size)) + (current_index >> (current_size - (encode_bit - pre_size)));
+
+			pre_size = current_size - (encode_bit - pre_size);
+			pre_index = current_index;
+
+			break;
+		}
+		else
+		{
+			pre_index = ((pre_index << (8 - pre_size)) & 0xFF) >> (8 - pre_size);
+
+			pre_size += current_size;
+			pre_index = (pre_index << current_size) + current_index;
+			continue;
+		}
+	}
+
+	return index;
+}
+
+int Lzw::WriteValue(UINT8** outbuf, int code)
+{
+	int write_size = code_list[code].str_size;
+	int write_pos = write_size - 1;
+	int temp_code = code;
+
+	do {
+		(*outbuf)[write_pos--] = code_list[temp_code].str;
+		temp_code = code_list[temp_code].pre;
+	} while (temp_code != NULL_CODE);
+
+	*outbuf += write_size;
+
+	return write_size;
+}
+
+int Lzw::GetFirstCode(int code)
+{
+	int first = code;
+	while (code_list[first].pre != NULL_CODE)
+		first = code_list[first].pre;
+
+	return first;
+}
+
+int Lzw::CheckDecodeListFull()
+{
+	if ((code_size + 1) == (1 << encode_bit))
+		++encode_bit;
+
+	return 0;
+}
+
+int Lzw::Decode(UINT8* inbuf, UINT8* outbuf, UINT32 outbuf_size)
+{
+	UINT8* tempInBuf = inbuf;
+	int code, pre_code = NULL_CODE;
+
+	init();
+
+	while (1)
+	{
+		code = ReadCode(&tempInBuf);
+
+		if (code == 256)
+		{
+			table_reset();
+
+			code = ReadCode(&tempInBuf);
+			WriteValue(&outbuf, code);
+			pre_code = code;
+		}
+		else if (code == 257)
+		{
+			break;
+		}
+		else
+		{
+			if (code < code_size)
+			{
+				AddCode(pre_code, GetFirstCode(code));
+				WriteValue(&outbuf, code);
+				pre_code = code;
+			}
+			else
+			{
+				int new_code = AddCode(pre_code, GetFirstCode(pre_code));
+				WriteValue(&outbuf, new_code);
+				pre_code = code;
+			}
+		}
+
+		CheckDecodeListFull();
+	}
+
+	deinit();
+
+	return 0;
+}
+
+void Lzw::PredicatorDecode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel)
+{
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	for (UINT32 i = 0; i < length; ++i)
+	{
+		UINT8* pixel = inbuf + i * width * channel;
+		for (UINT32 j = 1; j < width; ++j)
+		{
+			for (UINT32 k = 0; k < channel; ++k)
+			{
+				pixel[k + channel] += pixel[k];
+			}
+			pixel += channel;
+		}
+	}
+}
+
+void Lzw::PredicatorEncode(UINT8* inbuf, UINT32 width, UINT32 length, UINT32 channel)
+{
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	for (UINT32 i = 0; i < length; ++i)
+	{
+		UINT8* pixel = inbuf + i * width * channel + (width - 2) * channel;
+		for (UINT32 j = width - 1; j > 0; --j)
+		{
+			for (UINT32 k = 0; k < channel; ++k)
+			{
+				pixel[k + channel] -= pixel[k];
+			}
+			pixel -= channel;
+		}
+	}
+}
 
 #define TIFF_LZW_MAX_BITS  12
 #define TIFF_LZW_MAX_DICT  4096
@@ -16,17 +397,9 @@
 #define LZW_EOI       257
 #define LZW_FIRST     258
 
-struct LZWEntry {
-    uint16_t prefix;
-    uint8_t  suffix;
-};
 
-struct LZWDict {
-    LZWEntry entry[TIFF_LZW_MAX_DICT];
-    uint16_t size;
-    uint8_t  codeBits;
-    uint16_t nextLimit;
-};
+
+
 
 struct BitReader {
     const uint8_t* buf;
@@ -35,7 +408,7 @@ struct BitReader {
     int bitPos;
 };
 
-Entry dict[LZW_MAX_DICT];
+//Entry dict[LZW_MAX_DICT];
 
 static inline void BR_Reset(BitReader* br)
 {
@@ -162,7 +535,7 @@ bool Lzw_Perplexity::Decode(
     if (!DetectBitOrder(in, inSize, &order))
         return false;
 
-    BitReader br = { in, inSize, 0, 0 };  // ä½¿ç”¨ ReadBitsMSB
+    BitReader br = { in, inSize, 0, 0 };  // ¨Ï¥Î ReadBitsMSB
     bool (*ReadBits)(BitReader*, int, uint16_t*) =
         (order == LZW_LSB_FIRST) ? ReadBitsLSB : ReadBitsMSB;
 
@@ -260,7 +633,7 @@ void Lzw_Perplexity::PredicatorDecode(
         uint8_t* row = buf + y * rowBytes;
 
         if (bitsPerSample == 8) {
-            // Your original implementation, but with the step size adjusted: measured in â€œone pixelâ€ units
+            // Your original implementation, but with the step size adjusted: measured in ¡§one pixel¡¨ units
             for (int x = bytesPerPixel; x < rowBytes; ++x) {
                 row[x] = (uint8_t)(row[x] + row[x - bytesPerPixel]);
             }
@@ -429,7 +802,7 @@ static void LZWEnc_Insert(
         h++;
         if (h == LZW_HASH_SIZE) h = 0;
         if (h == start) {
-			// hash fullï¼Œjust clear it and start over (should not happen if hash size is reasonably larger than dict size)
+			// hash full¡Ajust clear it and start over (should not happen if hash size is reasonably larger than dict size)
             return;
         }
     }
@@ -542,8 +915,9 @@ void Lzw_Perplexity::PredicatorEncode(
         uint8_t* row = buf + y * rowBytes;
 
         if (bitsPerSample == 8) {
-            // Horizontal difference in bytes
-            for (int x = bytesPerPixel; x < rowBytes; ++x) {
+            // Horizontal difference in bytes, backward so the previous pixel
+            // is not yet encoded (PredicatorDecode accumulates forward).
+            for (int x = rowBytes - 1; x >= bytesPerPixel; --x) {
                 row[x] = (uint8_t)(row[x] - row[x - bytesPerPixel]);
             }
         }
