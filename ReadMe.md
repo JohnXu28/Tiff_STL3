@@ -1,153 +1,154 @@
-# Tiff_STL3 Project
+# Tiff_STL3 / Tiff_STL4 — TIFF Image Module
 
-## Static Library Overview
-
-AppWizard has created this Tiff_STL3 library project for you. This file contains a summary of what you will find in each of the files that make up your Tiff_STL3 application.
-
----
-
-## Project Files
-
-### Tiff_STL3.vcxproj
-
-This is the main project file for VC++ projects generated using an Application Wizard. It contains information about the version of Visual C++ that generated the file, and information about the platforms, configurations, and project features selected with the Application Wizard.
-
-### Tiff_STL3.vcxproj.filters
-
-This is the filters file for VC++ projects generated using an Application Wizard. It contains information about the association between the files in your project and the filters. This association is used in the IDE to show grouping of files with similar extensions under a specific node (for e.g. ".cpp" files are associated with the "Source Files" filter).
+> **Status**: This module has been fully refactored (A1–A10, B1–B5, C1–C4) and
+> upgraded/renamed to **Tiff_STL4**. New code should use `Tiff_STL4.h` /
+> namespace `AV_Tiff_STL4`; the legacy `Tiff_STL3.h` / `AV_Tiff_STL3` remains
+> as a compatibility shim, so existing consumers (Icc4, ColorTools, Descreen,
+> Dithering, …) work **without modification**. See `refactor.md` in the
+> repository root for the full refactoring log.
 
 ---
 
-## Core Source Files
+## Feature Overview
 
-### StdAfx.h, StdAfx.cpp
-
-These files are used to build a precompiled header (PCH) file named `Tiff_STL3.pch` and a precompiled types file named `StdAfx.obj`.
-
-### Tiff_STL3.cpp, Tiff_STL3.h
-
-These files are the core of the tiff class. Basically, you just need these two files.
-
-> **Note:** If your compiler supports C++11, turn on the `ENABLE_SHARED_POINTER` define.
-
-### Virtual_IO.cpp, Virtual_IO.h
-
-If you don't define `VIRTUAL_IO` or `VIRTUAL_IO_STL`, you don't need these files. They are used for testing IO streams.
-
-### Tiff_c.cpp and Version_C Files
-
-These files were written a long time ago but are easy to understand.
+| Feature | Read | Write | Notes |
+|---------|------|-------|-------|
+| Uncompressed | ✅ | ✅ | Single/multi strip, Planar 0/1/2 (planar reads are auto-`Pack`ed to RGBRGB) |
+| LZW (Compression=5) | ✅ | ✅ | Read: `Lzw_Perplexity` (auto LSB/MSB bit-order detection); write: `Lzw` + Predictor=2 (8-bit) |
+| **G3 / G4 (Compression=3/4)** | ✅ | ✅ | 1 bit/pixel. G3 1D MH + 2D (EOL/fill bits/tag bit), G4 MMR (V/H/Pass); code tables from `LibTiff/t4.h` (ITU standard) |
+| 16-bit / 8-bit / 1-bit | ✅ | ✅ | 1-bit used by the G3/G4 paths |
+| ICC Profile tag | ✅ | ✅ | `SetIccProfile` / `SaveIccProfile` / `RemoveIcc` |
+| Predictor (horizontal differencing) | ✅ | ✅ | 8-bit, tag added automatically on save |
+| Memory I/O | ✅ | ✅ | `ReadMemory` / `SaveMemory` (requires the matching IO macro branch) |
+| Multi-strip read | ✅ | — | Strip tags normalized after read (RowsPerStrip=Length, Compression=1) |
 
 ---
 
-## TiffTest Project
+## File Layout
 
-### TiffTest.cpp
-
-Turn on the `Tiff_Test` define to test all TIFF files in the "TestImg" folder.
-
-**Test Procedure:**
-1. Read TIFF files and clone files into Output folder (example: `3RGB8.tif` → `3RGBOut.tif`)
-2. Perform copy test (example: `3RGB8.tif` → `3RGBOut2.tif`)
-3. Read `3RGB8Out.tif` and `3RGB8Out2.tif`, and verify that these two files are equivalent
-
----
-
-## General Notes
-
-### Limitations and Design
-
-- **Compression:** This class support LZW compression.
-- **Purpose:** This TIFF class is designed for image processing and ICC color management testing.
-- **Use Cases:** Descreen, color conversion (RGB, Lab, YCC [8 or 16-bit] → RGB, Lab, CMYK [8 or 16-bit]), dithering, conversion to PS/PDF, etc.
-- **Output:** Most of the time, the final output is sent to print, so compression is not desired.
-
-For examples, refer to `TiffTest.cpp` or `Tiff_STL3.h`.
-
----
-
-## Test Images
-
-| # | Type | Description |
-|---|------|-------------|
-| 0 | NULL | Pure empty files |
-| 1 | LineArt | 1 channel, 1 bit |
-| 2 | gray8 | Gray, 8 bits |
-| 3 | RGB8 | R,G,B color image, 8 bits, interlaced |
-| 4 | CMYK8 | C,M,Y,K color image, 8 bits, interlaced |
-| 5 | Lab8 | Lab color image, 8 bits, interlaced |
-| 6 | gray16 | Gray, 16 bits, interlaced |
-| 7 | RGB16 | R,G,B color image, 16 bits, interlaced |
-| 8 | CMYK16 | C,M,Y,K color image, 16 bits, interlaced |
-| 9 | Lab16 | Lab color image, 16 bits, interlaced |
-| 10 | RGB82 | R,G,B color image, 8 bits, non-interlaced |
-| 11 | RGB162 | R,G,B color image, 16 bits, non-interlaced |
-| 12 | CMYK82 | C,M,Y,K color image, 8 bits, non-interlaced |
-| 13 | CMYK162 | C,M,Y,K color image, 16 bits, non-interlaced |
-| 14 | Lab82 | Lab color image, 8 bits, non-interlaced |
-| 15 | Lab162 | Lab color image, 16 bits, non-interlaced |
-| 16 | MultiStrip | Multiple Strip Image |
-| 17 | Ycc8 | Special file format for image processing simulation |
-| 18 | CLR68 | 6 channels, 8 bits, embedded ICC profile |
-| 19 | CLR616 | 6 channels, 16 bits, embedded ICC profile |
-| 20 | IccLab8 | Lab, 8 bits, embedded ICC profile |
-| 21 | IccLab16 | Lab, 16 bits, embedded ICC profile |
-| 22 | Alpha8 | Alpha channel, 8 bits |
-| 23 | Alpha16 | Alpha channel, 16 bits |
-| 24 | Lzw8 | RGB, 8 bits, LZW compression |
-| 25 | Lzw16 | RGB, 16 bits, LZW compression |
-| 26 | Lzw_Gray8 | Gray, 8 bits, LZW compression |
-| 27 | Lzw_Gray16 | Gray, 16 bits, LZW compression |
-| 28 | Lzw_SWOP8 | SWOP, 8 bits, LZW compression |
-| 29 | Lzw_SWOP16 | SWOP, 16 bits, LZW compression* |
-| 30 | Lzw_Lab8 | Lab, 8 bits, LZW compression |
-| 31 | Lzw_Lab16 | Lab, 16 bits, LZW compression |
-
-> *Note: Compression size is larger than the original size
-
----
-
-## Example Usage
-
-```cpp
-#include "stdafx.h"
-#include <string>
-#include <iostream>
-using namespace std;
-#include "Tiff_STL3.h" // Has claimed the namespace...
-// using namespace AV_Tiff_STL3; // Don't need anymore...
-
-int main(int argc, _TCHAR* argv[])
-{
-    SPTIFF lpIn = make_shared<CTiff>("Input.tif");
-
-    int Width = lpIn->GetTagValue(ImageWidth);
-    int Length = lpIn->GetTagValue(ImageLength);
-    int resolution = lpIn->GetTagValue(XResolution);
-    int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel);
-    int bitspersample = lpIn->GetTagValue(BitsPerSample);
-
-    SPTIFF lpOut = make_shared<CTiff>(Width, Length, resolution, samplesPerPixel, bitspersample);
-
-    int BytesPerLine = Width * samplesPerPixel * bitspersample / 8;
-    LPBYTE lpBuf = new BYTE[BytesPerLine];
-
-    for(int i = 0; i < Length; i++)
-    {
-        lpIn->GetRow(lpBuf, i);
-        LPBYTE lpTemp = lpBuf;
-        for(int j = 0; j < Width; j++)
-        {
-            Process(lpBuf, Width); // Add your process here.
-        }
-        lpOut->PutRow(lpBuf, i);
-    }
-    delete []lpBuf;
-
-    lpOut->SaveFile("Output.tif");
-    
-    return 0;
-}
+```
+Tiff_STL3/                        ← Directory name kept (git submodule path)
+├── Include/
+│   ├── Tiff_STL4.h               ← Main header: namespace AV_Tiff_STL4 (use for new code)
+│   ├── Tiff_STL3.h               ← Compatibility shim: type aliases → AV_Tiff_STL4
+│   └── LZW_Perplexity.h, LZW.h …
+├── Src/
+│   ├── Tiff_Tags.cpp             ← TiffTag family, IFD, tag operations (GetTag/SetTag/RemoveTag…)
+│   ├── Tiff_RW.cpp               ← Core read/write (ReadImage/ReadTiff/SaveFile/BuildFileImage/Pack…)
+│   ├── Tiff_LZW.cpp              ← LZW file paths (LZW_Compress/SaveTiff_lzw/ReadLzwStrips)
+│   ├── CTiff.cpp                 ← CTiff convenience layer (CreateNew/row access/Icc Profile/JPG)
+│   ├── G3G4.cpp                  ← CCITT G3/G4 codec + Tiff integration
+│   ├── LZW_Integrated.cpp        ← Lzw (write) + Lzw_Perplexity (read) codecs
+│   ├── Tiff_STL3_NE.cpp          ← (Legacy, not built)
+│   └── Version_C/                ← C wrapper (Windows vcxproj only)
+├── TiffTest/
+│   └── TiffRefactorGuard.cpp     ← Behavior lock test (101 checks, target: Tiff_RefactorGuard)
+├── TestImg/                      ← Sample images (incl. *_LZW.tif, 1LineArt.tif)
+└── LZW/                          ← Legacy codecs (not built)
 ```
 
+> **History**: the original single-file `Src/Tiff_STL3.cpp` (~2000 lines) was
+> split into the four source files above and upgraded to STL4. The old content
+> remains in git history (`git show HEAD:Src/Tiff_STL3.cpp`).
+
 ---
+
+## Quick Start
+
+### New code (Tiff_STL4)
+```cpp
+#include "Tiff_STL4.h"
+using namespace AV_Tiff_STL4;
+
+// Read
+CTiff in;
+in.ReadFile("in.tif");
+int w = (int)in.GetTagValue(ImageWidth);   // tag query
+LPBYTE pix = in.GetImageBuf();             // image memory
+
+// Create + write (compression: omit = none, 1 = LZW, 3 = G3, 4 = G4)
+CTiff out;
+out.CreateNew(width, length, 72, samplesPerPixel, bitsPerSample, 1);
+out.PutRow(rowPtr, y);            // per row
+out.SaveFile("out.tif", 4);       // G4
+```
+
+### Legacy code (compatibility shim, unchanged)
+```cpp
+#include "Tiff_STL3.h"            // shim → Tiff_STL4.h
+AV_Tiff_STL3::CTiff tiff;         // or simply CTiff tiff;
+```
+
+### Low-level API (Tiff class)
+`Tiff` is the core reader/writer (throws on error paths); `CTiff` derives from
+it, returns `Tiff_Err` codes instead and manages the image buffer for you.
+The second parameter of `SaveFile` is the compression id: **0** none,
+**1** LZW, **3** G3, **4** G4.
+
+---
+
+## Compression Internals
+
+- **Write**: `BuildFileImage(img, mode)` assembles the complete file image
+  (header + IFD + tag data + image + Exif) in memory and writes it in one go.
+  LZW/G3/G4 compression releases the original image buffer
+  (`CTiff::SaveFile` clears the cached `m_lpImageBuf` — **do not read the old
+  pointer after Save**).
+- **Read**: each strip reader normalizes the tags afterwards
+  (StripOffsets → whole image, RowsPerStrip → Length, Compression → 1,
+  Predicator removed).
+
+---
+
+## Build
+
+### CMake (Linux / cross-platform)
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build          # produces Lib/libAVCMP.so and Tiff_RefactorGuard
+```
+Targets: `obj_Tiff_STL4` (merged into `AVCMP`), test `Tiff_RefactorGuard`.
+(The directory `Tiff_STL3/` stays as-is — it is the git submodule path.)
+
+### MSVC
+`Src/Tiff_STL3.vcxproj` (Win32/x64/ARM/ARM64 configurations).
+
+### Defines
+- Required: `SYS_INFO`, `FIXED_VECTOR`, `ICC_Ver4` (engine consumers)
+- `NO_SMART_POINTER` (SysInfo.h): reverts tag ownership to raw pointers with
+  manual frees (default is the `unique_ptr`/`shared_ptr` mode — keep it)
+- IO backend: Linux uses C stdio; Windows can select `IO_File` (Virtual_IO)
+  or fstream
+
+---
+
+## Testing
+
+| Test | Content | How |
+|------|---------|-----|
+| `Tiff_RefactorGuard` | 101 behavior checks: 8/16-bit, LZW, G3/G4 round-trips, RemoveTag ownership, multi-strip, Planar+Pack, 1-bit CMYKcm, invalid files, G3/G4 end-to-end | `cmake --build build --target Tiff_RefactorGuard && ./Tiff_RefactorGuard` (exit code = failure count) |
+| `TestImg/` | Sample images for every format (incl. `*_LZW.tif`, `1LineArt.tif`) | Manual verification |
+
+---
+
+## Known Limitations
+
+- G3/G4 support 1 bit/pixel, SamplesPerPixel=1 only; fax uncompressed mode
+  (T4Options bit1 / T6Options bit0) is unsupported and reported as an error.
+- G4 encoding does not use Pass mode (valid output, slightly below optimal
+  compression).
+- LZW writes Predictor=2 for 8-bit only; 16-bit is not predicted (poor gain).
+- `MAXTAG = 40`: tags per page limit.
+- The historical `RemoveTag` last-element bug is fixed, but note that
+  `FixedVector::erase` semantics (returns bool) differ from `std::vector`
+  (returns iterator) — mind this in cross-container code.
+
+---
+
+## History
+
+- STL3 era: single-file `Tiff_STL3.cpp` + the LZW / VC++ AppWizard layout.
+- STL4 upgrade: refactoring (file split, ownership, write path, decision
+  matrix), correctness fixes (RemoveTag, GetValue truncation, LZW short-image
+  overread, planar inline crash, predictor difference direction, …), G3/G4
+  support, API rename. See `refactor.md` for the full log.
