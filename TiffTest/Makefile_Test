@@ -9,7 +9,7 @@ CPPS = TiffTest.cpp \
 
 OBJS = $(CPPS:.cpp=.o)
 
-SYS_INCLUDE = -I../Src -I../Include
+SYS_INCLUDE = -I../Src -I../Include -I../..
 
 CXXFLAGS += $(SYS_INCLUDE)
 

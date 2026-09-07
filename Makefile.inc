@@ -51,8 +51,8 @@ CXX	= $(TOOL_CHAIN)$(CROSS_COMPILE)g++
 CXXFLAGS += -Wno-missing-braces -Wno-overloaded-virtual
 #IMPL_CPPFLAGS+=-v -g
 
-CPPFLAGS += -std=c++14
-CPPFLAGS += -DANDROID
+CXXFLAGS += -std=c++14
+CXXFLAGS += -DANDROID
 AR      = $(TOOL_CHAIN)$(CROSS_COMPILE)ar
 STRIP   = $(TOOL_CHAIN)$(CROSS_COMPILE)strip
 
@@ -66,8 +66,8 @@ CROSS_COMPILE = x86_64-apple-darwin23-
 CXX      = $(TOOL_CHAIN)$(CROSS_COMPILE)clang++
 CXXFLAGS += -Wno-missing-braces -Wno-overloaded-virtual
 #CXXFLAGS += -std=c++23
-CPPFLAGS += -DAPPLE -mmacosx-version-min=10.10
-CPPFLAGS += -arch x86_64 -arch arm64 -dynamiclib
+CXXFLAGS += -DAPPLE -mmacosx-version-min=10.10
+CXXFLAGS += -arch x86_64 -arch arm64 -dynamiclib
 
 #IMPL_CPPFLAGS += -arch x86_64
 AR      = $(TOOL_CHAIN)llvm-ar
@@ -79,8 +79,12 @@ else ifeq ($(COMPILER), 4)
 CXX      = $(TOOL_CHAIN)$(CROSS_COMPILE)clang++
 CXXFLAGS += -Wno-missing-braces -Wno-overloaded-virtual
 #CXXFLAGS += -std=c++23
-CPPFLAGS += -DAPPLE 
-CPPFLAGS += -arch x86_64 -arch arm64 -dynamiclib
+CXXFLAGS += -DAPPLE
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Darwin)
+UNAME_M := $(shell uname -m)
+CXXFLAGS += -arch $(UNAME_M) -dynamiclib
+endif
 
 
 else
@@ -89,7 +93,7 @@ else
 #TOOL_CHAIN = c:\Apps\MinGW\bin\
 
 CXX		= $(CROSS_COMPILE)g++
-CPPFLAGS +=-static-libgcc -static-libstdc++ -std=c++11
+CXXFLAGS +=-static-libgcc -static-libstdc++ -std=c++11
 
 
 AR      = $(TOOL_CHAIN)$(CROSS_COMPILE)ar
@@ -124,7 +128,9 @@ LDLIBS += -arch x86_64 -arch arm64 -dynamiclib
 #LDLIBS += -arch x86_64  -dynamiclib
 
 else ifeq ($(COMPILER), 4)
-LDLIBS += -arch x86_64 -arch arm64 -dynamiclib
+ifeq ($(UNAME_S), Darwin)
+LDLIBS += -arch $(UNAME_M) -dynamiclib
+endif
 #LDLIBS += -arch x86_64  -dynamiclib
 #LDLIBS += -shared
 

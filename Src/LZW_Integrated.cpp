@@ -915,8 +915,9 @@ void Lzw_Perplexity::PredicatorEncode(
         uint8_t* row = buf + y * rowBytes;
 
         if (bitsPerSample == 8) {
-            // Horizontal difference in bytes
-            for (int x = bytesPerPixel; x < rowBytes; ++x) {
+            // Horizontal difference in bytes, backward so the previous pixel
+            // is not yet encoded (PredicatorDecode accumulates forward).
+            for (int x = rowBytes - 1; x >= bytesPerPixel; --x) {
                 row[x] = (uint8_t)(row[x] - row[x - bytesPerPixel]);
             }
         }

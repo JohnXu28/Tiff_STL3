@@ -7,6 +7,8 @@
 #ifdef _WINDOWS
 #include "targetver.h"
 #include <tchar.h>
+#else
+typedef char _TCHAR;
 #endif //_WINDOWS
 
 #include <stdio.h>

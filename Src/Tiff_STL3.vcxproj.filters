@@ -7,9 +7,6 @@
     <ClCompile Include="..\Version_C\Virtual_IO_C.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tiff_STL3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Version_C\tiff.cpp">
       <Filter>Source Files\Other Version</Filter>
     </ClCompile>
@@ -23,6 +20,21 @@
       <Filter>Source Files\Other Version</Filter>
     </ClCompile>
     <ClCompile Include="LZW_Integrated.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="G3G4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tiff_Tags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tiff_RW.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tiff_LZW.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CTiff.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

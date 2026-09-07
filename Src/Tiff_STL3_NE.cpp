@@ -29,7 +29,7 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////
 //#define _WINDOWS
 
-namespace AV_Tiff_STL3 {
+namespace AV_Tiff_STL4 {
 	int DataType[FieldTypeSize] = {
 		1,//Unknown						= 0x0000L,
 		1,//Byte						= 0x0001L,
