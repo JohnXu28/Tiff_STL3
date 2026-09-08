@@ -3,8 +3,12 @@ include ../Makefile.inc
 Module = Tiff_STL3
 LIB = lib$(Module).a
 CPPS = \
+CTiff.cpp \
+G3G4.cpp \
 LZW_Integrated.cpp \
-Tiff_STL3.cpp \
+Tiff_LZW.cpp \
+Tiff_RW.cpp \
+Tiff_Tags.cpp \
 
 OBJS = $(CPPS:.cpp=.o)
 DEPS = $(CPPS:.cpp=.d)

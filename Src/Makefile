@@ -3,8 +3,12 @@ LIB_DIR  := $(CURDIR)/../../Lib
 
 Module = Tiff_STL3
 CPPS = \
-Tiff_STL3.cpp \
-LZW_Integrated.cpp
+CTiff.cpp \
+G3G4.cpp \
+LZW_Integrated.cpp \
+Tiff_LZW.cpp \
+Tiff_RW.cpp \
+Tiff_Tags.cpp
 
 #OBJS : replace *.cpp to *.o
 #OBJS = $(patsubst %.cpp,%.o,$(SRCS))
