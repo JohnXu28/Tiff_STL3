@@ -1,0 +1,61 @@
+# Makefile_Test - standalone build + test entry for the Tiff module.
+#
+# Compiles the module sources plus TiffTest/TiffRefactorGuard.cpp
+# (behavior-lock test, 96 cases) and runs it.
+#
+# Requires sibling directories next to this module (the GitHub Actions
+# workflow checks them out):
+#   ../SysInfo   ../LibTiff
+#
+# Usage:
+#   make -f Makefile_Test          # build + run
+#   make -f Makefile_Test clean
+#
+# The test binary exit code = number of failed cases.
+
+include Makefile.inc
+
+BUILD = build_test
+
+VPATH = Src TiffTest
+
+MOD_SRCS = \
+	CTiff.cpp \
+	G3G4.cpp \
+	LZW_Integrated.cpp \
+	Tiff_LZW.cpp \
+	Tiff_RW.cpp \
+	Tiff_Tags.cpp
+
+TEST_SRCS = TiffRefactorGuard.cpp
+
+CPPS = $(MOD_SRCS) $(TEST_SRCS)
+OBJS = $(addprefix $(BUILD)/,$(notdir $(CPPS:.cpp=.o)))
+DEPS = $(OBJS:.o=.d)
+
+CXXFLAGS += -IInclude -ISrc -ITiffTest -I../..
+
+#---------------------------------------------------------
+# Default target: build + run
+all: test
+
+#---------------------------------------------------------
+test: $(BUILD)/Tiff_RefactorGuard
+	./$(BUILD)/Tiff_RefactorGuard
+
+#---------------------------------------------------------
+$(BUILD)/Tiff_RefactorGuard: $(OBJS) | $(BUILD)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(BUILD):
+	mkdir -p $@
+
+$(BUILD)/%.o: %.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c -o $@ $<
+
+#---------------------------------------------------------
+-include $(DEPS)
+
+#---------------------------------------------------------
+clean:
+	$(RM) -r $(BUILD)

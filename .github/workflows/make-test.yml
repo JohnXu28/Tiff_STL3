@@ -1,0 +1,27 @@
+name: Tiff Make Test
+
+on: [push, pull_request]
+
+jobs:
+  tiff-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tiff_STL3
+        uses: actions/checkout@v4
+        with:
+          path: Tiff_STL3
+
+      - name: Checkout SysInfo sibling
+        uses: actions/checkout@v4
+        with:
+          repository: JohnXu28/SysInfo
+          path: SysInfo
+
+      - name: Checkout LibTiff sibling
+        uses: actions/checkout@v4
+        with:
+          repository: JohnXu28/LibTiff
+          path: LibTiff
+
+      - name: Build and test
+        run: make -C Tiff_STL3 -f Makefile_Test
