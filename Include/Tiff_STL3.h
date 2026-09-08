@@ -31,6 +31,8 @@ namespace AV_Tiff_STL3 {
 	using IFD_STRUCTURE    = AV_Tiff_STL4::IFD_STRUCTURE;
 	using Tiff             = AV_Tiff_STL4::Tiff;
 	using CTiff            = AV_Tiff_STL4::CTiff;
-	using AV_Tiff_STL4::SwapDWORD;
-	using AV_Tiff_STL4::SwapWORD;
+	//SwapWORD/SwapDWORD are intentionally NOT imported here. They are
+	//object-like macros on WIN32/LINUX (SysInfo.h); a using-declaration
+	//would expand to the CRT intrinsic and fail (MSVC C2873). The macros,
+	//or the global inline fallback in SysInfo.h, resolve every call form.
 }
