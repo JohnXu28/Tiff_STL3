@@ -598,20 +598,11 @@ namespace AV_Tiff_STL4 {
 		LPBYTE m_lpImageBuf;
 	};
 	//************************************************************
-	// Byte swap and Lab encode/decode helpers.
+	// Lab encode/decode helpers.
+	//Byte swap comes from SysInfo.h only: macros (WIN32/LINUX) or the
+	//global inline fallback. Namespace-level copies here would make
+	//unqualified consumer calls ambiguous on no-SWAP platforms.
 	//*************************************************************
-#ifndef SWAP
-	inline DWORD SwapDWORD(const DWORD x)
-	{
-		return (((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | (x << 24));
-	}
-
-	inline WORD SwapWORD(const WORD x)
-	{
-		return (((x & 0xFF) << 8) | (x >> 8));
-	}
-#endif //SWAP
-
 	inline WORD Tiff_encode_L(double data)
 	{//range 0 ~ 100
 		int intPart, rationPart;

@@ -1,10 +1,10 @@
 add_library(obj_Tiff_STL4 OBJECT
-    src/Tiff_Tags.cpp
-    src/Tiff_RW.cpp
-    src/Tiff_LZW.cpp
-    src/CTiff.cpp
-    src/G3G4.cpp
-    src/LZW_Integrated.cpp
+    Src/Tiff_Tags.cpp
+    Src/Tiff_RW.cpp
+    Src/Tiff_LZW.cpp
+    Src/CTiff.cpp
+    Src/G3G4.cpp
+    Src/LZW_Integrated.cpp
 )
 
 target_include_directories(obj_Tiff_STL4 PRIVATE
@@ -12,4 +12,9 @@ target_include_directories(obj_Tiff_STL4 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
-add_subdirectory(TiffTest)
+#Tests need the superproject layout (obj_SysInfo target, SysInfo headers).
+#Standalone builds of this module skip them unless explicitly enabled.
+option(TIFF_BUILD_TESTS "Build TiffTest programs" OFF)
+if(TIFF_BUILD_TESTS)
+    add_subdirectory(TiffTest)
+endif()
