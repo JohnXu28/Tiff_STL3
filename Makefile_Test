@@ -3,9 +3,9 @@
 # Compiles the module sources plus TiffTest/TiffRefactorGuard.cpp
 # (behavior-lock test, 96 cases) and runs it.
 #
-# Requires sibling directories next to this module (the GitHub Actions
-# workflow checks them out):
-#   ../SysInfo   ../LibTiff
+# Requires sibling directory next to this module (the GitHub Actions
+# workflow checks it out):
+#   ../SysInfo
 #
 # Usage:
 #   make -f Makefile_Test          # build + run

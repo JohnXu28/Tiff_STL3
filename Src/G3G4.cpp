@@ -3,7 +3,8 @@
 //
 // Decode: G3 1D/2D (EOL + optional fill bits + 1D/2D tag bit), G4 MMR.
 // Encode: G3 1D MH per row with EOL, G4 MMR with trailing EOFB.
-// Run length code tables come from LibTiff/t4.h (ITU T.4 tables).
+// Run length code tables are inlined in Include/FaxTables.h (ITU T.4,
+// originally from LibTiff/t4.h).
 //////////////////////////////////////////////////////////////////////x
 #include <iostream>
 #include "stdafx.h"
@@ -15,8 +16,7 @@ using namespace AV_Tiff_STL4;
 #include <cstring>
 using namespace std;
 
-#define G3CODES
-#include "../../LibTiff/t4.h"
+#include "../Include/FaxTables.h"
 
 namespace AV_Tiff_STL4 {
 

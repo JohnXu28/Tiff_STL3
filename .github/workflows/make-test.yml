@@ -17,11 +17,5 @@ jobs:
           repository: JohnXu28/SysInfo
           path: SysInfo
 
-      - name: Checkout LibTiff sibling
-        uses: actions/checkout@v4
-        with:
-          repository: JohnXu28/LibTiff
-          path: LibTiff
-
       - name: Build and test
         run: make -C Tiff_STL3 -f Makefile_Test
