@@ -1,3 +1,10 @@
+cmake_minimum_required(VERSION 3.14)
+
+#Declare a project only when built standalone (not via add_subdirectory).
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    project(Tiff_STL4 LANGUAGES CXX)
+endif()
+
 add_library(obj_Tiff_STL4 OBJECT
     Src/Tiff_Tags.cpp
     Src/Tiff_RW.cpp
