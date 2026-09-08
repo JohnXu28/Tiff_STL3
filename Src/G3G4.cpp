@@ -20,6 +20,70 @@ using namespace std;
 
 namespace AV_Tiff_STL4 {
 
+//****************************************************************************
+// Containers.
+// FIXED_VECTOR : bounded run arrays on FixedVector, byte buffers on a
+//                minimal growable heap buffer (new[]/delete[], no STL).
+// otherwise    : std::vector everywhere.
+//****************************************************************************
+#ifdef FIXED_VECTOR
+//Max runs per row is (W+1)/2 + guards. kMaxFaxRuns supports widths up to
+//~8700 pixels (3 arrays x 4352 x 4B ~= 52KB stack at peak).
+static const size_t kMaxFaxRuns = 4352;
+template<typename T>
+using FaxRunArray = FixedVector<T, kMaxFaxRuns>;
+
+class FaxBuffer
+{
+public:
+	FaxBuffer() :_p(nullptr), _n(0), _cap(0) {}
+	~FaxBuffer() { delete[]_p; }
+
+	bool reserve(size_t need)
+	{
+		if (need <= _cap)
+			return true;
+		size_t nc = _cap ? _cap : need;
+		while (nc < need)
+			nc *= 2;
+		BYTE* q = new BYTE[nc];
+		if (!q)
+			return false;
+		for (size_t i = 0; i < _n; i++)
+			q[i] = _p[i];
+		delete[]_p;
+		_p = q;
+		_cap = nc;
+		return true;
+	}
+
+	bool push_back(BYTE b)
+	{
+		if (_n >= _cap && !reserve(_n + 1))
+			return false;
+		_p[_n++] = b;
+		return true;
+	}
+
+	BYTE& operator[](size_t i) { return _p[i]; }
+	const BYTE& operator[](size_t i) const { return _p[i]; }
+	BYTE& back() { return _p[_n - 1]; }
+	BYTE* data() { return _p; }
+	const BYTE* data() const { return _p; }
+	size_t size() const { return _n; }
+	bool empty() const { return _n == 0; }
+
+private:
+	BYTE* _p;
+	size_t _n;
+	size_t _cap;
+};
+#else
+template<typename T>
+using FaxRunArray = std::vector<T>;
+using FaxBuffer = std::vector<BYTE>;
+#endif
+
 const int FaxEOL = 0x001;//12 bits 000000000001
 
 //****************************************************************************
@@ -48,10 +112,10 @@ public:
 class FaxWriter
 {
 public:
-	vector<unsigned char>& out;
+	FaxBuffer& out;
 	int bitPos;
 
-	FaxWriter(vector<unsigned char>& o) :out(o), bitPos(0)
+	FaxWriter(FaxBuffer& o) :out(o), bitPos(0)
 	{
 		out.push_back(0);
 	}
@@ -198,7 +262,7 @@ static FaxMode FaxReadMode(FaxBits& br)
 //****************************************************************************
 //Changing element boundaries of a run list (they alternate color, the last
 //bound is >= W).
-static void FaxRowBounds(const vector<int>& runs, int W, vector<int>& bounds)
+static void FaxRowBounds(const FaxRunArray<int>& runs, int W, FaxRunArray<int>& bounds)
 {
 	bounds.clear();
 	int pos = 0;
@@ -211,21 +275,21 @@ static void FaxRowBounds(const vector<int>& runs, int W, vector<int>& bounds)
 		else if (i == 0)
 			bounds.push_back(0);//Line starts with black.
 	}
-	if (bounds.empty() || bounds.back() < W)
+	if (bounds.empty() || bounds[bounds.size() - 1] < W)
 		bounds.push_back(W);
 }
 
 //First changing element boundary > a0. Bounds alternate color, so the first
 //one always starts the opposite color of the run containing a0. Falls back
 //to bounds back (>= W) past the end of the line.
-static int FaxFindBound(const vector<int>& bounds, int a0)
+static int FaxFindBound(const FaxRunArray<int>& bounds, int a0)
 {
 	for (size_t i = 0; i < bounds.size(); i++)
 	{
 		if (bounds[i] > a0)
 			return bounds[i];
 	}
-	return bounds.back();
+	return bounds[bounds.size() - 1];
 }
 
 //Paint black pixels (from, to] (from may be -1), clamped to [0, W).
@@ -241,9 +305,9 @@ static void FaxPaintBlack(unsigned char* row, int from, int to, int W)
 // 2D line decode (used by G4 and G3-2D). Pixels are written into `row`
 // directly, so Pass mode needs no bookkeeping.
 //****************************************************************************
-static bool FaxDecode2DLine(FaxBits& br, const vector<int>& refRuns, int W, unsigned char* row)
+static bool FaxDecode2DLine(FaxBits& br, const FaxRunArray<int>& refRuns, int W, unsigned char* row)
 {
-	vector<int> bounds;
+	FaxRunArray<int> bounds;
 	FaxRowBounds(refRuns, W, bounds);
 
 	int a0 = -1;
@@ -305,7 +369,7 @@ static bool FaxDecode2DLine(FaxBits& br, const vector<int>& refRuns, int W, unsi
 }
 
 //1D MH line.
-static bool FaxDecode1DLine(FaxBits& br, int W, vector<int>& runs)
+static bool FaxDecode1DLine(FaxBits& br, int W, FaxRunArray<int>& runs)
 {
 	runs.clear();
 	int pos = 0;
@@ -322,7 +386,7 @@ static bool FaxDecode1DLine(FaxBits& br, int W, vector<int>& runs)
 	return true;
 }
 
-static void FaxRunsToBits(const vector<int>& runs, int W, unsigned char* row)
+static void FaxRunsToBits(const FaxRunArray<int>& runs, int W, unsigned char* row)
 {
 	int pos = -1;
 	int color = 0;//white
@@ -336,7 +400,7 @@ static void FaxRunsToBits(const vector<int>& runs, int W, unsigned char* row)
 	}
 }
 
-static void FaxRowRuns(const unsigned char* row, int W, vector<int>& runs)
+static void FaxRowRuns(const unsigned char* row, int W, FaxRunArray<int>& runs)
 {
 	runs.clear();
 	int color = 0;
@@ -369,8 +433,8 @@ bool G3G4_Decode(const unsigned char* in, int inBytes,
 
 	bool twoDim = g4 ? true : ((options & 1) != 0);
 
-	vector<int> refRuns;
-	vector<int> runs;
+	FaxRunArray<int> refRuns;
+	FaxRunArray<int> runs;
 	refRuns.push_back(W);//Imaginary all white reference line.
 
 	int r = 0;
@@ -469,13 +533,24 @@ static void FaxEmit1DRow(FaxWriter& w, const unsigned char* row, int W)
 }
 
 
+static void FaxAssignRuns(FaxRunArray<int>& dst, const FaxRunArray<int>& src)
+{
+#ifdef FIXED_VECTOR
+	dst.clear();
+	for (size_t i = 0; i < src.size(); i++)
+		dst.push_back(src[i]);
+#else
+	dst = src;
+#endif
+}
+
 //Encode one G4 (MMR) row. Vertical mode when possible, horizontal otherwise.
 static void FaxEncode2DRow(FaxWriter& w, const unsigned char* row, int W,
-	const vector<int>& refRuns, vector<int>& runs)
+	const FaxRunArray<int>& refRuns, FaxRunArray<int>& runs)
 {
 	FaxRowRuns(row, W, runs);
 
-	vector<int> bounds;
+	FaxRunArray<int> bounds;
 	FaxRowBounds(refRuns, W, bounds);
 
 	int a0 = -1;
@@ -526,14 +601,14 @@ static void FaxEncode2DRow(FaxWriter& w, const unsigned char* row, int W,
 // Public encode. in holds `rows` rows of `rowBytes` bytes (1 bit per pixel).
 //****************************************************************************
 int G3G4_Encode(const unsigned char* in, int rowBytes, int rows,
-	vector<unsigned char>& out, bool g4)
+	FaxBuffer& out, bool g4)
 {
 	FaxInit();
 	FaxWriter w(out);
 	int W = rowBytes * 8;
 
-	vector<int> refRuns;
-	vector<int> runs;
+	FaxRunArray<int> refRuns;
+	FaxRunArray<int> runs;
 	refRuns.push_back(W);
 
 	for (int r = 0; r < rows; r++)
@@ -547,7 +622,7 @@ int G3G4_Encode(const unsigned char* in, int rowBytes, int rows,
 		}
 
 		FaxEncode2DRow(w, row, W, refRuns, runs);
-		refRuns = runs;
+		FaxAssignRuns(refRuns, runs);
 	}
 
 	if (g4)
@@ -578,12 +653,12 @@ Tiff_Err Tiff::G3G4_Compress(int comp)
 	TiffTagPtr TagStripOffsets = GetTag(StripOffsets);
 	LPBYTE lpImageBuf = TagStripOffsets->lpData;
 
-	vector<unsigned char> dst;
+	FaxBuffer dst;
 	dst.reserve((size_t)BytesPerLine * Length / 4 + 1024);
 	G3G4_Encode(lpImageBuf, BytesPerLine, Length, dst, comp == 4);
 
 	LPBYTE lpFaxBuf = new BYTE[dst.size()];
-	memcpy(lpFaxBuf, &dst[0], dst.size());
+	memcpy(lpFaxBuf, dst.data(), dst.size());
 
 	StripOffsetsTag* pTagStripOffsets = dynamic_cast<StripOffsetsTag*>(GetPtr(TagStripOffsets));
 	pTagStripOffsets->SetLzwData(lpFaxBuf);
@@ -616,12 +691,12 @@ Tiff_Err Tiff::SaveTiff_G3G4(IO_INTERFACE* IO, int comp)
 	Tiff_Err ret = G3G4_Compress(comp);
 	if (ret != Tiff_OK)
 		return ret;
-	vector<BYTE> img;
+	std::vector<BYTE> img;//Module-wide file image type (BuildFileImage API).
 	ret = BuildFileImage(img, comp);
 	if (ret != Tiff_OK)
 		return ret;
 	IO_Seek(0, SEEK_SET);
-	IO_Write(&img[0], 1, img.size());
+	IO_Write(img.data(), 1, img.size());
 	return ret;
 }
 
