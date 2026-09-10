@@ -12,7 +12,7 @@ BUILD_DIRS = ${DIRS} ${CDIRS}
 
 # Per-directory extra make flags (e.g. -f <alt-makefile>)
 Src_mflags      = -f Makefile_Test
-TiffTest_mflags = -f Makefile_Test
+TiffTest_mflags =
 
 # Dummy targets for building and clobbering everything in all subdirectories
 
@@ -21,7 +21,8 @@ all:
 	@echo "*****************************Tiff_STL3************************"
 	@ for dir in ${BUILD_DIRS}; do \
 		extra=""; \
-		[ "$$dir" = "Src" -o "$$dir" = "TiffTest" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "Src" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "TiffTest" ] && extra="$(TiffTest_mflags)"; \
 		(cd "$$dir"; ${MAKE} $$extra); \
 	done
 
@@ -30,7 +31,8 @@ allgen:
 	@echo "*****************************Tiff_STL3 release************************"
 	@ for dir in ${BUILD_DIRS}; do \
 		extra=""; \
-		[ "$$dir" = "Src" -o "$$dir" = "TiffTest" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "Src" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "TiffTest" ] && extra="$(TiffTest_mflags)"; \
 		(cd "$$dir"; ${MAKE} $$extra allgen); \
 	done
 
@@ -39,7 +41,8 @@ debug:
 	@echo "*****************************Tiff_STL3 Debug************************"
 	@ for dir in ${BUILD_DIRS}; do \
 		extra=""; \
-		[ "$$dir" = "Src" -o "$$dir" = "TiffTest" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "Src" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "TiffTest" ] && extra="$(TiffTest_mflags)"; \
 		(cd "$$dir"; ${MAKE} $$extra debug); \
 	done
 
@@ -48,7 +51,8 @@ release:
 	@echo "*****************************AVCMP Release************************"
 	@ for dir in ${BUILD_DIRS}; do \
 		extra=""; \
-		[ "$$dir" = "Src" -o "$$dir" = "TiffTest" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "Src" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "TiffTest" ] && extra="$(TiffTest_mflags)"; \
 		(cd "$$dir"; ${MAKE} $$extra release); \
 	done
 
@@ -56,6 +60,7 @@ clean:
 	@echo "*****************************AVCMP Clean************************"
 	@ for dir in ${BUILD_DIRS}; do \
 		extra=""; \
-		[ "$$dir" = "Src" -o "$$dir" = "TiffTest" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "Src" ] && extra="$(Src_mflags)"; \
+		[ "$$dir" = "TiffTest" ] && extra="$(TiffTest_mflags)"; \
 		(cd "$$dir"; ${MAKE} $$extra clean); \
 	done

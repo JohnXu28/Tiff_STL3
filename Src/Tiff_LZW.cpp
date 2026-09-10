@@ -138,7 +138,7 @@ Tiff_Err Tiff::ReadLzwStrips(IO_INTERFACE* IO, bool SingleStrip)
 	int Length = GetTagValue(ImageLength);
 	int bitsPerSample = GetTagValue(BitsPerSample);
 	int samplesPerPixel = GetTagValue(SamplesPerPixel);
-	int BytesPerLine = (bitsPerSample * samplesPerPixel + 7) / 8 * Width;
+	int BytesPerLine = (Width * samplesPerPixel * bitsPerSample + 7) / 8;
 	int rowsPerStrip = GetTagValue(RowsPerStrip);
 	int predicator = GetTagValue(Predicator);
 

@@ -355,7 +355,7 @@ Tiff_Err Tiff::ReadImage(IO_INTERFACE* IO)
 			DWORD stripByteCounts = GetTagValue(StripByteCounts);
 			if (Compress == 1)
 			{
-				UINT64 size = Width * Length * samplesPerPixel * bitsPerSample / 8;
+				UINT64 size = ((UINT64)Width * samplesPerPixel * bitsPerSample + 7) / 8 * Length;
 				if (size > 0xFFFFFFFF)
 					throw " *** Image Size is too big, size > 0xFFFFFFFF *** ";
 				stripByteCounts = (DWORD)size;

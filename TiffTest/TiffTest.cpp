@@ -3,6 +3,11 @@
 #ifdef _WINDOWS
 	#include "stdafx.h"
 	#include <Windows.h>
+	#include <direct.h>
+#else
+	#include <sys/stat.h>
+	#include <sys/types.h>
+	#include <unistd.h>
 #endif //
 
 #include <string>
@@ -43,7 +48,7 @@ using namespace std;
 #endif//Tiff_STL
 
 #if Tiff_C
-#include "..\Tiff_STL3\Version_C\Tiff_c.h"
+#include "../Tiff_STL3/Version_C/Tiff_c.h"
 #define STiff Tiff
 //	#define Tiff_ReadFile(lpTiff, fileName) Tiff_ReadFile(lpTiff, (char*)fileName)
 //	#define Tiff_SaveFile(lpTiff, fileNmae) Tiff_SaveFile(lpTiff, (char*)fileNmae)
@@ -162,13 +167,30 @@ enum TiffTagSignature {
 };
 #endif //_TiffTagSignature_
 
-#if Tiff_Test	
+#if Tiff_Test
+#ifdef WINDOWS
+	string ImgDir = "TestImg";
+	string OutDir = "TestImg/Output";
+#else
+	string ImgDir = "../../TestImg";
+	string OutDir = "../../TestImg/Output";
+#endif
+
+void EnsureDir(const string& Dir)
+{
+#ifdef _WINDOWS
+	_mkdir(Dir.c_str());
+#else
+	mkdir(Dir.c_str(), 0755);
+#endif
+}
+
 int ImageTest1(string FileName)
 {
 	cout << "Read, Write Test : " << FileName.c_str() << ".tif\n";
 	STiff* lpTiff = Tiff_Create();
-	string FileIn = FileName + ".tif";
-	string FileOut = "Output\\" + FileName + "out.tif";
+	string FileIn = ImgDir + "/" + FileName + ".tif";
+	string FileOut = OutDir + "/" + FileName + "out.tif";
 
 	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != Tiff_OK)
 	{
@@ -213,22 +235,44 @@ void TiffCopy(STiff* lpTiffDest, STiff* lpTiffSrc)
 //Raw Test
 int ImageTest2(string FileName)
 {
-	string FileIn = "Output\\" + FileName + "out.tif";
-	string FileRaw = FileName + ".raw";
+	string FileIn = OutDir + "/" + FileName + "out.tif";
+	string FileRaw = ImgDir + "/" + FileName + ".raw";
 
 	cout << "Raw Test : " << FileName.c_str() << "out.tif\n";
 	STiff* lpTiff = Tiff_Create();
-	Tiff_ReadFile(lpTiff, FileIn.c_str());
+	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != Tiff_OK)
+	{
+		Tiff_Close(lpTiff);
+		return -1;
+	}
 
 	//Compare
 	int ret = 0;
 	int stripByteCounts = Tiff_GetTagValue(lpTiff, StripByteCounts);
 	unsigned char* lpTemp1 = (unsigned char*)Tiff_GetImageBuf(lpTiff);
 
+	if ((stripByteCounts <= 0) || (lpTemp1 == NULL))
+	{
+		Tiff_Close(lpTiff);
+		return -1;
+	}
+
 	//Get Raw
 	FILE* file = fopen(FileRaw.c_str(), "rb");
+	if (file == NULL)
+	{
+		Tiff_Close(lpTiff);
+		return -1;
+	}
 	LPBYTE lpRaw = new BYTE[stripByteCounts];
-	fread(lpRaw, 1, stripByteCounts, file);
+	size_t read = fread(lpRaw, 1, stripByteCounts, file);
+	fclose(file);
+	if (read != (size_t)stripByteCounts)
+	{
+		delete[]lpRaw;
+		Tiff_Close(lpTiff);
+		return -1;
+	}
 	unsigned char* lpTemp2 = lpRaw;
 
 	for (int i = 0; i < stripByteCounts; i++)
@@ -246,14 +290,23 @@ int ImageTest2(string FileName)
 
 int ImageTest3(string FileName)
 {
-	string FileIn = "Output\\" + FileName + "out.tif";
-	string FileOut = "Output\\" + FileName + "out2.tif";
+	string FileIn = OutDir + "/" + FileName + "out.tif";
+	string FileOut = OutDir + "/" + FileName + "out2.tif";
 
 	cout << "Copy Test : " << FileName.c_str() << "out.tif\n";
 	STiff* lpTiff = Tiff_Create();
 
-	Tiff_ReadFile(lpTiff, FileIn.c_str());
+	if (Tiff_ReadFile(lpTiff, FileIn.c_str()) != Tiff_OK)
+	{
+		Tiff_Close(lpTiff);
+		return -1;
+	}
 	STiff* lpTiff2 = Tiff_Clone();
+	if (lpTiff2 == NULL)
+	{
+		Tiff_Close(lpTiff);
+		return -1;
+	}
 
 	//For memory leak test.
 	/*Tiff_CreateNew(lpTiff2, Tiff_GetTagValue(lpTiff, ImageWidth),
@@ -299,6 +352,8 @@ int GetXY_Test(STiff* lpTiff1, STiff* lpTiff2)
 {
 	if (Tiff_GetTagValue(lpTiff1, BitsPerSample) == 1)
 		return 0;
+	if ((Tiff_GetImageBuf(lpTiff1) == NULL) || (Tiff_GetImageBuf(lpTiff2) == NULL))
+		return -1;
 	int Width = Tiff_GetTagValue(lpTiff1, ImageWidth);
 	int Length = Tiff_GetTagValue(lpTiff1, ImageLength);
 	int samplesPerPixel = Tiff_GetTagValue(lpTiff1, SamplesPerPixel);
@@ -321,10 +376,20 @@ int ImageTest4(string FileName)
 {
 	STiff* lpTiff1 = Tiff_Create();
 	STiff* lpTiff2 = Tiff_Create();
-	string File1 = FileName + ".tif";
-	string File2 = "Output\\" + FileName + "out2.tif";
-	Tiff_ReadFile(lpTiff1, File1.c_str());
-	Tiff_ReadFile(lpTiff2, File2.c_str());
+	string File1 = ImgDir + "/" + FileName + ".tif";
+	string File2 = OutDir + "/" + FileName + "out2.tif";
+	if (Tiff_ReadFile(lpTiff1, File1.c_str()) != Tiff_OK)
+	{
+		Tiff_Close(lpTiff1);
+		Tiff_Close(lpTiff2);
+		return -1;
+	}
+	if (Tiff_ReadFile(lpTiff2, File2.c_str()) != Tiff_OK)
+	{
+		Tiff_Close(lpTiff1);
+		Tiff_Close(lpTiff2);
+		return -1;
+	}
 
 	int ret = 0;
 	if (Tiff_GetTagValue(lpTiff1, BitsPerSample) == 16)
@@ -335,7 +400,7 @@ int ImageTest4(string FileName)
 	if (ret != 0)
 		cout << "Get(X,Y) error! " << FileName.c_str() << "\n";
 	else
-		cout << FileName.c_str() << "Test OK.\n\n";
+		cout << FileName.c_str() << " Test OK.\n\n";
 
 	Tiff_Close(lpTiff1);
 	Tiff_Close(lpTiff2);
@@ -358,49 +423,53 @@ string FileName[TestNum] = {
 
 int FullTest1()
 {
+	int failed = 0;
 	for (int i = 1; i < TestNum; i++)
 		if (ImageTest1(FileName[i]) != 0)
 		{
 			cout << "Test 1 fail, FileName : " << FileName[i] << endl;
-			//return -1;
+			failed++;
 		}
-	return 0;
+	return failed;
 }
 
 int FullTest2()
 {
+	int failed = 0;
 	for (int i = 2; i < TestNum; i++)
 		if (ImageTest2(FileName[i]) != 0)
 		{
 			cout << "Test 2 fail, FileName : " << FileName[i] << endl;
-			//return -1;
+			failed++;
 		}
 
-	return 0;
+	return failed;
 }
 
 int FullTest3()
 {
+	int failed = 0;
 	for (int i = 1; i < TestNum; i++)
 		if (ImageTest3(FileName[i]) != 0)
 		{
 			cout << "Test 3 fail, FileName : " << FileName[i] << endl;
-			//return -1;
+			failed++;
 		}
 
-	return 0;
+	return failed;
 }
 
 int FullTest4()
 {
+	int failed = 0;
 	for (int i = 1; i < TestNum; i++)
 		if (ImageTest4(FileName[i]) != 0)
 		{
 			cout << "Test 4 fail, FileName : " << FileName[i] << endl;
-			//return -1;
+			failed++;
 		}
 
-	return 0;
+	return failed;
 }
 
 #endif //Tiff_Test
@@ -508,22 +577,40 @@ int main(int argc, char* argv[])
 #endif //_WINDOWS
 {
 #ifdef _DEBUG
+#if defined(_WINDOWS)
 	//_CrtSetBreakAlloc(192);
 	//_crtBreakAlloc = 205;
 	atexit(DumpMemory);
+#endif //_WINDOWS
 #endif //_DEBUG
 
 #ifdef _WINDOWS
 	char Dir[128];
 	int size = GetCurrentDirectory(128, Dir);
 	cout << "Dir : " << Dir << endl;
+#else
+	char Dir[512];
+	if (getcwd(Dir, sizeof(Dir)) != NULL)
+		cout << "Dir : " << Dir << endl;
 #endif //_WINDOWS
 
 #if Tiff_Test
-	FullTest1();
-	FullTest2();
-	FullTest3();
-	FullTest4();
+#ifndef _WINDOWS
+	if (argc > 1)
+		ImgDir = argv[1];
+#endif //_WINDOWS
+	OutDir = ImgDir + "/Output";
+	EnsureDir(OutDir);
+
+	int failed = 0;
+	failed += FullTest1();
+	failed += FullTest2();
+	failed += FullTest3();
+	failed += FullTest4();
+	if (failed == 0)
+		cout << "\n=== TiffTest: ALL PASS ===" << endl;
+	else
+		cout << "\n=== TiffTest: " << failed << " failed ===" << endl;
 #endif//
 
 #if	Single_Test
@@ -547,7 +634,10 @@ int main(int argc, char* argv[])
 	Test(argc, argv);
 
 #if Tiff_Test
+#ifdef _WINDOWS
 	system("pause");
+#endif //_WINDOWS
+	return failed;
 #endif //	
  	return 0;
 }

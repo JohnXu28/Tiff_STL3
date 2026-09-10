@@ -17,5 +17,14 @@ jobs:
           repository: JohnXu28/SysInfo
           path: SysInfo
 
-      - name: Build and test
+      # Standalone build + run (exit code = number of failed cases).
+      - name: Tiff_RefactorGuard (101 behavior checks)
         run: make -C Tiff_STL3 -f Makefile_Test
+
+      # Builds Src/libTiff_STL3.a then TiffTest/build_test/TiffTest.
+      - name: Build libTiff_STL3 + TiffTest
+        run: make -C Tiff_STL3
+
+      # Reads ../TestImg sample images (exit code = number of failures).
+      - name: TiffTest (32 sample images, 4 test stages)
+        run: make -C Tiff_STL3/TiffTest test
