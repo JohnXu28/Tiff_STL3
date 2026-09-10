@@ -40,7 +40,9 @@ Tiff_STL3/                        ← 目錄名保留（git submodule 路徑）
 │   ├── Tiff_STL3_NE.cpp          ← （舊版，未納入建置）
 │   └── Version_C/                ← C wrapper（僅 Windows vcxproj）
 ├── TiffTest/
-│   └── TiffRefactorGuard.cpp     ← 行為鎖定測試（101 項，target: Tiff_RefactorGuard）
+│   ├── TiffTest.cpp             ← 端對端整合測試：4 組測試 × 32 張樣本影像；
+│   │                              受測實作可用巨集層切換
+│   └── TiffRefactorGuard.cpp    ← 行為鎖定測試（101 項，target: Tiff_RefactorGuard）
 ├── TestImg/                      ← 測試影像（含 LZW 範例）
 └── LZW/                          ← 舊版 codec（未納入建置）
 ```
@@ -118,6 +120,7 @@ Target：`obj_Tiff_STL4`（併入 `AVCMP`）、測試 `Tiff_RefactorGuard`。
 | 測試 | 內容 | 執行 |
 |------|------|------|
 | `Tiff_RefactorGuard` | 101 項行為鎖定：8/16-bit、LZW、G3/G4 round-trip、RemoveTag 所有權、multi-strip、Planar+Pack、1-bit CMYKcm、壞檔處理、G3/G4 端對端 | `cmake --build build --target Tiff_RefactorGuard && ./Tiff_RefactorGuard`（exit code = 失敗數）|
+| `TiffTest` | 針對 `TestImg/` 32 張樣本（LineArt/gray/RGB/CMYK/Lab、8/16-bit、ICC、Alpha、LZW、MultiStrip）的端對端整合測試：**Test 1** 讀→寫 round-trip（同一檔讀兩次以抓 memory leak）、**Test 2** 解碼 buffer 與 `.raw` 參考檔逐 byte 比對、**Test 3** `Clone` + `GetRow`/`PutRow` 逐列複製 → 重存 → buffer 比對、**Test 4** `Get(X,Y)` 像素存取與線性 buffer 比對。受測實作由巨集層決定 — `John` = Tiff_STL3/STL4（預設）、`Tiff_C` = C wrapper、`Luke` / `Chunyen_yang` = 舊版函式庫；另有 `Single_Test`（Exif）與 `RGBA`（插入 alpha 頻道）開關 | `make -C TiffTest test`（先經 `Src/Makefile_Test` 建立 `libTiff_STL3.a`，再執行 `./build_test/TiffTest ../TestImg`；自訂目錄：`./build_test/TiffTest <imgdir>`；exit code = 失敗檔案數）|
 | `TestImg/` | 各格式樣本影像（含 `*_LZW.tif`、`1LineArt.tif`）| 手動驗證用 |
 
 ---

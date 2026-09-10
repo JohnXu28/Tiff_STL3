@@ -42,7 +42,9 @@ Tiff_STL3/                        ← Directory name kept (git submodule path)
 │   ├── Tiff_STL3_NE.cpp          ← (Legacy, not built)
 │   └── Version_C/                ← C wrapper (Windows vcxproj only)
 ├── TiffTest/
-│   └── TiffRefactorGuard.cpp     ← Behavior lock test (101 checks, target: Tiff_RefactorGuard)
+│   ├── TiffTest.cpp             ← End-to-end integration test: 4 suites × 32 sample
+│   │                              images; implementation selectable via macro layer
+│   └── TiffRefactorGuard.cpp    ← Behavior lock test (101 checks, target: Tiff_RefactorGuard)
 ├── TestImg/                      ← Sample images (incl. *_LZW.tif, 1LineArt.tif)
 └── LZW/                          ← Legacy codecs (not built)
 ```
@@ -127,6 +129,7 @@ Targets: `obj_Tiff_STL4` (merged into `AVCMP`), test `Tiff_RefactorGuard`.
 | Test | Content | How |
 |------|---------|-----|
 | `Tiff_RefactorGuard` | 101 behavior checks: 8/16-bit, LZW, G3/G4 round-trips, RemoveTag ownership, multi-strip, Planar+Pack, 1-bit CMYKcm, invalid files, G3/G4 end-to-end | `cmake --build build --target Tiff_RefactorGuard && ./Tiff_RefactorGuard` (exit code = failure count) |
+| `TiffTest` | End-to-end integration test over the 32 `TestImg/` samples (LineArt/gray/RGB/CMYK/Lab, 8/16-bit, ICC, Alpha, LZW, MultiStrip): **Test 1** read→write round-trip (file read twice to catch memory leaks), **Test 2** decoded buffer vs `.raw` reference compare, **Test 3** `Clone` + `GetRow`/`PutRow` copy → re-save → buffer compare, **Test 4** `Get(X,Y)` pixel access vs linear buffer. The implementation under test is chosen by a macro layer — `John` = Tiff_STL3/STL4 (default), `Tiff_C` = C wrapper, `Luke` / `Chunyen_yang` = legacy libs; optional `Single_Test` (Exif) and `RGBA` (alpha insert) switches | `make -C TiffTest test` (builds via `Src/Makefile_Test` → `libTiff_STL3.a`, then runs `./build_test/TiffTest ../TestImg`; custom dir: `./build_test/TiffTest <imgdir>`; exit code = failed file count) |
 | `TestImg/` | Sample images for every format (incl. `*_LZW.tif`, `1LineArt.tif`) | Manual verification |
 
 ---
