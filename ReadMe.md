@@ -75,6 +75,37 @@ out.PutRow(rowPtr, y);            // per row
 out.SaveFile("out.tif", 4);       // G4
 ```
 
+### Smart pointers (SPTIFF)
+`SPTIFF` is a `shared_ptr<CTiff>` alias, so instances free themselves —
+no `delete` needed (see the example in `Tiff_STL4.h`):
+
+```cpp
+#include "Tiff_STL4.h"
+
+SPTIFF lpIn = make_shared<CTiff>("Input.tif");
+
+int Width           = lpIn->GetTagValue(ImageWidth);
+int Length          = lpIn->GetTagValue(ImageLength);
+int resolution      = lpIn->GetTagValue(XResolution);
+int samplesPerPixel = lpIn->GetTagValue(SamplesPerPixel);
+int bitspersample   = lpIn->GetTagValue(BitsPerSample);
+
+SPTIFF lpOut = make_shared<CTiff>(Width, Length, resolution, samplesPerPixel, bitspersample);
+
+int BytesPerLine = Width * samplesPerPixel * bitspersample / 8;
+LPBYTE lpBuf = new BYTE[BytesPerLine];
+
+for (int i = 0; i < Length; i++)
+{
+    lpIn->GetRow(lpBuf, i);
+    Process(lpBuf, Width);          // Add your process here.
+    lpOut->PutRow(lpBuf, i);
+}
+delete []lpBuf;
+
+lpOut->SaveFile("Output.tif");
+```
+
 ### Legacy code (compatibility shim, unchanged)
 ```cpp
 #include "Tiff_STL3.h"            // shim → Tiff_STL4.h
